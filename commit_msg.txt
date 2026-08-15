@@ -1,0 +1,7 @@
+﻿feat: ABACUS çekirdek motorları referans deposu oluşturuldu
+
+- 7 motor (math/money/currency/date/text/validate/mask) eklendi
+- 163 unit test %100 yeşil
+- decimal.js tabanlı hassas hesaplama
+- tek otorite (SSOT), saf, I/O'suz mimari
+- AI-RULES ve ABACUS-SPEC ile tam uyumlu
