@@ -1,0 +1,45 @@
+name: SNN-Abacus-Core CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  verify:
+    name: Lint, Typecheck, Test & Grep Guard
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Run TypeScript typecheck
+        run: npx tsc --noEmit
+
+      - name: Run Vitest unit tests
+        run: npm test
+
+      - name: Motor-Ici Grep Guard (Math. ve Intl. Tarayici)
+        run: |
+          echo "Motor içi ham Math. ve Intl. araması yapılıyor..."
+          MATCHES=$(grep -rn --include="*.ts" -E "(Math\.|Intl\.)" src/abacus/ | grep -v "^\s*[*//]" || true)
+          if [ -n "$MATCHES" ]; then
+            echo "❌ HATA: Motor kodlarında meşru olmayan ham Math. veya Intl. kullanımı tespit edildi:"
+            echo "$MATCHES"
+            exit 1
+          fi
+          echo "✅ Temiz! Motor kodlarında ham Math. veya Intl. kullanımı bulunamadı."

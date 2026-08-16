@@ -1,4 +1,4 @@
-﻿import tsParser from '@typescript-eslint/parser';
+import tsParser from '@typescript-eslint/parser';
 import tsPlugin from '@typescript-eslint/eslint-plugin';
 
 export default [
@@ -39,6 +39,14 @@ export default [
         {
           name: 'parseFloat',
           message: 'Ham parseFloat kullanımı yasaktır. Lütfen ABACUS math/money motorunu kullanın.',
+        },
+        {
+          name: 'Math',
+          message: 'Ham Math kullanımı yasaktır. Lütfen ABACUS math motorunu veya decimal.js kullanın.',
+        },
+        {
+          name: 'Intl',
+          message: 'Ham Intl kullanımı yasaktır. Lütfen ABACUS date/money motorunu kullanın.',
         },
       ],
     },
