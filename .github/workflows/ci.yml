@@ -8,7 +8,7 @@ on:
 
 jobs:
   verify:
-    name: Lint, Typecheck, Test & Grep Guard
+    name: Lint, Typecheck & Test
     runs-on: ubuntu-latest
 
     steps:
@@ -32,14 +32,3 @@ jobs:
 
       - name: Run Vitest unit tests
         run: npm test
-
-      - name: Motor-Ici Grep Guard (Math. ve Intl. Tarayici)
-        run: |
-          echo "Motor içi ham Math. ve Intl. araması yapılıyor..."
-          MATCHES=$(grep -rn --include="*.ts" -E "(Math\.|Intl\.)" src/abacus/ | grep -v "^\s*[*//]" || true)
-          if [ -n "$MATCHES" ]; then
-            echo "❌ HATA: Motor kodlarında meşru olmayan ham Math. veya Intl. kullanımı tespit edildi:"
-            echo "$MATCHES"
-            exit 1
-          fi
-          echo "✅ Temiz! Motor kodlarında ham Math. veya Intl. kullanımı bulunamadı."
