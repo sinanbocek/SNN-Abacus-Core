@@ -1,73 +1,73 @@
-# 🚀 ABACUS Core Yeni Projeye Entegrasyon Rehberi (`INSTALL.md`)
+# 🚀 ABACUS Core Entegrasyon ve Kullanım Rehberi (`INSTALL.md`)
 
-Bu rehber, ABACUS çekirdek motorunu herhangi bir yeni SNN projesine sıfır çabayla entegre etme adımlarını içerir.
+Bu rehber, **ABACUS Engine** (`@snn/abacus-core`) çekirdek motorunu herhangi bir SNN projesine GitHub npm paketi olarak entegre etme adımlarını içerir.
 
 ---
 
-## Adım 1: Klasörü Kopyala
-`SNN-Abacus-Core/src/abacus/` klasörünün tamamını yeni projenizin `src/domain/abacus/` dizinine kopyalayın:
+## 📦 1. Kurulum (GitHub npm Package)
+
+Projelerinizin kök dizininde aşağıdaki komutu çalıştırarak `@snn/abacus-core` paketini doğrudan GitHub deposundan kurun:
 
 ```bash
-cp -r SNN-Abacus-Core/src/abacus/ yeni-proje/src/domain/abacus/
+npm install github:sinanbocek/SNN-Abacus-Core
 ```
 
-Klasör Yapısı:
-```
-src/domain/abacus/
-├── index.ts
-├── math/
-│   ├── index.ts
-│   └── math.test.ts
-├── money/
-│   ├── index.ts
-│   └── money.test.ts
-├── currency/
-│   ├── index.ts
-│   └── currency.test.ts
-├── date/
-│   ├── index.ts
-│   └── date.test.ts
-├── text/
-│   ├── index.ts
-│   └── text.test.ts
-├── validate/
-│   ├── index.ts
-│   └── validate.test.ts
-└── mask/
-    ├── index.ts
-    └── mask.test.ts
+> 💡 **Bağımlılık Notu:** Paket, hassas matematiksel işlemler için gereken `decimal.js` bağımlılığını otomatik olarak indirip projenize bağlar. Ekstra bir `decimal.js` kurulumu gerekmez.
+
+---
+
+## ⚙️ 2. Gereksinimler & Tüketim Modeli
+
+- **Ham TS Tüketimi:** `@snn/abacus-core`, derlenmiş JS çıktısı (dist) sunmaz; ham TypeScript (`.ts`) dosyaları üzerinden doğrudan tüketilir.
+- **Bundler Desteği:** Projeniz TypeScript kodlarını işleyebilen modern bir bundler kullanmalıdır (örn. **Vite**, **Rollup**, **Webpack**, **esbuild**, **Next.js**).
+
+---
+
+## 💻 3. Kullanım Örneği
+
+Tüm motorlar tek bir barrel export (`@snn/abacus-core`) üzerinden projelerinize aktarılır:
+
+```typescript
+import { money, math, date, text, validate, mask, currency, tradingMath } from '@snn/abacus-core';
+
+// Para Biçimlendirme
+console.log(money.format(150000));                          // ₺1.500
+
+// Hassas Kuruş Matematiği (decimal.js)
+console.log(math.add(10000, 5000));                         // 15000
+
+// Ticari & BIST İşlem Matematiği
+console.log(tradingMath.calculateThresholdDays(0.10, 35));  // 116
+
+// Türkçe Tarih Biçimlendirme
+console.log(date.format(new Date()));                       // 16 Ağustos 2026
+
+// PII Gizleme
+console.log(mask.vkn('1234567890'));                        // 123******0
 ```
 
 ---
 
-## Adım 2: Dış Bağımlılığı Yükle
-ABACUS yalnızca `decimal.js` paketine bağımlıdır.
+## 🔄 4. Paket Güncelleme Süreci
+
+`SNN-Abacus-Core` deposunda yeni güncellemeler yapıldığında, projelerinizde paketi en son sürüme çekmek için:
 
 ```bash
-npm install decimal.js@^10.6.0
+npm update @snn/abacus-core
 ```
 
 ---
 
-## Adım 3: TypeScript Ayarlarını Ekle (`tsconfig.json`)
-Projenizin `tsconfig.json` dosyasında `compilerOptions` altına şu ayarları ekleyin:
+## 🚨 5. KRİTİK Senkronizasyon Kuralı (Single Source of Truth)
 
-```json
-{
-  "compilerOptions": {
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
-    "target": "ES2020",
-    "moduleResolution": "bundler"
-  }
-}
-```
+1. **Tek Yönlü Değişiklik:** Çekirdek motorlardaki tüm matematik, format, doğrulama ve mantık değişiklikleri **SADECE VE SADECE `SNN-Abacus-Core` REPOSUNDA** yapılır, birim testleri yazılır ve `main` branch'e push edilir.
+2. **Asla Proje İçinde Değişiklik Yapılamaz:** Tüketici projeler (`SNN-AI-BIST-Radar`, `SNN-PORTFOLIO-UI` vb.) içinde ABACUS kodlarına müdahale edilemez / fork'lanamaz. Projeler güncellemeleri yalnızca `npm update @snn/abacus-core` ile çeker.
 
 ---
 
-## Adım 4: ESLint Kısıtlama Kurallarını Ekle (`eslint.config.js`)
-Frontend veya domain katmanlarında ABACUS dışı ham matematik/format ve string dönüşümü kullanımını engellemek için tam kural bloğunu ekleyin:
+## 📜 6. ESLint Kısıtlama Kuralları (`eslint.config.js`)
+
+Frontend veya domain katmanlarında ABACUS dışı ham matematik/format ve string dönüşümü kullanımını engellemek için projenize aşağıdaki ESLint kısıtlamalarını eklemeniz önerilir:
 
 ```js
 import tsParser from '@typescript-eslint/parser';
@@ -116,16 +116,6 @@ export default [
 
 ---
 
-## Adım 5: Anayasa Dokümanlarını Kök Dizine Koy
-Proje köküne `.agent/` veya proje kökenine `AI-RULES.md` ve `ABACUS-SPEC.md` anayasa dokümanlarını kopyalayın.
+## 🏛️ 7. Arşivlenmiş Yöntem (Manuel Klasör Kopyalama - Artık Gerekli Değil)
 
----
-
-## Adım 6: Testleri Çalıştırıp Doğrula
-Projenizde Vitest ile testleri çalıştırarak entegrasyonu onaylayın:
-
-```bash
-npm test
-```
-
-163+ ABACUS birim testinin %100 YEŞİL geçtiğini doğrulayın.
+> ⚠️ **Arşiv Notu:** Eskiden uygulanan `cp -r SNN-Abacus-Core/src/abacus/ yeni-proje/src/domain/abacus/` kopyala-yapıştır yöntemi ve manuel `decimal.js` kurulumu, versiyon takibini imkansız kıldığı için **terk edilmiştir**. Artık standart `npm install github:sinanbocek/SNN-Abacus-Core` yöntemidir.

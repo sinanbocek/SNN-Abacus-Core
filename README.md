@@ -1,10 +1,35 @@
 # 🧮 ABACUS Core Reference Engine (`SNN-Abacus-Core`)
 
-> **ABACUS Engine Standard**: Tüm SNN projelerinde finansal hesaplama, Türkçe metin normalizasyonu, tarih biçimlendirme, PII gizleme ve doğrulama işlemlerinde **Tek Otorite (Single Source of Truth)** olan bağımsız referans çekirdek deposu.
+> **ABACUS Engine Standard**: Tüm SNN projelerinde finansal hesaplama, Türkçe metin normalizasyonu, tarih biçimlendirme, PII gizleme, doğrulama ve BIST ticari işlemlerde **Tek Otorite (Single Source of Truth)** olan bağımsız referans çekirdek paketidir.
 
 ---
 
-## 📦 Motor Özeti (7 Çekirdek Motor)
+## ⚡ Hızlı Başlangıç & Kurulum
+
+Projelerinize GitHub üzerinden doğrudan npm paketi olarak ekleyin:
+
+```bash
+npm install github:sinanbocek/SNN-Abacus-Core
+```
+
+```typescript
+import { money, math, tradingMath, date } from '@snn/abacus-core';
+
+// Para Biçimlendirme
+money.format(150000);                          // "₺1.500"
+
+// Hassas Kuruş Matematiği
+math.add(10000, 5000);                         // 15000
+
+// BIST Ticari Hesaplama
+tradingMath.calculateThresholdDays(0.10, 35);  // 116
+```
+
+> Detaylı kurulum & kullanım rehberi: [INSTALL.md](INSTALL.md)
+
+---
+
+## 📦 Motor Özeti (8 Çekirdek Motor)
 
 | Motor | Klasör | Bir Satır Özeti |
 |---|---|---|
@@ -15,6 +40,15 @@
 | **`text`** | `src/abacus/text/` | Türkçe ek çekim fonetiği (`suffix`: 5 hâl + 6 iyelik + pronominal-n), harf dönüşümü (`upper`, `lower`, `title`), `join` ve metin normalizasyonları (`phone`, `email`, `website`, `name`, `company`). |
 | **`validate`** | `src/abacus/validate/` | Türkiye resmi kurum checksum algoritmaları (`vkn`, `tckn`, `iban` TR mod-97), `ikn` formatı ve `email` doğrulaması. |
 | **`mask`** | `src/abacus/mask/` | Gösterim amaçlı PII gizleme motoru (`money`, `vkn`, `iban`, `phone`). Saklanan veriyi asla mutasyona uğratmaz. |
+| **`tradingMath`** | `src/abacus/trading-math/` | BIST & Ticari işlem matematiği, eşik gün hesabı, fırsat analizi ve pozisyon büyüklüğü hesaplamaları. |
+
+---
+
+## 🧪 Kalite & Test Kapsamı
+
+- **205 Birim Testi:** %100 yeşil test güvencesi (`vitest`).
+- **TypeScript Strict:** Sıfır `any`, tam tip emniyeti.
+- **Sıfır Dış Bağımlılık (Hassas Matematik Hariç):** Yalnızca `decimal.js` kullanır.
 
 ---
 
@@ -24,3 +58,4 @@
 2. **Sıfır Intl / toLocale\***: Tarih ve para formatlamasında `Intl` ve `toLocale*` kullanımı yasaktır.
 3. **Sıfır Ham toLowerCase / toUpperCase**: Türkçe harf dönüşümleri (`İ->i`, `I->ı`) `text.lower` ve `text.upper` ile yapılır.
 4. **Parametresiz Date Yok**: `relative` ve `daysUntil` fonksiyonları bugün tarihini parametre olarak alır.
+5. **Single Source of Truth**: Motor güncellemeleri yalnızca `SNN-Abacus-Core` reposunda yapılır ve `npm update` ile projelere dağıtılır.
