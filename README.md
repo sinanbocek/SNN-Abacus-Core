@@ -1,4 +1,4 @@
-﻿# 🧮 ABACUS Core Reference Engine (`snn-abacus-core`)
+# 🧮 ABACUS Core Reference Engine (`SNN-Abacus-Core`)
 
 > **ABACUS Engine Standard**: Tüm SNN projelerinde finansal hesaplama, Türkçe metin normalizasyonu, tarih biçimlendirme, PII gizleme ve doğrulama işlemlerinde **Tek Otorite (Single Source of Truth)** olan bağımsız referans çekirdek deposu.
 

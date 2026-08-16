@@ -1,14 +1,14 @@
-﻿# 🚀 ABACUS Core Yeni Projeye Entegrasyon Rehberi (`INSTALL.md`)
+# 🚀 ABACUS Core Yeni Projeye Entegrasyon Rehberi (`INSTALL.md`)
 
 Bu rehber, ABACUS çekirdek motorunu herhangi bir yeni SNN projesine sıfır çabayla entegre etme adımlarını içerir.
 
 ---
 
 ## Adım 1: Klasörü Kopyala
-`snn-abacus-core/src/abacus/` klasörünün tamamını yeni projenizin `src/domain/abacus/` dizinine kopyalayın:
+`SNN-Abacus-Core/src/abacus/` klasörünün tamamını yeni projenizin `src/domain/abacus/` dizinine kopyalayın:
 
 ```bash
-cp -r snn-abacus-core/src/abacus/ yeni-proje/src/domain/abacus/
+cp -r SNN-Abacus-Core/src/abacus/ yeni-proje/src/domain/abacus/
 ```
 
 Klasör Yapısı:
