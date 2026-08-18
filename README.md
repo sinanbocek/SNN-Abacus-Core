@@ -67,4 +67,4 @@ silver.gramSilverPrice(31, 34.20);        // 3405 (kuruş) — 999 külçe gram 
 2. **Sıfır Intl / toLocale\***: Tarih ve para formatlamasında `Intl` ve `toLocale*` kullanımı yasaktır.
 3. **Sıfır Ham toLowerCase / toUpperCase**: Türkçe harf dönüşümleri (`İ->i`, `I->ı`) `text.lower` ve `text.upper` ile yapılır.
 4. **Parametresiz Date Yok**: `relative` ve `daysUntil` fonksiyonları bugün tarihini parametre olarak alır.
-5. **Single Source of Truth**: Motor güncellemeleri yalnızca `SNN-Abacus-Core` reposunda yapılır ve `npm update` ile projelere dağıtılır.
+5. **Single Source of Truth**: Motor güncellemeleri yalnızca `SNN-Abacus-Core` reposunda yapılır; tüketici projeler pin'i elle yeni sürüm tag'ine çekerek alır (otomatik `npm update` kullanılmaz).

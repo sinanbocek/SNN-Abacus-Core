@@ -28,7 +28,7 @@ npm install github:sinanbocek/SNN-Abacus-Core#v1.1.0
 Tüm motorlar tek bir barrel export (`@snn/abacus-core`) üzerinden projelerinize aktarılır:
 
 ```typescript
-import { money, math, date, text, validate, mask, currency, tradingMath } from '@snn/abacus-core';
+import { money, math, date, text, validate, mask, currency, tradingMath, gold, silver } from '@snn/abacus-core';
 
 // Para Biçimlendirme
 console.log(money.format(150000));                          // ₺1.500
