@@ -6,4 +6,6 @@ export * as currency from './currency';
 export * as validate from './validate';
 export * as mask from './mask';
 export * as tradingMath from './trading-math';
+export * as gold from './gold';
+
 
