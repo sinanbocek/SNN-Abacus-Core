@@ -9,8 +9,10 @@
 Projelerinize GitHub üzerinden doğrudan npm paketi olarak ekleyin:
 
 ```bash
-npm install github:sinanbocek/SNN-Abacus-Core
+npm install github:sinanbocek/SNN-Abacus-Core#v1.1.0
 ```
+
+> **Üretim projeleri her zaman bir sürüm tag'ine pinlemelidir** (örn. `#v1.1.0`). Yükseltme, tag'i elle yeni sürüme çekip tüketici projenin testlerini çalıştırarak yapılır — otomatik güncelleme kullanılmaz.
 
 ```typescript
 import { money, math, tradingMath, date, gold, silver } from '@snn/abacus-core';

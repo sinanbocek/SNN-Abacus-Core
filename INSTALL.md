@@ -9,7 +9,7 @@ Bu rehber, **ABACUS Engine** (`@snn/abacus-core`) çekirdek motorunu herhangi bi
 Projelerinizin kök dizininde aşağıdaki komutu çalıştırarak `@snn/abacus-core` paketini doğrudan GitHub deposundan kurun:
 
 ```bash
-npm install github:sinanbocek/SNN-Abacus-Core
+npm install github:sinanbocek/SNN-Abacus-Core#v1.1.0
 ```
 
 > 💡 **Bağımlılık Notu:** Paket, hassas matematiksel işlemler için gereken `decimal.js` bağımlılığını otomatik olarak indirip projenize bağlar. Ekstra bir `decimal.js` kurulumu gerekmez.
@@ -50,18 +50,14 @@ console.log(mask.vkn('1234567890'));                        // 123******0
 
 ## 🔄 4. Paket Güncelleme Süreci
 
-`SNN-Abacus-Core` deposunda yeni güncellemeler yapıldığında, projelerinizde paketi en son sürüme çekmek için:
-
-```bash
-npm update @snn/abacus-core
-```
+Sürüm yükseltmek için tüketici projede pin'i elle yeni tag'e çekin (örn. `#v1.1.0` → `#v1.2.0`), sonra projenin karakterizasyon/birim testlerini çalıştırıp beklenmeyen değişiklik olmadığını doğrulayın. Otomatik `npm update` KULLANILMAZ — sürüm geçişi her zaman bilinçli ve test-korumalıdır.
 
 ---
 
 ## 🚨 5. KRİTİK Senkronizasyon Kuralı (Single Source of Truth)
 
 1. **Tek Yönlü Değişiklik:** Çekirdek motorlardaki tüm matematik, format, doğrulama ve mantık değişiklikleri **SADECE VE SADECE `SNN-Abacus-Core` REPOSUNDA** yapılır, birim testleri yazılır ve `main` branch'e push edilir.
-2. **Asla Proje İçinde Değişiklik Yapılamaz:** Tüketici projeler (`SNN-AI-BIST-Radar`, `SNN-PORTFOLIO-UI` vb.) içinde ABACUS kodlarına müdahale edilemez / fork'lanamaz. Projeler güncellemeleri yalnızca `npm update @snn/abacus-core` ile çeker.
+2. **Asla Proje İçinde Değişiklik Yapılamaz:** Tüketici projeler (`SNN-AI-BIST-Radar`, `SNN-PORTFOLIO-UI` vb.) içinde ABACUS kodlarına müdahale edilemez / fork'lanamaz. Projeler güncellemeleri yalnızca elle tag yükseltme ile çeker.
 
 ---
 
