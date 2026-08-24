@@ -7,7 +7,7 @@
 > Bu dosya SNN-Abacus-Core'a (çekirdek hesaplama kütüphanesi) özgüdür. Tüketici
 > uygulamaların kuralları (mimari katman, veritabanı, dağıtım) burada yer almaz.
 >
-> **Sürüm:** 1.0 · **Geçerlilik:** tüm AI asistanları · **Kod dili:** İngilizce
+> **Sürüm:** 2.0 · **Geçerlilik:** tüm AI asistanları · **Kod dili:** İngilizce
 
 ---
 
@@ -29,9 +29,13 @@ Yazılı kural yetmez. Her katı kuralın otomatik zorlayıcısı vardır:
 
 - **ESLint (`error`, warn değil):** `.toFixed`, `toLocaleString`, ham `toUpperCase`/
   `toLowerCase`, `parseFloat`, ham `Math`, ham `Intl` yasak → ABACUS motoruna yönlendirir.
+  Ayrıca `no-restricted-syntax` ile **sessiz varsayılan** (`|| 0`, `?? 0`) yasaktır.
 - **TypeScript strict:** `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`,
   `noUnusedLocals`, `noUnusedParameters`. Örtük `any` yok.
-- **CI kapısı (Node 22):** `npm ci → lint → tsc --noEmit → test`. Herhangi biri kırılırsa merge yok.
+- **Kapsam kapısı:** `npm run test:coverage` eşiklerle çalışır (`vitest.config.ts`).
+  Kapsam düşerse CI kırılır; eşikler kapsam arttıkça yukarı çekilir.
+- **CI kapısı (Node 22):** `npm ci → lint → tsc --noEmit → test:coverage`.
+  Herhangi biri kırılırsa merge yok.
 
 Zorlanamayan madde "kural" değil "öneri"dir.
 
@@ -46,6 +50,11 @@ Yeni davranış eklenirken:
 2. **Sonra kod yazılır** → test **YEŞİL** olur.
 3. **Meta-doğrulama:** bir sabit/mantık geçici bozulur → ilgili test kırmızı olmalı
    (test gerçekten ölçüyor mu), sonra geri alınır → yeşil, `git diff` boş.
+   ⚠️ Geri almak için `git checkout` KULLANMA: yeni (henüz commit'lenmemiş) dosyaları
+   geri getirmez ve o oturumun çalışmasını siler. Önce dosyaları depo dışına kopyala,
+   mutasyondan sonra kopyadan geri yükle.
+4. **Kırmızı vermeyen koruma ölü koddur:** bozulduğunda hiçbir test kırılmıyorsa ya
+   testi ekle ya kodu kaldır; ikisinden birini yapmadan bırakma.
 
 Assert değerleri **dış otoriteden** (piyasa/Darphane/resmi standart) gelir; kodun
 ürettiği çıktı assert'e körlemesine kopyalanmaz. Kod ile beklenen çelişirse DUR, raporla.
@@ -57,7 +66,14 @@ Assert değerleri **dış otoriteden** (piyasa/Darphane/resmi standart) gelir; k
 - Motorlar **saf** kalır: I/O yok (fetch/DB/localStorage/env/fs). Veri parametreyle gelir.
 - **decimal.js yalnız `math`** içinde. Yeni motor hesabı `math` primitifleriyle yapar.
 - Para **kuruş** (integer minor). Float ile para yasak.
-- Hata **`null`** ile döner; sessiz `|| 0` yasak.
+- Hata sentineli **işin türüne** bağlıdır; normatif tablo `ABACUS-SPEC.md §2.1`'dedir
+  (hesap → `null`, biçimlendirme → `'—'`, doğrulama → `false`, normalizasyon →
+  `{valid:false}`, metin → `''`). Sessiz `|| 0` / `?? 0` her durumda yasak.
+- **Motorlar arası dairesel import yasak.** İki motorun ortak ihtiyacı varsa parça
+  `src/abacus/internal/` altında bir **yaprak modüle** taşınır; genel API adı değişmez.
+  `internal/` barrel üzerinden export EDİLMEZ.
+- **Sabitler tek kaynaktan.** Aynı sabit iki motorda ayrı tanımlanmaz
+  (ör. `ONS_TO_GRAM` → `internal/constants`).
 
 ---
 

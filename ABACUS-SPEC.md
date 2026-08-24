@@ -4,7 +4,10 @@
 > hangi sözleşmelere uyduğunu belirtir. Kütüphaneye özgüdür; herhangi bir tüketici
 > uygulamanın (ör. mimari, veritabanı) kurallarını içermez.
 >
-> **Sürüm:** 1.0 · **Kod dili:** İngilizce · **Bağımlılık:** yalnız `decimal.js`
+> **Sürüm:** 2.0 · **Kod dili:** İngilizce · **Bağımlılık:** yalnız `decimal.js`
+>
+> Bu dosyadaki API adları **koddan doğrulanmıştır**. Fonksiyon imzalarının ve
+> davranış ayrıntılarının tam dökümü için `SNN-ABACUS-CORE-MOTOR-DETAYLARI.md`.
 
 ---
 
@@ -39,6 +42,9 @@ export * as mask       from './mask';
 export * as tradingMath from './trading-math';
 export * as gold       from './gold';
 export * as silver     from './silver';
+export * as unit       from './unit';
+export * as period     from './period';
+export * as collate    from './collate';
 ```
 
 Kullanım:
@@ -55,20 +61,45 @@ silver.gramSilverPrice(31, 34.20);        // 3405 (kuruş)
 
 ## 2. Motor Sözleşmeleri (API)
 
-| Motor | Ana fonksiyonlar | Not |
+| Motor | Dışa açılan fonksiyonlar (tam liste) | Not |
 |---|---|---|
-| `math` | add, sub, mul, div\|null, round(half-up), abs, floor, mod\|null, ratio\|null, percent\|null, pow\|null, log\|null, max\|null | decimal.js kapsülü |
-| `money` | format, percent, toWords, compact | kuruş → metin |
-| `currency` | convert(minor, rate)\|null, cross(minor, from, to)\|null | kur ondalık |
-| `date` | formatDate, formatDateTime, timeAgo, daysBetween | Intl'siz, TR |
-| `text` | upper, lower, turkishSlug, numberToWords | TR harf güvenli |
-| `validate` | isValidTCKN, isValidVKN, isValidIBAN | resmi checksum |
-| `mask` | maskName, maskPhone, maskTCKN, maskIBAN | PII gizleme |
-| `tradingMath` | calculateThresholdDays, calculatePositionSize | ticari |
-| `gold` | gramGoldPrice(onsUsd, usdTry, karat)\|null, ziynetPrice(type, onsUsd, usdTry)\|null | kuruş çıktı |
-| `silver` | gramSilverPrice(onsUsd, usdTry, millesimal=999)\|null | kuruş çıktı |
+| `math` | `add`, `sub`, `mul`, `div`\|null, `round` (half-up), `abs`, `floor`, `mod`\|null, `ratio`\|null, `percent`\|null, `pow`\|null, `log`\|null, `max`\|null | decimal.js kapsülü |
+| `money` | `format`, `percent`, `parseNumber`\|null, `fmtDecimalGrouped`, `formatGroupedInput`, `toWords`, `compact` | kuruş → metin |
+| `currency` | `convert(minor, rate)`\|null, `cross(minor, from, to)`\|null | kur parametreyle gelir |
+| `date` | `format`, `monthName`, `daysBetween`\|null, `daysUntil`\|null, `relative`, `dayName` | Intl'siz, TR, Europe/Istanbul |
+| `text` | `toAsciiLower`, `toTrLower`, `lower`, `upper`, `title`, `join`, `phone`, `whatsapp`, `email`, `website`, `websiteUrl`, `name`, `company`, `numberToWords`, `lastVowel`, `isBackVowel`, `isRoundedVowel`, `endsWithHardConsonant`, `endsWithVowel`, `suffix` | TR harf güvenli |
+| `validate` | `vkn`, `tckn`, `ikn`, `iban`, `email` | resmî checksum, hepsi `boolean` |
+| `mask` | `money`, `vkn`, `iban`, `phone` | PII gizleme |
+| `tradingMath` | `volumeFromQty`, `qtyFromVolume`, `leverage`\|null, `calculateThresholdDays`\|null, `validateTradeDirections`, `computeRiskReward`, `computePortfolioRatios` | ticari |
+| `gold` | `gramGoldPrice(onsUsd, usdTry, karat)`\|null, `ziynetPrice(type, onsUsd, usdTry)`\|null + `ONS_TO_GRAM`, `PURITY`, `ZIYNET_GRAM` | kuruş çıktı |
+| `silver` | `gramSilverPrice(onsUsd, usdTry, millesimal=999)`\|null + `ONS_TO_GRAM`, `SILVER_PURITY` | kuruş çıktı |
+| `unit` | `convert(value, from, to)`\|null, `categoryOf`\|null, `dataSize` + `ONS_TO_GRAM` | birim çevrimi |
+| `period` | `addDays`\|null, `addMonths`\|null, `startOfMonth`\|null, `endOfMonth`\|null, `quarterOf`\|null, `quarterRange`\|null, `monthsBetween`\|null, `isBetween`\|null | tarih ÜRETİR (`date` biçimlendirir) |
+| `collate` | `key`, `compare`, `sortBy` | Türkçe sıralama, `Intl.Collator` yok |
 
-Tüm hesap motorları geçersiz girdide `null` döner.
+### 2.1 Dönüş Sözleşmeleri (normatif)
+
+Motorlar tek bir hata dili kullanmaz; **hangi işin hangi sentineli döndürdüğü kuraldır**:
+
+| İş türü | Geçersiz girdide | Örnek |
+|---|---|---|
+| **Hesap** (sayı üretir) | `null` | `math.div`, `currency.convert`, `gold.gramGoldPrice`, `unit.convert` |
+| **Biçimlendirme** (metin üretir) | `'—'` (em dash) | `money.format`, `money.toWords`, `date.format`, `mask.*`, `unit.dataSize` |
+| **Doğrulama** | `false` | `validate.*` |
+| **Normalizasyon** | `{ valid: false, stored: '', display: '', raw }` | `text.phone`, `text.email`, `text.website` |
+| **Metin dönüşümü** | `''` (boş dize) | `text.title`, `text.join`, `text.numberToWords` |
+
+**İlkel katman istisnası (`math`):** `add`, `sub`, `mul`, `round`, `abs`, `floor`
+sonlu olmayan girdide sonlu olmayan çıktı üretir (`add(NaN, 1) → NaN`). Bu
+IEEE-754 yayılımıdır ve **bilinçlidir**: bu altı fonksiyon `number` döner, tanımsızlık
+üretemez. Tanımsızlık üretebilenler (`div`, `mod`, `ratio`, `percent`, `pow`, `log`,
+`max`) `null` döner. Girdi doğrulaması **motor katmanının** sorumluluğudur; her genel
+motor kapısı `Number.isFinite` ile korunur. `NaN` hiçbir koşulda `0`'a çevrilmez.
+
+**Yasak:** hiçbir fonksiyon geçersiz girdide `0` döndüremez; `|| 0` ve `?? 0`
+sessiz varsayılanları ESLint `no-restricted-syntax` ile `error` seviyesinde engellenir.
+`0` yalnızca **gerçek sıfır** anlamına gelir.
+
 
 ---
 
@@ -90,6 +121,9 @@ Gold ve silver motorları aşağıdaki **piyasa/Darphane otoritesi** değerlerin
 
 **Gümüş milyem:** 999 (külçe, varsayılan) · 925 (sterling) · 800 · 1000.
 
+`ONS_TO_GRAM` sabiti `gold`, `silver` ve `unit` motorlarında **tek kaynaktan**
+(`internal/constants`) gelir; üçü her zaman eşittir.
+
 Hesap zinciri (her ikisi de): `div(onsUsd, 31.1034768) → mul(purity) → mul(usdTry) → round(×100, 0)` → kuruş.
 
 ---
@@ -100,6 +134,6 @@ Hesap zinciri (her ikisi de): `div(onsUsd, 31.1034768) → mul(purity) → mul(u
 2. **`Intl` / `toLocale*` yok** — `date`/`money` motoru kullanılır.
 3. **Ham `toUpperCase`/`toLowerCase` yok** — `text.upper`/`text.lower` (TR harf güvenliği).
 4. **`.toFixed` / `parseFloat` yok** — `math`/`money` motoru.
-5. **`|| 0` sessiz varsayılan yok** — `null` sentinel.
+5. **`|| 0` / `?? 0` sessiz varsayılan yok** — §2.1'deki sentinel kullanılır.
 
 Tümü ESLint `error` ile zorlanır (eslint.config.js).

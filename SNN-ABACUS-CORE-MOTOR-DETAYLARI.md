@@ -2,12 +2,12 @@
 
 > Bu belge SNN-Abacus-Core'un (`@snn/abacus-core`) **derin API referansıdır**: her motorun
 > gerçek imzaları, davranışı, kenar durumları ve tüketici projeler için entegrasyon notları.
-> Kaynak koddan (v1.1.0) doğrulanmıştır.
+> Kaynak koddan (v2.0.0, henüz etiketlenmemiş) doğrulanmıştır.
 >
 > **Amaç:** Kütüphanenin resmi API referansı olmak; README/SPEC özetlerini beslemek ve tüm
 > tüketici projelerin entegrasyonunda tek başvuru kaynağı olmak.
 >
-> **Sürüm:** v1.1.0 · **Kod dili:** İngilizce · **Bağımlılık:** yalnız `decimal.js` (yalnız `math` içinde)
+> **Sürüm:** v2.0.0 (yayımlanmamış) · **Kod dili:** İngilizce · **Bağımlılık:** yalnız `decimal.js` (yalnız `math` içinde)
 
 ---
 
@@ -20,12 +20,23 @@
   (çıkışta) gerekir.
 - **decimal.js yalnız `math` içinde:** Diğer motorlar `math` primitiflerini kullanır.
 - **Yuvarlama = half-up (Türkiye usulü), işaret korumalı:** `2,49→2` · `2,50→3` · `-2,5→-3`.
-- **Hata = `null` sentinel:** Hesaplanamazsa `null`. Gerçek `0` ile yokluk ayrılır. Sessiz
-  `|| 0` yasak. Tüketici tarafında `null` mutlaka ele alınmalı.
+- **Hata sentineli işin türüne bağlıdır** (normatif tablo: `ABACUS-SPEC.md §2.1`):
+  hesap → `null` · biçimlendirme → `'—'` · doğrulama → `false` ·
+  normalizasyon → `{ valid: false, ... }` · metin dönüşümü → `''`.
+  Gerçek `0` ile yokluk her zaman ayrılır. Sessiz `|| 0` / `?? 0` **yasaktır** ve
+  ESLint `no-restricted-syntax` ile `error` seviyesinde engellenir.
+  `math` ilkel katmanı istisnadır: `add`/`sub`/`mul`/`round`/`abs`/`floor` sonlu
+  olmayan girdide sonlu olmayan çıktı üretir (IEEE-754 yayılımı); `NaN` asla
+  `0`'a çevrilmez.
 - **Namespace barrel:** `import { math, money, ... } from '@snn/abacus-core'`.
 
-Barrel (kök `index.ts`) şu 10 motoru açar:
-`math`, `money`, `text`, `date`, `currency`, `validate`, `mask`, `tradingMath`, `gold`, `silver`.
+Barrel (kök `index.ts`) şu **13 motoru** açar:
+`math`, `money`, `text`, `date`, `currency`, `validate`, `mask`, `tradingMath`,
+`gold`, `silver`, `unit`, `period`, `collate`.
+
+`src/abacus/internal/` altındaki modüller (`constants`, `patterns`, `tr-case`,
+`money-format`) **dışa açık API değildir**; barrel üzerinden export edilmez.
+Motorların ortak parçalarını tutarak hem tekrarı hem dairesel import'u önlerler.
 
 ---
 
@@ -100,8 +111,9 @@ TCMB kurallarına uygun para biçimlendirme. **Girdi kuruş bazlı tam sayıdır
 
 **Motor-içi bağımlılık:** `math` (add/sub/div/floor/mod/round) ve `text` (`numberToWords`, yalnız
 `toWords` için). Yani `money` tek başına değil — `text` motoruna bağımlıdır.
-**Ortak yokluk davranışı:** `null`/`undefined`/`NaN` girdide `format`/`percent`/`compact` → `'—'`
-(em-dash); `fmtDecimalGrouped` → `'0'`.
+**Ortak yokluk davranışı (v2.0.0):** `null`/`undefined`/`NaN` girdide
+`format` / `percent` / `compact` / `fmtDecimalGrouped` / `toWords` → `'—'` (em-dash).
+`parseNumber` bir hesap işidir ve `null` döner.
 
 ### `format(kurus: number | null | undefined, opts?: FormatMoneyOptions): string`
 Kuruş tam sayısını para metnine çevirir.
@@ -131,15 +143,19 @@ alanıdır (`opts.kurus`, "kuruş basamağı göster" boolean'ı). İkisi ayrıd
 Yüzde biçimi. Ondalık ayraç virgül. Örnek: `percent(12.345, 1) → "%12,3"` · `percent(2.5678, 2) → "%2,57"`
 · `percent(null) → "—"`.
 
-### `parseNumber(val: string): number`
-Binlik-ayraçlı metni ham sayıya çevirir (nokta binlik, virgül ondalık). Geçersizse `0`.
-Örnek: `"23.232,50" → 23232.5`. (Not: yokluk/hatada `null` değil `0` döner — bu fonksiyon giriş
-ayrıştırıcı olduğu için istisnadır.)
+### `parseNumber(val: string): number | null`
+Binlik-ayraçlı metni ham sayıya çevirir (nokta binlik, virgül ondalık).
+**Çözümlenemeyen girdide `null` döner** (v1.1.0'da `0` dönüyordu; bu, "değer yok"
+ile "değer sıfır"ı karıştırıyordu — rapor B5).
+Örnek: `"23.232,50" → 23232.5` · `"1.234,56" → 1234.56` · `"-1.234,56" → -1234.56`
+· `"0" → 0` (gerçek sıfır) · `"abc" → null` · `"" → null` · `"-" → null`.
 
 ### `fmtDecimalGrouped(value: number | null | undefined, digits = 0): string`
 Ondalıklı sayıyı binlik-ayraçlı (nokta) + ondalık (virgül) gösterir; sondaki sıfırları korur.
-Yoklukta `'0'`. Örnek: `fmtDecimalGrouped(47.89, 4) → "47,8900"` · `fmtDecimalGrouped(34.5, 4) → "34,5000"`
-· `fmtDecimalGrouped(70000.5, 2) → "70.000,50"`.
+**Yoklukta `'—'`** (v1.1.0'da `'0'` dönüyordu — rapor B5).
+Örnek: `fmtDecimalGrouped(47.89, 4) → "47,8900"` · `fmtDecimalGrouped(34.5, 4) → "34,5000"`
+· `fmtDecimalGrouped(70000.5, 2) → "70.000,50"` · `fmtDecimalGrouped(0) → "0"` (gerçek sıfır)
+· `fmtDecimalGrouped(null) → "—"` · `fmtDecimalGrouped(NaN) → "—"`.
 
 ### `formatGroupedInput(raw: string): string`
 Serbest ondalık giriş kutuları için canlı biçimlendirme (kullanıcı yazarken). Örnek: ham girişten
@@ -147,7 +163,11 @@ binlik-ayraçlı çıktı üretir; boş girişte `''`.
 
 ### `toWords(kurus: number, opts?: ToWordsOptions): string`
 Çek/sözleşme "Yalnız..." tutar yazısı. Girdi kuruş. `ToWordsOptions.spaced?: boolean` (boşluklu yazım).
-Negatifte `-` "Yalnız" önüne gelir. `text.numberToWords`'e bağımlı.
+Negatifte **"Eksi"** ibaresi "Yalnız"dan SONRA gelir (v2.0.0; v1.1.0'da `-` işareti
+"Yalnız"ın önüne geliyordu ve bu Türkçede geçersizdi).
+`NaN` / `Infinity` / ondalıklı kuruş girdisinde `'—'` döner.
+`text.numberToWords`'e bağımlıdır; ölçek tavanı **Katrilyon** (10^15), güvenli tam sayı
+sınırının ötesinde `'—'`.
 Örnekler:
 - `toWords(32000000) → "Yalnız ÜçYüzYirmiBinTürkLirası"`
 - `toWords(334533454) → "Yalnız ÜçMilyonÜçYüzKırkBeşBinÜçYüzOtuzDörtLiraElliDörtKuruş"`
@@ -296,11 +316,27 @@ bağımsız, deterministik).
 
 **Bağımlılık:** `math` (abs/div/round/sub).
 
-**⚠️ KRİTİK — UTC tabanlı:** Motor tarihleri **UTC** olarak yorumlar (`Date.UTC`, `getUTCDay`).
-Yerel saat dilimi kullanmaz. Bir tüketici tarih işlemlerini yerel TZ ile yapıyorsa, bu motora
-geçişte **gün kayması** riski vardır (özellikle gece yarısı/gün sınırında).
+**⚠️ KRİTİK — Europe/Istanbul (v2.0.0'dan itibaren):** Saat dilimi eki TAŞIYAN ISO
+değerleri (`...Z`, `...+02:00`) **İstanbul saatine (sabit UTC+3)** çevrilir; bu, saatle
+birlikte **tarihi de** ileri/geri alabilir. Saat dilimi eki OLMAYAN değerler
+(`2026-08-15`, `2026-08-15T21:30:00`) İstanbul duvar saati kabul edilir ve kaydırılmaz.
 
-**Tip:** `DateFormatStyle = 'short' | 'long' | 'dayMonth' | 'monthYear' | 'period'`.
+> v1.1.0 saat kısmını tümüyle yok sayardı: `format('2026-08-15T21:30:00Z')` → `"15.08.2026"`.
+> v2.0.0'da aynı çağrı `"16.08.2026"` döner (İstanbul'da ertesi gün 00:30'dur).
+> Bu **kırıcı bir değişikliktir** ve `format`, `dayName`, `relative`, `daysBetween`
+> fonksiyonlarının tümünü etkiler.
+
+**⚠️ 2016 öncesi tarihler:** Sabit +3 varsayımı Türkiye'nin 2016 sonrası kalıcı UTC+3
+düzenine uygundur. 2016 öncesi yaz saati dönemlerinde bir saat sapma olur; `Intl` yasağı
+(§4.2) nedeniyle tarihsel saat dilimi veritabanı çekirdeğe taşınmamıştır.
+
+**⚠️ TAKVİM DOĞRULAMASI (v2.0.0):** Var olmayan günler artık reddedilir.
+`2024-02-30` → `'—'` · `2025-02-29` → `'—'` · `2026-04-31` → `'—'`.
+Artık yıl kuralı yüzyıl istisnasıyla uygulanır: `2000-02-29` geçerli, `1900-02-29` değil.
+v1.1.0 bu tarihleri geçerli sayıyor ve `daysBetween` sessizce kayıyordu.
+
+**Tip:** `DateFormatStyle = 'short' | 'long' | 'dayMonth' | 'monthYear' | 'period' | 'time' | 'dateTime' | 'dayMonthWeekday'`
+· `NameForm = 'short' | 'long'`.
 
 ### `format(iso: string | null | undefined, style: DateFormatStyle = 'short'): string`
 ISO tarihi Türkçe metne çevirir. ISO'nun saat kısmı (`T...`) yok sayılır. Geçersiz/null/boş/hatalı → `'—'`.
@@ -312,8 +348,18 @@ Stiller (örnek: `2026-08-15`):
 - `period` → `"08/2026"` (AA/YYYY)
 Diğer örnekler:
 - `format('2026-01-05') → "05.01.2026"` (tek hane sıfır-dolgulu)
-- `format('2026-08-15T21:30:00Z') → "15.08.2026"` (saat yok sayılır)
+- `format('2026-08-15T21:30:00Z') → "16.08.2026"` (İstanbul saatine çevrilir)
 - `format(null) → "—"` · `format('') → "—"` · `format('abc') → "—"` · `format('2026-13-45') → "—"`
+- `format('2024-02-30') → "—"` (var olmayan takvim günü)
+
+Saat stilleri (v2.0.0):
+- `time` → `"00:30"` — saat kısmı yoksa `'—'`
+- `dateTime` → `"25.08.2026 00:30"` — saat kısmı yoksa `'—'`
+- `dayMonthWeekday` → `"13 Ağustos Per."`
+
+### `monthName(month: number, form: NameForm = 'long'): string`
+Ay numarasından (1-12) Türkçe ay adı. `monthName(8) → "Ağustos"` · `monthName(8,'short') → "Ağu"`
+· `monthName(0) → "—"` · `monthName(13) → "—"`.
 
 ### `daysBetween(isoA: string, isoB: string): number | null`
 Gün farkı (`isoB - isoA`), UTC gün bazında. Geçersiz girdide `null`.
@@ -329,15 +375,17 @@ Türkçe bağıl zaman. **Bugün parametre** (saf/deterministik). Geçersizde `'
 Örnek: `relative('2026-08-15', '2026-08-15') → "bugün"` · `dün` (-1) · `yarın` (+1)
 · `relative('2026-08-12', '2026-08-15') → "3 gün önce"` · `relative('2026-08-18', '2026-08-15') → "3 gün sonra"`.
 
-### `dayName(iso: string): string`
-Türkçe kısa gün adı (Paz/Pzt/Sal/Çar/Per/Cum/Cts), **UTC gününe göre**. Geçersizde `'—'`.
-Örnek: `dayName('2026-08-15') → "Cts"` · `dayName('2026-08-17') → "Pzt"` · `dayName('invalid') → "—"`.
+### `dayName(iso: string, form: NameForm = 'short'): string`
+Türkçe gün adı, **İstanbul gününe göre**. Varsayılan kısa (Paz/Pzt/...),
+`form: 'long'` ile uzun (Pazar/Pazartesi/...). Geçersizde `'—'`.
+Örnek: `dayName('2026-08-15') → "Cts"` · `dayName('2026-08-15','long') → "Cumartesi"`
+· `dayName('2026-08-17') → "Pzt"` · `dayName('invalid') → "—"`.
 
 ### `date` — entegrasyon notları
 - **⚠️ TZ tuzağı (en kritik):** Core UTC yorumlar; yerel-TZ tabanlı tarih kodu bu motora geçince
   **gün kayması** üretebilir. Taşıma testle dikkatli yönetilmeli; gece yarısı sınır case'leri test edilmeli.
-- **Girdi ISO string:** `Date` nesnesi geçiren kod önce ISO'ya çevirmeli (`.toISOString()` + TZ farkına
-  dikkat). `date.format(new Date())` **yanlıştır** — `Date` değil ISO string beklenir.
+- **Girdi ISO string:** `Date` nesnesi geçiren kod önce ISO'ya çevirmeli (`.toISOString()`).
+  `date.format(new Date())` **yanlıştır** — `Date` değil ISO string beklenir; `'—'` döner.
 - `daysUntil`/`relative` **bugünü parametre** alır — çağıran `today`'i açıkça vermeli (saf motor `new Date()` çağırmaz).
 - Geçersizde `'—'`: boş-string/null default'larından farklı, gösterim değişebilir.
 
@@ -348,14 +396,21 @@ Türkçe kısa gün adı (Paz/Pzt/Sal/Çar/Per/Cum/Cts), **UTC gününe göre**.
 Türkçe metin işleme: harf dönüşümü (İ/ı güvenli), normalizasyon (telefon/e-posta/web/ad/firma),
 sayı→yazı ve Türkçe ek çekimi. En kapsamlı motor.
 
-**Motor-içi bağımlılıklar (KRİTİK — döngüsel):**
+**Motor-içi bağımlılıklar (v2.0.0'dan itibaren DÖNGÜSÜZ):**
 - `text` → `math` (div/floor/mod — numberToWords için)
-- `text` → `money` (`format` — suffix 'money' türü için)
-- `text` → `validate` (`email` — email normalizasyonu SSOT için)
-- **Ters yön:** `money` → `text` (`numberToWords` — toWords için).
-Yani `text` ↔ `money` **karşılıklı bağımlı**. Taşımada biri geçerse diğeri de tutarlı olmalı.
+- `text` → `internal/money-format` (`formatMoney` — suffix 'money' türü için)
+- `text` → `internal/patterns` (`isEmailShaped` — email normalizasyonu SSOT için)
+- `text` → `internal/tr-case` (Türkçe harf haritaları; `collate` ile paylaşılır)
+- Tek yön: `money` → `text` (`numberToWords`), `validate` → `text` (`upper`), `mask` → `text`.
+
+> **Değişiklik notu (v2.0.0):** v1.1.0'da `text` ↔ `money` ve `text` ↔ `validate`
+> karşılıklı bağımlıydı. Ortak parçalar `internal/` altındaki yaprak modüllere
+> taşınarak grafik döngüsüz hâle getirildi. Genel API değişmedi: `money.format`
+> ve `validate.email` aynı adla, aynı davranışla çalışmaya devam eder.
+> `internal/` dışa açık API **değildir**, barrel üzerinden export edilmez.
 
 **Normalizasyon dönüş tipi:** `NormalizeResult { stored, display, raw, valid }`.
+`phone` bundan türeyen `PhoneResult { ..., kind }` döner (aşağıya bakınız).
 `stored` = kanonik/DB formu, `display` = gösterim formu, `raw` = ham girdi, `valid` = geçerli mi.
 Geçersizde `stored`/`display` boş, `valid: false`, `raw` korunur.
 
@@ -554,3 +609,156 @@ Kaldıraç = hacim ÷ teminat. Teminat ≤ 0 → `null` (sessiz 1 yok). Örnek: 
 ### `tradingMath` — entegrasyon notları
 - Parasal girdiler kuruş integer; float birim kullanan taraf `×100`/`÷100` adapter ekler.
 - BIST-Radar, portföy/pozisyon yönetimi gibi trading projeleri için tasarlanmıştır.
+
+---
+
+## Motor: `unit` (v2.0.0'da eklendi)
+
+Birim çevrimi. Saf, I/O'suz; tüm aritmetik `math` üzerinden. Çevrim, birimin kendi
+kategorisindeki **taban birime** oranı üzerinden yapılır.
+
+**Bağımlılık:** `math` (mul/div/round) + `internal/constants` (ONS_TO_GRAM).
+
+**Kategoriler ve taban birimler**
+
+| Kategori | Taban | Birimler |
+|---|---|---|
+| `length` | metre | `mm` (0.001) · `cm` (0.01) · `m` (1) · `km` (1000) |
+| `mass` | gram | `g` (1) · `kg` (1000) · `ton` (1e6) · `ons` (31.1034768, troy) |
+| `area` | metrekare | `m2` (1) · `dönüm` (1000) · `dekar` (1000) · `hektar` (10000) · `km2` (1e6) |
+| `data` | bayt | `B` (1) · `KB` (1024) · `MB` (1024²) · `GB` (1024³) · `TB` (1024⁴) |
+
+**⚠️ Kapsam sınırları (bilinçli kararlar):**
+- `dönüm` = `dekar` = **1000 m²** (metrik / Tapu-Kadastro standardı). Tarihî
+  "eski dönüm" (919,3 m²) **kapsam dışıdır**; gerekirse ayrı bir birim adıyla eklenir.
+- Veri birimleri **ikili tabandadır** (1 KB = 1024 B). Ondalık taban (1 kB = 1000 B)
+  kapsam dışıdır; gerekirse ayrı birim adlarıyla eklenir.
+
+### `convert(value: number, from: Unit, to: Unit): number | null`
+Aynı kategorideki birimler arasında çevirir. **Kategori uyuşmazlığında, tanınmayan
+birimde ve geçersiz sayıda `null`** (sessiz 0 yok).
+Örnekler: `convert(1,'km','m') → 1000` · `convert(5000,'m2','dönüm') → 5`
+· `convert(1,'ons','g') → 31.1034768` · `convert(5242880,'B','MB') → 5`
+· `convert(1,'kg','m') → null` · `convert(NaN,'m','km') → null`.
+**Not:** `0` ve negatif değerler geçerlidir (gerçek değerdir, hata değil):
+`convert(-2,'km','m') → -2000`.
+
+### `categoryOf(u: Unit): UnitCategory | null`
+Birimin kategorisini döner; tanınmayan birimde `null`.
+
+### `dataSize(bytes: number | null | undefined, opts?): string`
+Bayt değerini okunur metne çevirir. Ölçeği kendisi seçer, ondalık ayraç Türkçe
+virgüldür, gereksiz `,0` kuyruğu atılır. `opts.digits` varsayılan 1.
+**Negatif / geçersiz / null girdide `'—'`** (biçimlendirme sözleşmesi).
+Örnek: `dataSize(5242880) → "5 MB"` · `dataSize(1536) → "1,5 KB"`
+· `dataSize(512) → "512 B"` · `dataSize(0) → "0 B"` · `dataSize(-1) → "—"`.
+
+### `ONS_TO_GRAM`
+`31.1034768`. `gold.ONS_TO_GRAM` ve `silver.ONS_TO_GRAM` ile **aynı** tek kaynaktan
+(`internal/constants`) gelir; üçü her zaman eşittir (test ile çivilenmiştir).
+
+---
+
+## `text.phone` — BTK sınıflandırması (v2.0.0'da genişledi)
+
+`phone(raw)` artık `PhoneResult` döner: `NormalizeResult` + `kind`.
+
+**BTK Milli Numaralandırma Planı, ilk hane** (kaynak: https://www.btk.gov.tr/cografi-numaralar):
+
+| İlk hane | Anlam | `kind` |
+|---|---|---|
+| 1 | kısa numara | — (geçersiz) |
+| 2, 3, 4 | coğrafi numara / sabit hat | `'landline'` |
+| 5 | mobil | `'mobile'` |
+| 8, 9 | coğrafi olmayan (850, 800) | `'special'` |
+| 0, 6, 7 | tahsissiz | — (geçersiz) |
+
+Kabul edilen girdi biçimleri: 10 hane · 11 hane `0` önekli · 12 hane `90` önekli.
+Geçersizde `{ stored:'', display:'', valid:false, kind:null }`.
+
+- `phone('02123334455')` → `{ stored:'+902123334455', display:'+90 (212) 333 44 55', kind:'landline' }`
+- `phone('5321234567')` → `kind:'mobile'` (**cep davranışı v1.1.0 ile birebir aynıdır**)
+- `phone('08503334455')` → `kind:'special'`
+- `whatsapp(...)` yalnız `kind === 'mobile'` için link üretir; sabit hat/850'de `''`.
+- `mask.phone(...)` artık cep dışındaki geçerli numaraları da maskeler:
+  `+90 2** *** ** 55`. Cep için çıktı değişmemiştir (`+90 5** *** ** 67`).
+
+**⚠️ Açık nokta:** 7 haneli `444XXXX` kurumsal servis numaraları **kapsam dışıdır**
+(bugün geçersiz döner). BTK'nın bu aralığa dair kuralı doğrulanmadığı için
+tahminle uygulanmamıştır.
+
+---
+
+## Motor: `period` (v2.0.0'da eklendi)
+
+Dönem / periyot aritmetiği. `date` motoru **biçimlendirir ve fark hesaplar**;
+`period` **tarih üretir**. Bağımlılık tek yönlüdür: `period` → `date`.
+
+Girdi ve çıktı ISO tarih metnidir (`"YYYY-AA-GG"`). Saat kısmı taşıyan girdiler
+`date` kurallarına göre Europe/Istanbul gününe indirgenir.
+**Geçersiz veya var olmayan takvim gününde tüm fonksiyonlar `null` döner.**
+
+### `addDays(iso, days): string | null`
+Gün ekler/çıkarır. `days` tam sayı olmalıdır.
+`addDays('2026-08-31', 1) → '2026-09-01'` · `addDays('2024-02-28', 1) → '2024-02-29'`
+· `addDays('2026-03-01', -1) → '2026-02-28'` · `addDays('2026-08-24', 1.5) → null`.
+
+### `addMonths(iso, months): string | null`
+Ay ekler/çıkarır. **Hedef ayda gün yoksa ay sonuna kırpar** (takvim aritmetiğinin
+standart davranışı, "clamp"):
+`addMonths('2026-01-31', 1) → '2026-02-28'` · `addMonths('2024-01-31', 1) → '2024-02-29'`
+· `addMonths('2026-03-31', 1) → '2026-04-30'` · `addMonths('2026-01-15', -13) → '2024-12-15'`.
+
+### `startOfMonth(iso)` · `endOfMonth(iso)`
+`startOfMonth('2026-08-24') → '2026-08-01'` · `endOfMonth('2026-02-10') → '2026-02-28'`
+· `endOfMonth('2024-02-10') → '2024-02-29'`.
+
+### `quarterOf(iso): 1|2|3|4 | null` · `quarterRange(year, quarter): {start, end} | null`
+Takvim çeyreği. `quarterOf('2026-08-24') → 3`
+· `quarterRange(2026, 3) → { start: '2026-07-01', end: '2026-09-30' }`
+· `quarterRange(2026, 5) → null`.
+
+### `monthsBetween(isoA, isoB): number | null`
+**Tam** ay sayısı; gün eşiği dolmadıysa ay sayılmaz.
+`monthsBetween('2026-01-15', '2026-02-14') → 0` · `('2026-01-15', '2026-02-15') → 1`
+· ters yönde negatif: `('2026-04-15', '2026-01-15') → -3`.
+
+### `isBetween(iso, startIso, endIso): boolean | null`
+Kapalı aralık (**uçlar dâhil**). `isBetween('2026-08-31', '2026-08-01', '2026-08-31') → true`.
+
+---
+
+## Motor: `collate` (v2.0.0'da eklendi)
+
+Türkçe alfabetik sıralama. **`Intl.Collator` KULLANILMAZ** (ABACUS-SPEC §4.2);
+sıra sabit bir alfabe tablosundan üretilir, sonuç her ortamda/sürümde aynıdır.
+
+**Bağımlılık:** yalnız `internal/tr-case`. **`math`'e bağlı DEĞİLDİR — decimal.js taşımaz**
+(tek başına paketlendiğinde ~1,4 KB).
+
+**Alfabe sırası:** `a b c ç d e f g ğ h ı i j k l m n o ö p r s ş t u ü v y z` (29 harf).
+
+**Bilinçli kararlar:**
+- Alfabede bulunmayan **q, w, x** harfleri `z`'den SONRA sıralanır.
+- **Şapkalı harfler** (â, î, û) şapkasız karşılıklarıyla **aynı** sırada kabul edilir
+  (`compare('kâr','kar') → 0`).
+- Sıra sınıfları: **noktalama < rakam < harf**.
+- Büyük/küçük harf sırayı etkilemez (`compare('Çan','çan') → 0`).
+
+> ⚠️ `collate.key` **SIRALAMA** anahtarıdır, **ARAMA** anahtarı değildir.
+> Sıralama Türkçe harfleri ayrı harf olarak korur (ç ≠ c); arama ise onları
+> katlamak ister. İkisi karıştırılmamalıdır.
+
+### `key(value): string`
+Sabit genişlikte kod üretir; düz `<` / `>` karşılaştırması Türkçe sırayı verir.
+Boş/null/undefined girdide `''`.
+
+### `compare(a, b): number`
+`-1 | 0 | 1`. `Array.prototype.sort` ile doğrudan kullanılabilir.
+`compare('can','çan') → -1` · `compare('ısı','iyi') → -1`.
+
+### `sortBy(items, selector?): T[]`
+Yeni dizi döner, **girdiyi değiştirmez**. Anahtar eleman başına bir kez hesaplanır.
+Eşit anahtarlarda özgün sıra korunur (`Array.sort` ES2019'dan beri kararlıdır).
+`sortBy(['zam','çam','dal']) → ['çam','dal','zam']`
+(ham `Array.sort()` aynı girdide `['dal','zam','çam']` verir — motorun varlık sebebi).
