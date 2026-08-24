@@ -1,0 +1,265 @@
+import { describe, expect, it } from 'vitest';
+import {
+  collate,
+  currency,
+  date,
+  gold,
+  mask,
+  math,
+  money,
+  period,
+  silver,
+  text,
+  tradingMath,
+  unit,
+  validate,
+} from './index';
+
+/**
+ * BELGE İDDİALARI TESTİ.
+ *
+ * README.md, INSTALL.md, ABACUS-SPEC.md ve SNN-ABACUS-CORE-MOTOR-DETAYLARI.md
+ * içindeki her kod örneği burada birebir doğrulanır.
+ *
+ * Amaç: denetim raporundaki B7 hatasının tekrarını önlemek — belgelerin
+ * yanlış çıktı iddia etmesi. Bir belge örneği değişirse bu test kırmızı verir.
+ */
+
+describe('BELGE İDDİALARI — README.md hızlı başlangıç', () => {
+  it('kod bloğundaki her satır', () => {
+    expect(money.format(150000)).toBe('₺1.500');
+    expect(math.add(10000, 5000)).toBe(15000);
+    expect(tradingMath.calculateThresholdDays(0.1, 35)).toBe(116);
+    expect(gold.gramGoldPrice(2650, 34.2, 22)).toBe(266906);
+    expect(gold.ziynetPrice('quarter', 2650, 34.2)).toBe(468153);
+    expect(silver.gramSilverPrice(31, 34.2)).toBe(3405);
+    expect(unit.convert(5000, 'm2', 'dönüm')).toBe(5);
+    expect(unit.dataSize(5242880)).toBe('5 MB');
+    expect(period.addMonths('2026-01-31', 1)).toBe('2026-02-28');
+    expect(period.quarterRange(2026, 3)).toEqual({ start: '2026-07-01', end: '2026-09-30' });
+    expect(collate.sortBy(['zam', 'çam', 'dal'])).toEqual(['çam', 'dal', 'zam']);
+  });
+});
+
+describe('BELGE İDDİALARI — INSTALL.md §3 kullanım örneği', () => {
+  it('kod bloğundaki her satır', () => {
+    expect(money.format(150000)).toBe('₺1.500');
+    expect(math.add(10000, 5000)).toBe(15000);
+    expect(tradingMath.calculateThresholdDays(0.1, 35)).toBe(116);
+    expect(date.format('2026-08-16')).toBe('16.08.2026');
+    expect(date.format('2026-08-16', 'long')).toBe('16 Ağustos 2026');
+    expect(date.format('2026-08-24T21:30:00Z', 'dateTime')).toBe('25.08.2026 00:30');
+    expect(mask.vkn('1234567890')).toBe('123****890');
+    expect(unit.convert(5000, 'm2', 'dönüm')).toBe(5);
+    expect(unit.dataSize(5242880)).toBe('5 MB');
+    expect(period.addMonths('2026-01-31', 1)).toBe('2026-02-28');
+    expect(collate.sortBy(['zam', 'çam', 'dal'])).toEqual(['çam', 'dal', 'zam']);
+  });
+
+  it('§3 uyarısı: Date nesnesi çalışmaz', () => {
+    expect(date.format(new Date() as never)).toBe('—');
+  });
+});
+
+describe('BELGE İDDİALARI — ABACUS-SPEC.md', () => {
+  it('§1 çağrı deseni örnekleri', () => {
+    expect(money.format(2323223)).toBe('₺23.232');
+    expect(gold.gramGoldPrice(2650, 34.2, 22)).toBe(266906);
+    expect(silver.gramSilverPrice(31, 34.2)).toBe(3405);
+  });
+
+  it('§2.1 dönüş sözleşmesi tablosunun her satırı', () => {
+    // hesap -> null
+    expect(math.div(1, 0)).toBeNull();
+    expect(currency.convert(100, 0)).toBeNull();
+    expect(gold.gramGoldPrice(2400, 34, 99)).toBeNull();
+    expect(unit.convert(1, 'kg', 'm')).toBeNull();
+    expect(money.parseNumber('abc')).toBeNull();
+    // biçimlendirme -> '—'
+    expect(money.format(null)).toBe('—');
+    expect(money.toWords(NaN)).toBe('—');
+    expect(money.fmtDecimalGrouped(null)).toBe('—');
+    expect(date.format(null)).toBe('—');
+    expect(mask.vkn('abc')).toBe('—');
+    expect(unit.dataSize(-1)).toBe('—');
+    // doğrulama -> false
+    expect(validate.vkn('abc')).toBe(false);
+    expect(validate.tckn('11111111111')).toBe(false);
+    expect(validate.iban('')).toBe(false);
+    expect(validate.ikn('abc')).toBe(false);
+    expect(validate.email(' ')).toBe(false);
+    // normalizasyon -> { valid: false }
+    expect(text.phone('abc').valid).toBe(false);
+    expect(text.email('abc').valid).toBe(false);
+    // metin dönüşümü -> ''
+    expect(text.title('')).toBe('');
+    expect(text.join([])).toBe('');
+    expect(text.numberToWords(-5)).toBe('');
+  });
+
+  it('§2.1 ilkel katman istisnası: NaN yayılır, 0 olmaz', () => {
+    expect(math.add(NaN, 1)).toBeNaN();
+    expect(math.mul(NaN, 2)).toBeNaN();
+    expect(math.add(NaN, 1)).not.toBe(0);
+  });
+
+  it('§3 ONS_TO_GRAM üç motorda tek kaynaktan', () => {
+    expect(gold.ONS_TO_GRAM).toBe(31.1034768);
+    expect(silver.ONS_TO_GRAM).toBe(gold.ONS_TO_GRAM);
+    expect(unit.ONS_TO_GRAM).toBe(gold.ONS_TO_GRAM);
+  });
+});
+
+describe('BELGE İDDİALARI — MOTOR-DETAYLARI: money', () => {
+  it('parseNumber (B5 sonrası)', () => {
+    expect(money.parseNumber('23.232,50')).toBe(23232.5);
+    expect(money.parseNumber('1.234,56')).toBe(1234.56);
+    expect(money.parseNumber('-1.234,56')).toBe(-1234.56);
+    expect(money.parseNumber('0')).toBe(0);
+    expect(money.parseNumber('abc')).toBeNull();
+    expect(money.parseNumber('')).toBeNull();
+    expect(money.parseNumber('-')).toBeNull();
+  });
+
+  it('fmtDecimalGrouped (B5 sonrası)', () => {
+    expect(money.fmtDecimalGrouped(47.89, 4)).toBe('47,8900');
+    expect(money.fmtDecimalGrouped(34.5, 4)).toBe('34,5000');
+    expect(money.fmtDecimalGrouped(70000.5, 2)).toBe('70.000,50');
+    expect(money.fmtDecimalGrouped(0)).toBe('0');
+    expect(money.fmtDecimalGrouped(null)).toBe('—');
+    expect(money.fmtDecimalGrouped(NaN)).toBe('—');
+  });
+
+  it('compact ve percent', () => {
+    expect(money.compact(123456789)).toBe('₺1,23M');
+    expect(money.compact(-123456789)).toBe('-₺1,23M');
+    expect(money.percent(12.345)).toBe('%12,3');
+    expect(money.percent(null)).toBe('—');
+  });
+
+  it('toWords (B2/B4 sonrası)', () => {
+    expect(money.toWords(123456)).toBe('Yalnız BinİkiYüzOtuzDörtLiraElliAltıKuruş');
+    expect(money.toWords(-15000)).toBe('Yalnız EksiYüzElliTürkLirası');
+    expect(money.toWords(-15000, { spaced: true })).toBe('Yalnız Eksi Yüz Elli Türk Lirası');
+    expect(money.toWords(0)).toBe('Yalnız SıfırTürkLirası');
+  });
+});
+
+describe('BELGE İDDİALARI — MOTOR-DETAYLARI: date', () => {
+  it('format stilleri ve takvim', () => {
+    expect(date.format('2026-01-05')).toBe('05.01.2026');
+    expect(date.format('2026-08-15', 'long')).toBe('15 Ağustos 2026');
+    expect(date.format('2026-12-01', 'long')).toBe('1 Aralık 2026');
+    expect(date.format('2026-08-15', 'dayMonth')).toBe('15 Ağu.');
+    expect(date.format('2026-08-15', 'monthYear')).toBe('Ağustos 2026');
+    expect(date.format('2026-08-15', 'period')).toBe('08/2026');
+    expect(date.format('2026-08-15T21:30:00Z')).toBe('16.08.2026');
+    expect(date.format('2024-02-30')).toBe('—');
+    expect(date.format('2026-13-45')).toBe('—');
+    expect(date.format('2026-08-13', 'dayMonthWeekday')).toBe('13 Ağustos Per.');
+  });
+
+  it('monthName ve dayName', () => {
+    expect(date.monthName(8)).toBe('Ağustos');
+    expect(date.monthName(8, 'short')).toBe('Ağu');
+    expect(date.monthName(0)).toBe('—');
+    expect(date.dayName('2026-08-15')).toBe('Cts');
+    expect(date.dayName('2026-08-15', 'long')).toBe('Cumartesi');
+    expect(date.dayName('2026-08-17')).toBe('Pzt');
+    expect(date.dayName('invalid')).toBe('—');
+  });
+
+  it('daysBetween ve relative', () => {
+    expect(date.daysBetween('2026-08-10', '2026-08-15')).toBe(5);
+    expect(date.daysBetween('2026-01-01', '2026-12-31')).toBe(364);
+    expect(date.relative('2026-08-12', '2026-08-15')).toBe('3 gün önce');
+    expect(date.relative('2026-08-18', '2026-08-15')).toBe('3 gün sonra');
+  });
+});
+
+describe('BELGE İDDİALARI — MOTOR-DETAYLARI: period', () => {
+  it('belgedeki tüm örnekler', () => {
+    expect(period.addDays('2026-08-31', 1)).toBe('2026-09-01');
+    expect(period.addDays('2024-02-28', 1)).toBe('2024-02-29');
+    expect(period.addDays('2026-03-01', -1)).toBe('2026-02-28');
+    expect(period.addDays('2026-08-24', 1.5)).toBeNull();
+    expect(period.addMonths('2026-01-31', 1)).toBe('2026-02-28');
+    expect(period.addMonths('2024-01-31', 1)).toBe('2024-02-29');
+    expect(period.addMonths('2026-03-31', 1)).toBe('2026-04-30');
+    expect(period.addMonths('2026-01-15', -13)).toBe('2024-12-15');
+    expect(period.startOfMonth('2026-08-24')).toBe('2026-08-01');
+    expect(period.endOfMonth('2026-02-10')).toBe('2026-02-28');
+    expect(period.endOfMonth('2024-02-10')).toBe('2024-02-29');
+    expect(period.quarterOf('2026-08-24')).toBe(3);
+    expect(period.quarterRange(2026, 3)).toEqual({ start: '2026-07-01', end: '2026-09-30' });
+    expect(period.quarterRange(2026, 5)).toBeNull();
+    expect(period.monthsBetween('2026-01-15', '2026-02-14')).toBe(0);
+    expect(period.monthsBetween('2026-01-15', '2026-02-15')).toBe(1);
+    expect(period.monthsBetween('2026-04-15', '2026-01-15')).toBe(-3);
+    expect(period.isBetween('2026-08-31', '2026-08-01', '2026-08-31')).toBe(true);
+  });
+});
+
+describe('BELGE İDDİALARI — MOTOR-DETAYLARI: collate', () => {
+  it('belgedeki tüm örnekler', () => {
+    expect(collate.compare('can', 'çan')).toBe(-1);
+    expect(collate.compare('ısı', 'iyi')).toBe(-1);
+    expect(collate.compare('kâr', 'kar')).toBe(0);
+    expect(collate.compare('Çan', 'çan')).toBe(0);
+    expect(collate.key('')).toBe('');
+    expect(collate.sortBy(['zam', 'çam', 'dal'])).toEqual(['çam', 'dal', 'zam']);
+    // belgedeki "ham sort yanlış verir" iddiası
+    expect([...['zam', 'çam', 'dal']].sort()).toEqual(['dal', 'zam', 'çam']);
+  });
+});
+
+describe('BELGE İDDİALARI — MOTOR-DETAYLARI: unit / silver / gold', () => {
+  it('unit örnekleri', () => {
+    expect(unit.convert(1, 'km', 'm')).toBe(1000);
+    expect(unit.convert(1, 'ons', 'g')).toBe(31.1034768);
+    expect(unit.convert(5000, 'm2', 'dönüm')).toBe(5);
+    expect(unit.convert(5242880, 'B', 'MB')).toBe(5);
+    expect(unit.convert(NaN, 'm', 'km')).toBeNull();
+    expect(unit.convert(-2, 'km', 'm')).toBe(-2000);
+    expect(unit.dataSize(1536)).toBe('1,5 KB');
+    expect(unit.dataSize(512)).toBe('512 B');
+    expect(unit.dataSize(0)).toBe('0 B');
+  });
+
+  it('silver / gold örnekleri', () => {
+    expect(silver.gramSilverPrice(31, 34.2, 999)).toBe(3405);
+    expect(silver.gramSilverPrice(31, 34.2, 925)).toBe(3153);
+    expect(silver.gramSilverPrice(31, 34.2, 800)).toBe(2727);
+    expect(silver.gramSilverPrice(31, 34.2, 1000)).toBe(3409);
+    expect(silver.gramSilverPrice(31, 34.2, 700)).toBeNull();
+  });
+});
+
+describe('BELGE İDDİALARI — MOTOR-DETAYLARI: text / mask', () => {
+  it('harf dönüşümü ve join', () => {
+    expect(text.lower('İSTANBUL')).toBe('istanbul');
+    expect(text.lower('IŞIK')).toBe('ışık');
+    expect(text.upper('iğne')).toBe('İĞNE');
+    expect(text.upper('ışık')).toBe('IŞIK');
+    expect(text.title('ahmet yılmaz')).toBe('Ahmet Yılmaz');
+    expect(text.title('iSTANBUL')).toBe('İstanbul');
+    expect(text.join(['Ali', 'Veli'])).toBe('Ali ve Veli');
+    expect(text.join(['Ali', 'Veli', 'Can'])).toBe('Ali, Veli ve Can');
+  });
+
+  it('numberToWords ölçek tavanı', () => {
+    expect(text.numberToWords(1e15)).toBe('BirKatrilyon');
+    expect(text.numberToWords(1e16)).toBe('');
+  });
+
+  it('phone BTK tablosu ve mask', () => {
+    expect(text.phone('02123334455').kind).toBe('landline');
+    expect(text.phone('5321234567').kind).toBe('mobile');
+    expect(text.phone('08503334455').kind).toBe('special');
+    expect(text.phone('01123334455').valid).toBe(false);
+    expect(text.whatsapp('02123334455')).toBe('');
+    expect(text.whatsapp('5321234567')).toBe('https://wa.me/905321234567');
+    expect(mask.phone('05321234567')).toBe('+90 5** *** ** 67');
+    expect(mask.phone('02123334455')).toBe('+90 2** *** ** 55');
+  });
+});
