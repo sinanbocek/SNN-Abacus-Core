@@ -1,8 +1,9 @@
 {
   "name": "@snn/abacus-core",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "description": "ABACUS Engine — Finansal ve Kurumsal Hesaplama & Biçimlendirme Referans Çekirdeği (SSOT)",
   "type": "module",
+  "sideEffects": false,
   "main": "./src/abacus/index.ts",
   "module": "./src/abacus/index.ts",
   "types": "./src/abacus/index.ts",
@@ -16,10 +17,15 @@
   "files": [
     "src",
     "README.md",
-    "INSTALL.md"
+    "INSTALL.md",
+    "ABACUS-SPEC.md",
+    "AI-RULES.md",
+    "SNN-ABACUS-CORE-MOTOR-DETAYLARI.md",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "test": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage",
     "lint": "eslint ."
   },
   "dependencies": {
@@ -28,6 +34,7 @@
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^8.67.0",
     "@typescript-eslint/parser": "^8.67.0",
+    "@vitest/coverage-v8": "^4.1.11",
     "eslint": "^10.8.1",
     "typescript": "^5.6.3",
     "vitest": "^4.1.10"
