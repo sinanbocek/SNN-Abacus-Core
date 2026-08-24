@@ -8,6 +8,9 @@ export * as mask from './mask';
 export * as tradingMath from './trading-math';
 export * as gold from './gold';
 export * as silver from './silver';
+export * as unit from './unit';
+export * as period from './period';
+export * as collate from './collate';
 
 
 

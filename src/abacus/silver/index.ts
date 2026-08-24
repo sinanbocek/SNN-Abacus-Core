@@ -1,4 +1,5 @@
 import { div, mul, round } from '../math';
+import { ONS_TO_GRAM } from '../internal/constants';
 
 /**
  * ABACUS Gümüş Motoru (ABACUS-SPEC & Yol-2 B-Otorite Mantığı).
@@ -7,7 +8,8 @@ import { div, mul, round } from '../math';
  * Tüm çıktı değerleri tamsayı kuruş (minor unit) cinsindendir.
  */
 
-export const ONS_TO_GRAM = 31.1034768;
+/** 1 troy ons = 31.1034768 gram. Tek kaynak: internal/constants. */
+export { ONS_TO_GRAM };
 
 export const SILVER_PURITY: Record<number, number> = {
   999: 0.999,
