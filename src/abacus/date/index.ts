@@ -1,6 +1,16 @@
 import { abs, div, round, sub } from '../math';
 
-export type DateFormatStyle = 'short' | 'long' | 'dayMonth' | 'monthYear' | 'period';
+export type DateFormatStyle =
+  | 'short'
+  | 'long'
+  | 'dayMonth'
+  | 'monthYear'
+  | 'period'
+  | 'time'
+  | 'dateTime'
+  | 'dayMonthWeekday';
+
+export type NameForm = 'short' | 'long';
 
 const MONTH_NAMES_FULL = [
   'Ocak',
@@ -34,81 +44,200 @@ const MONTH_NAMES_SHORT = [
 
 const DAY_NAMES_SHORT = ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cts'];
 
-/** ISO tarih stringini güvenle UTC gün sayısına çeviren dahili yardımcı */
-function parseUtcDays(iso: string | null | undefined): number | null {
+const DAY_NAMES_FULL = [
+  'Pazar',
+  'Pazartesi',
+  'Salı',
+  'Çarşamba',
+  'Perşembe',
+  'Cuma',
+  'Cumartesi',
+];
+
+/**
+ * Türkiye sabit saat dilimi farkı: UTC+03:00 (dakika cinsinden).
+ *
+ * UYARI: Türkiye 2016 yılından bu yana kalıcı UTC+3 uygular; yaz saati YOKTUR.
+ * Bu sabit, 2016 öncesi tarihlerde yaz saati dönemleri için yanlış sonuç verir.
+ * Intl / toLocale kullanımı ABACUS-SPEC §4.2 ile yasaklı olduğundan tarihsel
+ * saat dilimi veritabanı çekirdeğe taşınmaz; kapsam bilinçli olarak sınırlıdır.
+ */
+const ISTANBUL_OFFSET_MINUTES = 180;
+
+const MS_PER_DAY = 86400000;
+const MS_PER_MINUTE = 60000;
+
+interface DateParts {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+  hasTime: boolean;
+}
+
+/** Yılın artık yıl olup olmadığını döner (Gregoryen kuralı). */
+function isLeapYear(year: number): boolean {
+  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+}
+
+/** Ayın gerçek gün sayısını döner; ay geçersizse null. */
+function daysInMonth(year: number, month: number): number | null {
+  if (month < 1 || month > 12) return null;
+  if (month === 2) return isLeapYear(year) ? 29 : 28;
+  const thirtyDayMonths = [4, 6, 9, 11];
+  return thirtyDayMonths.includes(month) ? 30 : 31;
+}
+
+/**
+ * ISO metnini ayrıştırır, TAKVİM DOĞRULAMASI yapar ve saat dilimi bilgisi
+ * varsa Europe/Istanbul (UTC+3) karşılığına çevirir.
+ *
+ * - Saat dilimi eki YOKSA değer İstanbul duvar saati kabul edilir, kaydırılmaz.
+ * - Z veya +HH:MM eki VARSA değer İstanbul saatine çevrilir; bu, tarihi de
+ *   ileri veya geri alabilir.
+ *
+ * Geçersiz biçim veya var olmayan takvim gününde (ör. 2024-02-30) null döner.
+ */
+function parseIso(iso: string | null | undefined): DateParts | null {
   if (!iso || typeof iso !== 'string') return null;
-  const datePart = iso.includes('T') ? iso.split('T')[0] : iso;
-  if (!datePart) return null;
 
-  const match = datePart.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (!match || !match[1] || !match[2] || !match[3]) return null;
+  const match = iso.match(
+    /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2}))?\s*(Z|[+-]\d{2}:?\d{2})?)?$/
+  );
+  if (!match) return null;
 
-  const y = Number(match[1]);
-  const m = Number(match[2]);
-  const d = Number(match[3]);
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
 
-  if (m < 1 || m > 12 || d < 1 || d > 31) return null;
+  const maxDay = daysInMonth(year, month);
+  if (maxDay === null || day < 1 || day > maxDay) return null;
 
-  const utcMs = Date.UTC(y, m - 1, d);
-  const daysDiv = div(utcMs, 86400000);
+  const hasTime = match[4] !== undefined && match[5] !== undefined;
+  if (!hasTime) {
+    return { year, month, day, hour: 0, minute: 0, hasTime: false };
+  }
+
+  const hour = Number(match[4]);
+  const minute = Number(match[5]);
+  const second = match[6] !== undefined ? Number(match[6]) : 0;
+  if (hour > 23 || minute > 59 || second > 59) return null;
+
+  const zone = match[7];
+  if (zone === undefined) {
+    return { year, month, day, hour, minute, hasTime: true };
+  }
+
+  const zoneOffsetMinutes = parseZoneOffset(zone);
+  if (zoneOffsetMinutes === null) return null;
+
+  const utcMs = Date.UTC(year, month - 1, day, hour, minute, second);
+  const shiftMinutes = sub(ISTANBUL_OFFSET_MINUTES, zoneOffsetMinutes);
+  const istanbulMs = utcMs + shiftMinutes * MS_PER_MINUTE;
+  const shifted = new Date(istanbulMs);
+
+  return {
+    year: shifted.getUTCFullYear(),
+    month: shifted.getUTCMonth() + 1,
+    day: shifted.getUTCDate(),
+    hour: shifted.getUTCHours(),
+    minute: shifted.getUTCMinutes(),
+    hasTime: true,
+  };
+}
+
+/** Z veya +HH:MM / +HHMM saat dilimi ekini dakikaya çevirir; geçersizse null. */
+function parseZoneOffset(zone: string): number | null {
+  if (zone === 'Z') return 0;
+  const m = zone.match(/^([+-])(\d{2}):?(\d{2})$/);
+  if (!m || !m[1] || !m[2] || !m[3]) return null;
+  const hours = Number(m[2]);
+  const minutes = Number(m[3]);
+  if (hours > 14 || minutes > 59) return null;
+  const total = hours * 60 + minutes;
+  return m[1] === '-' ? -total : total;
+}
+
+/** İki haneye sıfır dolgusu yapar. */
+function pad2(n: number): string {
+  return n < 10 ? `0${n}` : `${n}`;
+}
+
+/** Doğrulanmış tarihi UTC gün sayısına çevirir. */
+function toUtcDays(parts: DateParts): number | null {
+  const utcMs = Date.UTC(parts.year, parts.month - 1, parts.day);
+  const daysDiv = div(utcMs, MS_PER_DAY);
   return daysDiv !== null ? round(daysDiv, 0) : null;
+}
+
+/** Doğrulanmış tarihin hafta günü indeksi (0 = Pazar). */
+function weekdayIndex(parts: DateParts): number | null {
+  const idx = new Date(Date.UTC(parts.year, parts.month - 1, parts.day)).getUTCDay();
+  return Number.isInteger(idx) ? idx : null;
 }
 
 /**
  * ABACUS tarih biçimlendirme motoru (ABACUS-SPEC §3.4).
- * ISO string girdi alır ("2026-08-15" veya "2026-08-15T21:30:00Z").
- * Intl / toLocale kullanılmadan string ayrıştırması ve sabit ay dizileri ile çalışır.
+ * ISO string girdi alır; `Date` nesnesi KABUL ETMEZ.
+ * Intl / toLocale kullanılmadan, sabit ad dizileriyle çalışır.
+ * Geçersiz biçim veya var olmayan takvim gününde '—' döner.
  */
 export function format(iso: string | null | undefined, style: DateFormatStyle = 'short'): string {
-  if (!iso || typeof iso !== 'string') {
-    return '—';
-  }
+  const parts = parseIso(iso);
+  if (parts === null) return '—';
 
-  const datePart = iso.includes('T') ? iso.split('T')[0] : iso;
-  if (!datePart) return '—';
+  const fullMonth = MONTH_NAMES_FULL[parts.month - 1];
+  const shortMonth = MONTH_NAMES_SHORT[parts.month - 1];
+  if (!fullMonth || !shortMonth) return '—';
 
-  const match = datePart.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (!match || !match[1] || !match[2] || !match[3]) {
-    return '—';
-  }
-
-  const yearStr = match[1];
-  const monthStr = match[2];
-  const dayStr = match[3];
-
-  const month = Number(monthStr);
-  const day = Number(dayStr);
-
-  if (month < 1 || month > 12 || day < 1 || day > 31) {
-    return '—';
-  }
-
-  const fullMonth = MONTH_NAMES_FULL[month - 1];
-  const shortMonth = MONTH_NAMES_SHORT[month - 1];
-
-  if (!fullMonth || !shortMonth) {
-    return '—';
-  }
+  const yearStr = `${parts.year}`;
+  const monthStr = pad2(parts.month);
+  const dayStr = pad2(parts.day);
+  const dateShort = `${dayStr}.${monthStr}.${yearStr}`;
 
   switch (style) {
     case 'long':
-      return `${day} ${fullMonth} ${yearStr}`;
+      return `${parts.day} ${fullMonth} ${yearStr}`;
     case 'dayMonth':
-      return `${day} ${shortMonth}.`;
+      return `${parts.day} ${shortMonth}.`;
     case 'monthYear':
       return `${fullMonth} ${yearStr}`;
     case 'period':
       return `${monthStr}/${yearStr}`;
+    case 'time':
+      if (!parts.hasTime) return '—';
+      return `${pad2(parts.hour)}:${pad2(parts.minute)}`;
+    case 'dateTime':
+      if (!parts.hasTime) return '—';
+      return `${dateShort} ${pad2(parts.hour)}:${pad2(parts.minute)}`;
+    case 'dayMonthWeekday': {
+      const wd = weekdayIndex(parts);
+      if (wd === null) return '—';
+      const shortDay = DAY_NAMES_SHORT[wd];
+      if (!shortDay) return '—';
+      return `${parts.day} ${fullMonth} ${shortDay}.`;
+    }
     case 'short':
     default:
-      return `${dayStr}.${monthStr}.${yearStr}`;
+      return dateShort;
   }
+}
+
+/** Ay numarasından (1-12) Türkçe ay adı döner. Geçersiz ayda '—'. */
+export function monthName(month: number, form: NameForm = 'long'): string {
+  if (!Number.isInteger(month) || month < 1 || month > 12) return '—';
+  const name = form === 'short' ? MONTH_NAMES_SHORT[month - 1] : MONTH_NAMES_FULL[month - 1];
+  return name ?? '—';
 }
 
 /** İki ISO tarihi arasındaki gün farkını hesaplar (isoB - isoA) */
 export function daysBetween(isoA: string, isoB: string): number | null {
-  const daysA = parseUtcDays(isoA);
-  const daysB = parseUtcDays(isoB);
+  const a = parseIso(isoA);
+  const b = parseIso(isoB);
+  if (a === null || b === null) return null;
+  const daysA = toUtcDays(a);
+  const daysB = toUtcDays(b);
   if (daysA === null || daysB === null) return null;
   return sub(daysB, daysA);
 }
@@ -135,21 +264,16 @@ export function relative(iso: string, today: string): string {
   return `${diff} gün sonra`;
 }
 
-/** Tarihin Türkçe kısa gün adını döner (Pzt / Sal / Çar / Per / Cum / Cts / Paz) */
-export function dayName(iso: string): string {
-  if (!iso || typeof iso !== 'string') return '—';
-  const datePart = iso.includes('T') ? iso.split('T')[0] : iso;
-  if (!datePart) return '—';
-
-  const match = datePart.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (!match || !match[1] || !match[2] || !match[3]) return '—';
-
-  const y = Number(match[1]);
-  const m = Number(match[2]);
-  const d = Number(match[3]);
-
-  if (m < 1 || m > 12 || d < 1 || d > 31) return '—';
-
-  const dayIndex = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
-  return DAY_NAMES_SHORT[dayIndex] ?? '—';
+/**
+ * Tarihin Türkçe gün adını döner.
+ * Varsayılan kısa biçim (Pzt/Sal/...); `form: 'long'` ile uzun biçim (Pazartesi/...).
+ * Geçersiz veya var olmayan tarihte '—'.
+ */
+export function dayName(iso: string, form: NameForm = 'short'): string {
+  const parts = parseIso(iso);
+  if (parts === null) return '—';
+  const idx = weekdayIndex(parts);
+  if (idx === null) return '—';
+  const name = form === 'long' ? DAY_NAMES_FULL[idx] : DAY_NAMES_SHORT[idx];
+  return name ?? '—';
 }

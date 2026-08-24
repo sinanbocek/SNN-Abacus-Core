@@ -49,10 +49,17 @@ describe('ABACUS mask PII gizleme motoru', () => {
       expect(phone('532 123 45 67')).toBe('+90 5** *** ** 67');
     });
 
-    it('geçersiz cep telefonu numarası için — döner', () => {
+    it('sabit hat ve 850 numaralarını da maskeler (BTK 2/3/4 ve 8/9 aralıkları)', () => {
+      expect(phone('02123334455')).toBe('+90 2** *** ** 55');
+      expect(phone('03124445566')).toBe('+90 3** *** ** 66');
+      expect(phone('08503334455')).toBe('+90 8** *** ** 55');
+    });
+
+    it('geçersiz telefon numarası için — döner', () => {
       expect(phone('123')).toBe('—');
       expect(phone('')).toBe('—');
-      expect(phone('02123456789')).toBe('—');
+      expect(phone('01123334455')).toBe('—'); // 1 = kısa numara aralığı
+      expect(phone('06123334455')).toBe('—'); // 6 = tahsissiz
     });
   });
 });

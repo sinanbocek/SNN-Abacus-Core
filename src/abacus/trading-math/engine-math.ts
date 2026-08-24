@@ -76,8 +76,21 @@ export function computeRiskReward(
   const perUnitLoss = isLong ? sub(priceMinor, stopMinor) : sub(stopMinor, priceMinor);
   const perUnitProfit = isLong ? sub(tpMinor, priceMinor) : sub(priceMinor, tpMinor);
 
-  const risk = max(0, perUnitLoss) ?? 0;
-  const reward = max(0, perUnitProfit) ?? 0;
+  // Sessiz varsayilan (?? 0) yok: max yalnizca hicbir sonlu deger yoksa null
+  // doner; bu durumda hesap yapilamaz ve bunu acikca ele aliyoruz.
+  const riskRaw = max(0, perUnitLoss);
+  const rewardRaw = max(0, perUnitProfit);
+  if (riskRaw === null || rewardRaw === null) {
+    return {
+      potentialLossNative: 0,
+      potentialProfitNative: 0,
+      potentialLossTRY: null,
+      potentialProfitTRY: null,
+      rr: null,
+    };
+  }
+  const risk = riskRaw;
+  const reward = rewardRaw;
 
   const potentialLossNative = stopValid ? mul(mul(risk, qty), mult) : 0;
   const potentialProfitNative = tpValid ? mul(mul(reward, qty), mult) : 0;

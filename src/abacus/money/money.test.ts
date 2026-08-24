@@ -129,12 +129,15 @@ describe('ABACUS money.toWords motoru', () => {
   });
 
   describe('negatif tutar davranışı', () => {
-    it('-15000 kuruş -> -Yalnız YüzElliTürkLirası', () => {
-      expect(toWords(-15000)).toBe('-Yalnız YüzElliTürkLirası');
+    it('-15000 kuruş -> Yalnız EksiYüzElliTürkLirası', () => {
+      // KIRICI DÜZELTME (v2.0.0 / rapor B4): v1.1.0 '-' işaretini "Yalnız"ın ÖNÜNE
+      // koyuyordu ("-Yalnız ..."), bu Türkçede geçersizdir. Artık "Eksi" ibaresi
+      // "Yalnız"dan sonra, tutarın önüne gelir.
+      expect(toWords(-15000)).toBe('Yalnız EksiYüzElliTürkLirası');
     });
 
-    it('-15000 kuruş (spaced) -> -Yalnız Yüz Elli Türk Lirası', () => {
-      expect(toWords(-15000, { spaced: true })).toBe('-Yalnız Yüz Elli Türk Lirası');
+    it('-15000 kuruş (spaced) -> Yalnız Eksi Yüz Elli Türk Lirası', () => {
+      expect(toWords(-15000, { spaced: true })).toBe('Yalnız Eksi Yüz Elli Türk Lirası');
     });
   });
 });

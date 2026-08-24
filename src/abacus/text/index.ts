@@ -1,6 +1,7 @@
 import { div, floor, mod } from '../math';
-import { format as formatMoney } from '../money';
-import { email as validateEmail } from '../validate';
+import { formatMoney } from '../internal/money-format';
+import { isEmailShaped } from '../internal/patterns';
+import { toAsciiLower as leafAsciiLower, toTrLower as leafTrLower, toTrUpper } from '../internal/tr-case';
 
 export interface NumberToWordsOptions {
   spaced?: boolean;
@@ -24,40 +25,37 @@ export interface NormalizeResult {
   valid: boolean;
 }
 
+/**
+ * Telefon numarası sınıfı (BTK Milli Numaralandırma Planı, ilk hane):
+ *  - 'mobile'   : 5 ile başlar (cep telefonu)
+ *  - 'landline' : 2, 3 veya 4 ile başlar (coğrafi numara / il alan kodu)
+ *  - 'special'  : 8 veya 9 ile başlar (coğrafi olmayan; 850, 800 vb.)
+ * Kaynak: https://www.btk.gov.tr/cografi-numaralar
+ */
+export type PhoneKind = 'mobile' | 'landline' | 'special';
+
+export interface PhoneResult extends NormalizeResult {
+  /** Geçerli numaralarda sınıf; geçersizde null. */
+  kind: PhoneKind | null;
+}
+
 const ONES = ['', 'Bir', 'İki', 'Üç', 'Dört', 'Beş', 'Altı', 'Yedi', 'Sekiz', 'Dokuz'];
 const TENS = ['', 'On', 'Yirmi', 'Otuz', 'Kırk', 'Elli', 'Altmış', 'Yetmiş', 'Seksen', 'Doksan'];
-const SCALES = ['', 'Bin', 'Milyon', 'Milyar', 'Trilyon'];
+/**
+ * Basamak ölçekleri (her adım 1000 kat).
+ * Tavan Katrilyon'dur (10^15). Daha yukarısı JavaScript'in güvenli tam sayı
+ * sınırının (Number.MAX_SAFE_INTEGER ~ 9.007 x 10^15) ötesinde kaldığı için
+ * eklenmemiştir: orada sayının kendisi zaten kesin değildir, yazıya dökmek
+ * yanlış bir kesinlik izlenimi verir.
+ */
+const SCALES = ['', 'Bin', 'Milyon', 'Milyar', 'Trilyon', 'Katrilyon'];
 
 const TR_VOWELS = ['a', 'e', 'ı', 'i', 'o', 'ö', 'u', 'ü'];
 const BACK_VOWELS = ['a', 'ı', 'o', 'u'];
 const ROUNDED_VOWELS = ['o', 'ö', 'u', 'ü'];
 const HARD_CONSONANTS = ['f', 's', 't', 'k', 'ç', 'ş', 'h', 'p'];
 
-const TR_UPPER_TO_LOWER_MAP: Record<string, string> = {
-  'İ': 'i',
-  'I': 'ı',
-  'Ç': 'ç',
-  'Ğ': 'ğ',
-  'Ö': 'ö',
-  'Ş': 'ş',
-  'Ü': 'ü',
-  'Â': 'â',
-  'Î': 'î',
-  'Û': 'û',
-};
 
-const TR_LOWER_TO_UPPER_MAP: Record<string, string> = {
-  'i': 'İ',
-  'ı': 'I',
-  'ç': 'Ç',
-  'ğ': 'Ğ',
-  'ö': 'Ö',
-  'ş': 'Ş',
-  'ü': 'Ü',
-  'â': 'Â',
-  'î': 'Î',
-  'û': 'Û',
-};
 
 const LOWERCASE_EXCEPTIONS = new Set(['ve', 'ile', 'veya', 'ya', 'da', 'de']);
 const PRESERVED_ABBREVIATIONS = new Set(['TYC', 'A.Ş.', 'Ltd.Şti.', 'San.', 'Tic.']);
@@ -97,43 +95,15 @@ const SINGLE_WORD_COMPANY_MAP: Record<string, string> = {
  * ASCII harf küçültme yardımcısı (E-posta ve Web normalizasyonu için).
  * 'I' harfini Türkçe 'ı' yerine ASCII 'i' yapar.
  */
-export function toAsciiLower(str: string): string {
-  if (!str) return '';
-  let res = '';
-  for (let i = 0; i < str.length; i++) {
-    const ch = str[i];
-    if (!ch) continue;
-    if (ch >= 'A' && ch <= 'Z') {
-      res += String.fromCharCode(ch.charCodeAt(0) + 32);
-    } else {
-      res += ch;
-    }
-  }
-  return res;
-}
+export const toAsciiLower = leafAsciiLower;
+
 
 /**
  * Türkçe harf küçültme yardımcısı (Intl / ham toLowerCase kullanılmaz).
  * Harita öncelikli eşleme yapar; 'İ' -> 'i' ve 'I' -> 'ı' dönüşümlerinin ASCII dalına düşmesini engeller.
  */
-export function toTrLower(str: string): string {
-  if (!str) return '';
-  let res = '';
-  for (let i = 0; i < str.length; i++) {
-    const ch = str[i];
-    if (!ch) continue;
+export const toTrLower = leafTrLower;
 
-    const mapped = TR_UPPER_TO_LOWER_MAP[ch];
-    if (mapped) {
-      res += mapped;
-    } else if (ch >= 'A' && ch <= 'Z') {
-      res += String.fromCharCode(ch.charCodeAt(0) + 32);
-    } else {
-      res += ch;
-    }
-  }
-  return res;
-}
 
 /** Türkçe harf küçültme motoru (toTrLower takma adı, ABACUS-SPEC §3.5-c) */
 export const lower = toTrLower;
@@ -142,24 +112,8 @@ export const lower = toTrLower;
  * Türkçe harf büyütme motoru (ABACUS-SPEC §3.5-c).
  * i->İ, ı->I dönüşümlerini özel harita ile yapar (ham toUpperCase kullanılmaz).
  */
-export function upper(str: string): string {
-  if (!str) return '';
-  let res = '';
-  for (let i = 0; i < str.length; i++) {
-    const ch = str[i];
-    if (!ch) continue;
+export const upper = toTrUpper;
 
-    const mapped = TR_LOWER_TO_UPPER_MAP[ch];
-    if (mapped) {
-      res += mapped;
-    } else if (ch >= 'a' && ch <= 'z') {
-      res += String.fromCharCode(ch.charCodeAt(0) - 32);
-    } else {
-      res += ch;
-    }
-  }
-  return res;
-}
 
 /**
  * Türkçe başlık harf biçimlendirme motoru (ABACUS-SPEC §3.5-c).
@@ -217,9 +171,21 @@ export function join(items: string[]): string {
   return `${previousItems.join(', ')} ve ${lastItem}`;
 }
 
-/** Türkiye cep telefonu normalizasyonu (ABACUS-SPEC §3.5-e) */
-export function phone(raw: string): NormalizeResult {
-  if (!raw) return { stored: '', display: '', raw: raw ?? '', valid: false };
+/**
+ * Türkiye telefon numarası normalizasyonu (ABACUS-SPEC §3.5-e).
+ *
+ * BTK Milli Numaralandırma Planı'nın ilk-hane sınıflandırmasını uygular:
+ *   1        -> kısa numara (desteklenmez, geçersiz)
+ *   2, 3, 4  -> coğrafi numara / sabit hat  -> kind: 'landline'
+ *   5        -> mobil                        -> kind: 'mobile'
+ *   8, 9     -> coğrafi olmayan (850/800)    -> kind: 'special'
+ * Kaynak: https://www.btk.gov.tr/cografi-numaralar
+ *
+ * Kabul edilen girdi biçimleri: 10 hane, 11 hane 0 önekli, 12 hane 90 önekli.
+ * Ayraç / boşluk / parantez serbesttir.
+ */
+export function phone(raw: string): PhoneResult {
+  if (!raw) return { stored: '', display: '', raw: raw ?? '', valid: false, kind: null };
 
   let digits = '';
   for (let i = 0; i < raw.length; i++) {
@@ -230,27 +196,38 @@ export function phone(raw: string): NormalizeResult {
   }
 
   let core = '';
-  if (digits.length === 12 && digits.startsWith('905')) {
+  if (digits.length === 12 && digits.startsWith('90')) {
     core = digits.slice(2);
-  } else if (digits.length === 11 && digits.startsWith('05')) {
+  } else if (digits.length === 11 && digits.startsWith('0')) {
     core = digits.slice(1);
-  } else if (digits.length === 10 && digits.startsWith('5')) {
+  } else if (digits.length === 10) {
     core = digits;
   }
 
-  if (core.length === 10 && core.startsWith('5')) {
-    const stored = `+90${core}`;
-    const display = `+90 (${core.slice(0, 3)}) ${core.slice(3, 6)} ${core.slice(6, 8)} ${core.slice(8, 10)}`;
-    return { stored, display, raw, valid: true };
+  const kind = phoneKindOf(core);
+  if (kind === null) {
+    return { stored: '', display: '', raw, valid: false, kind: null };
   }
 
-  return { stored: '', display: '', raw, valid: false };
+  const stored = `+90${core}`;
+  const display = `+90 (${core.slice(0, 3)}) ${core.slice(3, 6)} ${core.slice(6, 8)} ${core.slice(8, 10)}`;
+  return { stored, display, raw, valid: true, kind };
+}
+
+/** 10 haneli çekirdek numaranın BTK sınıfını döner; tahsissiz aralıkta null. */
+function phoneKindOf(core: string): PhoneKind | null {
+  if (core.length !== 10) return null;
+  const first = core[0];
+  if (first === '5') return 'mobile';
+  if (first === '2' || first === '3' || first === '4') return 'landline';
+  if (first === '8' || first === '9') return 'special';
+  return null;
 }
 
 /** WhatsApp direct link yardımcısı (ABACUS-SPEC §3.5-e) */
 export function whatsapp(raw: string): string {
   const p = phone(raw);
-  if (!p.valid) return '';
+  if (!p.valid || p.kind !== 'mobile') return '';
   return `https://wa.me/${p.stored.slice(1)}`;
 }
 
@@ -259,7 +236,7 @@ export function email(raw: string): NormalizeResult {
   if (!raw) return { stored: '', display: '', raw: raw ?? '', valid: false };
   const clean = toAsciiLower(raw.trim());
 
-  if (validateEmail(clean)) {
+  if (isEmailShaped(clean)) {
     return { stored: clean, display: clean, raw, valid: true };
   }
 
@@ -371,6 +348,11 @@ export function numberToWords(n: number, opts?: NumberToWordsOptions): string {
   const spaced = opts?.spaced ?? false;
   const joinStr = spaced ? ' ' : '';
 
+  // Negatif, ondalıklı, sonsuz, NaN veya güvenli tam sayı sınırı dışındaki
+  // girdiler yazıya dökülemez. Sessizce yanlış üretmek yerine boş dize döner
+  // (motorun mevcut "üretilemedi" sentineli).
+  if (!Number.isSafeInteger(n) || n < 0) return '';
+
   if (n === 0) return 'Sıfır';
 
   let remaining = n;
@@ -378,13 +360,18 @@ export function numberToWords(n: number, opts?: NumberToWordsOptions): string {
   let scaleIndex = 0;
 
   while (remaining > 0) {
-    const groupVal = mod(remaining, 1000) ?? 0;
+    const groupVal = mod(remaining, 1000);
+    if (groupVal === null) return '';
     if (groupVal > 0) {
       groups.push({ value: groupVal, scaleIndex });
     }
     const nextRemaining = div(remaining, 1000);
-    remaining = nextRemaining !== null ? floor(nextRemaining) : 0;
+    if (nextRemaining === null) return '';
+    remaining = floor(nextRemaining);
     scaleIndex++;
+
+    // Ölçek tablosunun ötesine geçildiyse sessizce basamak düşürmek yerine dur.
+    if (scaleIndex >= SCALES.length && remaining > 0) return '';
   }
 
   // Yüksek basamaktan düşüğe doğru işle
@@ -396,10 +383,14 @@ export function numberToWords(n: number, opts?: NumberToWordsOptions): string {
     const val = g.value;
     const sIndex = g.scaleIndex;
 
-    const hundreds = floor(div(val, 100) ?? 0);
-    const rem100 = mod(val, 100) ?? 0;
-    const tensVal = floor(div(rem100, 10) ?? 0);
-    const onesVal = mod(rem100, 10) ?? 0;
+    const hundredsDiv = div(val, 100);
+    const rem100 = mod(val, 100);
+    if (hundredsDiv === null || rem100 === null) return '';
+    const tensDiv = div(rem100, 10);
+    const onesVal = mod(rem100, 10);
+    if (tensDiv === null || onesVal === null) return '';
+    const hundreds = floor(hundredsDiv);
+    const tensVal = floor(tensDiv);
 
     const tokens: string[] = [];
 

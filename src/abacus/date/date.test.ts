@@ -30,8 +30,16 @@ describe('ABACUS date.format motoru', () => {
     expect(format('2026-12-01', 'long')).toBe('1 Aralık 2026');
   });
 
-  it('ISO string saat kısmını yok sayar (2026-08-15T21:30:00Z -> 15.08.2026)', () => {
-    expect(format('2026-08-15T21:30:00Z')).toBe('15.08.2026');
+  it('saat dilimli ISO’yu İstanbul saatine çevirir (2026-08-15T21:30:00Z -> 16.08.2026)', () => {
+    // KIRICI DEĞİŞİKLİK (v2.0.0): v1.1.0 saat kısmını tümüyle yok sayar ve
+    // '15.08.2026' dönerdi. Artık Z eki İstanbul saatine (UTC+3) çevrilir;
+    // 21:30 UTC = ertesi gün 00:30 İstanbul olduğu için TARİH de ilerler.
+    // Böylece 'short' ile 'dateTime' aynı günü gösterir (tutarlılık).
+    expect(format('2026-08-15T21:30:00Z')).toBe('16.08.2026');
+    expect(format('2026-08-15T21:30:00Z', 'dateTime')).toBe('16.08.2026 00:30');
+
+    // Saat dilimi eki olmayan ISO kaydırılmaz (İstanbul duvar saati kabul edilir).
+    expect(format('2026-08-15T21:30:00')).toBe('15.08.2026');
   });
 
   it('geçersiz, boş veya null/undefined girdi için — döner', () => {
@@ -71,7 +79,10 @@ describe('ABACUS date relative & gün aritmetiği motoru', () => {
       expect(relative('2026-08-16', '2026-08-15')).toBe('yarın');
       expect(relative('2026-08-12', '2026-08-15')).toBe('3 gün önce');
       expect(relative('2026-08-18', '2026-08-15')).toBe('3 gün sonra');
-      expect(relative('2026-08-15T21:30:00Z', '2026-08-15')).toBe('bugün');
+      // KIRICI DEĞİŞİKLİK (v2.0.0): 21:30 UTC = 16.08 00:30 İstanbul -> 'yarın'.
+      expect(relative('2026-08-15T21:30:00Z', '2026-08-15')).toBe('yarın');
+      // Saat dilimi eki yoksa kaydırma yok.
+      expect(relative('2026-08-15T21:30:00', '2026-08-15')).toBe('bugün');
     });
 
     it('geçersiz girdilerde — döner', () => {

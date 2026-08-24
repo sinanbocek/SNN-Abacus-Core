@@ -52,15 +52,17 @@ export function iban(s: string): string {
 
 /**
  * TR cep telefonu maskeleme (ABACUS-SPEC §3.8).
- * Biçim: "+90 5** *** ** 67" (Ülke kodu +90, ilk hane 5 ve son 2 hane açık).
- * Girdi text.phone ile normalize edilir; geçersiz cep numarasında "—" döner.
+ * Biçim: "+90 5** *** ** 67" (Ülke kodu +90, ilk hane ve son 2 hane açık).
+ * Cep, sabit hat ve 850/800 numaraları aynı biçimle maskelenir.
+ * Girdi text.phone ile normalize edilir; geçersiz numarada "—" döner.
  */
 export function phone(s: string): string {
   if (!s) return '—';
   const norm = normPhone(s);
   if (!norm.valid) return '—';
 
-  const core = norm.stored.slice(3); // 10 haneli cep no (5XXXXXXXXX)
+  const core = norm.stored.slice(3); // 10 haneli numara
+  const first = core.slice(0, 1);
   const last2 = core.slice(8);
-  return `+90 5** *** ** ${last2}`;
+  return `+90 ${first}** *** ** ${last2}`;
 }

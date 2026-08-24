@@ -1,4 +1,5 @@
 import { upper } from '../text';
+import { isEmailShaped } from '../internal/patterns';
 
 /**
  * ABACUS doğrulama motoru (ABACUS-SPEC §3.7).
@@ -34,7 +35,9 @@ export function vkn(s: string): boolean {
 
   let totalSum = 0;
   for (let i = 1; i <= 9; i++) {
-    const digit = parseInt(s[i - 1] ?? '0', 10);
+    const ch = s[i - 1];
+    if (ch === undefined) return false;
+    const digit = parseInt(ch, 10);
     const tmp = (digit + 10 - i) % 10;
     if (tmp !== 0) {
       const pow2 = POW_2_MAP[10 - i] ?? 1;
@@ -45,7 +48,9 @@ export function vkn(s: string): boolean {
   }
 
   const checkDigit = (10 - (totalSum % 10)) % 10;
-  const actualLastDigit = parseInt(s[9] ?? '0', 10);
+  const lastCh = s[9];
+  if (lastCh === undefined) return false;
+  const actualLastDigit = parseInt(lastCh, 10);
 
   return checkDigit === actualLastDigit;
 }
@@ -73,26 +78,42 @@ export function tckn(s: string): boolean {
   }
   if (allSame) return false;
 
-  const d = s.split('').map((ch) => parseInt(ch, 10));
-  const d1 = d[0] ?? 0;
-  const d2 = d[1] ?? 0;
-  const d3 = d[2] ?? 0;
-  const d4 = d[3] ?? 0;
-  const d5 = d[4] ?? 0;
-  const d6 = d[5] ?? 0;
-  const d7 = d[6] ?? 0;
-  const d8 = d[7] ?? 0;
-  const d9 = d[8] ?? 0;
-  const d10 = d[9] ?? 0;
-  const d11 = d[10] ?? 0;
+  // Basamaklar dogrudan dizeden okunur; sessiz varsayilan (?? 0) kullanilmaz.
+  // Regex zaten 11 hane garantiler, yine de her erisim acikca dogrulanir.
+  const digitAt = (i: number): number | null => {
+    const ch = s[i];
+    if (ch === undefined) return null;
+    return parseInt(ch, 10);
+  };
 
-  const oddSum = d1 + d3 + d5 + d7 + d9;
-  const evenSum = d2 + d4 + d6 + d8;
+  // 10. hane kontrolu: tek konumlar (1,3,5,7,9) ve cift konumlar (2,4,6,8)
+  let oddSum = 0;
+  let evenSum = 0;
+  for (let i = 0; i < 9; i++) {
+    const digit = digitAt(i);
+    if (digit === null) return false;
+    if (i % 2 === 0) {
+      oddSum += digit;
+    } else {
+      evenSum += digit;
+    }
+  }
+
+  const d10 = digitAt(9);
+  const d11 = digitAt(10);
+  if (d10 === null || d11 === null) return false;
 
   const check10 = ((oddSum * 7 - evenSum) % 10 + 10) % 10;
   if (check10 !== d10) return false;
 
-  const sum10 = d1 + d2 + d3 + d4 + d5 + d6 + d7 + d8 + d9 + d10;
+  // 11. hane kontrolu: ilk 10 hanenin toplaminin birler basamagi
+  let sum10 = 0;
+  for (let i = 0; i < 10; i++) {
+    const digit = digitAt(i);
+    if (digit === null) return false;
+    sum10 += digit;
+  }
+
   const check11 = sum10 % 10;
   return check11 === d11;
 }
@@ -129,7 +150,9 @@ export function iban(s: string): boolean {
 
   let remainder = 0;
   for (let i = 0; i < numericString.length; i++) {
-    const digit = parseInt(numericString[i] ?? '0', 10);
+    const ch = numericString[i];
+    if (ch === undefined) return false;
+    const digit = parseInt(ch, 10);
     remainder = (remainder * 10 + digit) % 97;
   }
 
@@ -141,6 +164,5 @@ export function iban(s: string): boolean {
  * Biçim: user@domain.tld
  */
 export function email(s: string): boolean {
-  if (!s) return false;
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.trim());
+  return isEmailShaped(s);
 }
