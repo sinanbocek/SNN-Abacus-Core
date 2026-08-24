@@ -3,6 +3,9 @@ import tsPlugin from '@typescript-eslint/eslint-plugin';
 
 export default [
   {
+    ignores: ['coverage/**', 'dist/**'],
+  },
+  {
     files: ['src/**/*.ts'],
     languageOptions: {
       parser: tsParser,
@@ -32,6 +35,21 @@ export default [
         {
           property: 'toUpperCase',
           message: 'Ham toUpperCase kullanımı yasaktır. Lütfen ABACUS text (upper) kullanın.',
+        },
+      ],
+      // ABACUS-SPEC §0.5 / §4.5 ve AI-RULES §3: hata `null` ile döner,
+      // sessiz `|| 0` / `?? 0` varsayılanı yasaktır. Kural artık makinede zorlanır.
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'LogicalExpression[operator="||"][right.type="Literal"][right.value=0]',
+          message:
+            'Sessiz `|| 0` varsayılanı yasaktır (ABACUS-SPEC §0.5). null durumunu açıkça ele alın.',
+        },
+        {
+          selector: 'LogicalExpression[operator="??"][right.type="Literal"][right.value=0]',
+          message:
+            'Sessiz `?? 0` varsayılanı yasaktır (ABACUS-SPEC §0.5). null durumunu açıkça ele alın.',
         },
       ],
       'no-restricted-globals': [

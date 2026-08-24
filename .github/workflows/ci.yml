@@ -30,5 +30,5 @@ jobs:
       - name: Run TypeScript typecheck
         run: npx tsc --noEmit
 
-      - name: Run Vitest unit tests
-        run: npm test
+      - name: Run Vitest unit tests (kapsam esikleri ile)
+        run: npm run test:coverage
