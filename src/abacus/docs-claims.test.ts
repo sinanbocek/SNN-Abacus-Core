@@ -263,3 +263,65 @@ describe('BELGE İDDİALARI — MOTOR-DETAYLARI: text / mask', () => {
     expect(mask.phone('02123334455')).toBe('+90 2** *** ** 55');
   });
 });
+
+describe('BELGE İDDİALARI — MIGRATION-v2.md', () => {
+  it('Adım 1a: saat dilimi çevrimi', () => {
+    expect(date.format('2026-08-15T21:30:00Z')).toBe('16.08.2026');
+    expect(date.format('2026-08-15')).toBe('15.08.2026');
+    expect(date.format('2026-08-15T21:30:00')).toBe('15.08.2026');
+  });
+
+  it('Adım 1b: takvim doğrulaması', () => {
+    expect(date.format('2024-02-30', 'long')).toBe('—');
+    expect(date.format('2025-02-29', 'long')).toBe('—');
+    expect(date.daysBetween('2024-02-30', '2024-03-01')).toBeNull();
+    expect(date.format('2024-02-29', 'long')).toBe('29 Şubat 2024');
+    expect(date.format('2000-02-29', 'long')).toBe('29 Şubat 2000');
+  });
+
+  it('Adım 2: parseNumber', () => {
+    expect(money.parseNumber('0')).toBe(0);
+    expect(money.parseNumber('')).toBeNull();
+    expect(money.parseNumber('abc')).toBeNull();
+    expect(money.parseNumber('1.234,56')).toBe(1234.56);
+  });
+
+  it('Adım 3a: fmtDecimalGrouped', () => {
+    expect(money.fmtDecimalGrouped(null)).toBe('—');
+    expect(money.fmtDecimalGrouped(0)).toBe('0');
+    expect(money.fmtDecimalGrouped(70000.5, 2)).toBe('70.000,50');
+  });
+
+  it('Adım 3b: toWords negatif ve geçersiz', () => {
+    expect(money.toWords(-15000)).toBe('Yalnız EksiYüzElliTürkLirası');
+    expect(money.toWords(NaN)).toBe('—');
+  });
+
+  it('Adım 3c: telefon sınıflandırması', () => {
+    expect(text.phone('02123334455').valid).toBe(true);
+    expect(text.phone('02123334455').kind).toBe('landline');
+    expect(mask.phone('02123334455')).toBe('+90 2** *** ** 55');
+    expect(text.phone('5321234567').kind).toBe('mobile');
+    expect(mask.phone('05321234567')).toBe('+90 5** *** ** 67');
+    expect(text.whatsapp('02123334455')).toBe('');
+    expect(text.whatsapp('5321234567')).toBe('https://wa.me/905321234567');
+  });
+
+  it('Değişmeyenler bölümü', () => {
+    expect(gold.ONS_TO_GRAM).toBe(31.1034768);
+    expect(silver.ONS_TO_GRAM).toBe(31.1034768);
+    expect(money.format(2323223)).toBe('₺23.232');
+    expect(money.compact(123456789)).toBe('₺1,23M');
+    expect(text.upper('ışık')).toBe('IŞIK');
+    expect(text.title('ahmet yılmaz')).toBe('Ahmet Yılmaz');
+  });
+
+  it('Yeni motorlar bölümü', () => {
+    expect(unit.convert(5000, 'm2', 'dönüm')).toBe(5);
+    expect(unit.dataSize(5242880)).toBe('5 MB');
+    expect(period.addMonths('2026-01-31', 1)).toBe('2026-02-28');
+    expect(period.quarterRange(2026, 3)).toEqual({ start: '2026-07-01', end: '2026-09-30' });
+    expect(collate.sortBy(['zam', 'çam', 'dal'])).toEqual(['çam', 'dal', 'zam']);
+    expect([...['zam', 'çam', 'dal']].sort()).toEqual(['dal', 'zam', 'çam']);
+  });
+});

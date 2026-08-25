@@ -44,6 +44,8 @@ collate.sortBy(['zam', 'çam', 'dal']);    // ["çam", "dal", "zam"]
 ```
 
 > Detaylı kurulum & kullanım rehberi: [INSTALL.md](INSTALL.md)
+>
+> **v1.1.0 kullanıyorsanız:** yükseltmeden önce [MIGRATION-v2.md](MIGRATION-v2.md) okuyun — v2.0.0 kırıcı değişiklikler içerir.
 
 ---
 
@@ -69,7 +71,7 @@ collate.sortBy(['zam', 'çam', 'dal']);    // ["çam", "dal", "zam"]
 
 ## 🧪 Kalite & Test Kapsamı
 
-- **360 Birim Testi:** %100 yeşil test güvencesi (`vitest`).
+- **368 Birim Testi:** %100 yeşil test güvencesi (`vitest`).
 - **Ölçülen Kapsam:** statements %91,2 · branches %86,2 · functions %99,0 · lines %96,5 — CI'da eşiklerle korunur (`npm run test:coverage`).
 - **TypeScript Strict:** Sıfır `any`, tam tip emniyeti.
 - **Belge İddiaları Test Edilir:** README/INSTALL/SPEC/MOTOR-DETAYLARI içindeki her kod örneği `docs-claims.test.ts` ile doğrulanır; belge ile kod ayrışırsa CI kırılır.

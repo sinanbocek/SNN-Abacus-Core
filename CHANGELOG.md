@@ -9,6 +9,8 @@ sürümleme [Semantic Versioning](https://semver.org/lang/tr/) kurallarına uyar
 > **Kırıcı değişiklikler içerir** (aşağıda ayrı başlıkta listelenmiştir).
 > Tüketici projeler pin'i `#v1.1.0` → `#v2.0.0` yükseltmeden önce
 > "Kırıcı değişiklikler" başlığını okumalı ve kendi testlerini çalıştırmalıdır.
+>
+> Adım adım geçiş rehberi: [MIGRATION-v2.md](MIGRATION-v2.md)
 
 ### Eklenenler (yeni motorlar)
 

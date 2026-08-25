@@ -71,6 +71,8 @@ console.log(collate.sortBy(['zam', 'çam', 'dal']));         // [ çam, dal, zam
 
 ## 🔄 4. Paket Güncelleme Süreci
 
+**v1.1.0 → v2.0.0 geçişi için ayrıntılı rehber: [MIGRATION-v2.md](MIGRATION-v2.md).**
+
 Sürüm yükseltmek için tüketici projede pin'i elle yeni tag'e çekin (örn. `#v1.1.0` → `#v2.0.0`), sonra projenin karakterizasyon/birim testlerini çalıştırıp beklenmeyen değişiklik olmadığını doğrulayın. Otomatik `npm update` KULLANILMAZ — sürüm geçişi her zaman bilinçli ve test-korumalıdır.
 
 ---
