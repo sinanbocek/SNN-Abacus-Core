@@ -1,4 +1,5 @@
 import { abs, div, round, sub } from '../math';
+import { toTrLower } from '../internal/tr-case';
 
 export type DateFormatStyle =
   | 'short'
@@ -276,4 +277,87 @@ export function dayName(iso: string, form: NameForm = 'short'): string {
   if (idx === null) return '—';
   const name = form === 'long' ? DAY_NAMES_FULL[idx] : DAY_NAMES_SHORT[idx];
   return name ?? '—';
+}
+
+/**
+ * ABACUS tarih AYRIŞTIRMA motoru — `format`'ın aynası.
+ *
+ * Türkçe biçimli tarih metnini ISO metnine çevirir.
+ *
+ * AYNA KURALI gereği yalnızca `format`'ın **bilgi kaybetmeden** ürettiği
+ * stiller geri okunabilir:
+ *   - `short`     "15.08.2026"        -> "2026-08-15"
+ *   - `long`      "15 Ağustos 2026"   -> "2026-08-15"
+ *   - `dateTime`  "25.08.2026 00:30"  -> "2026-08-25T00:30"
+ *
+ * Bilgi kaybeden stiller (`dayMonth`, `monthYear`, `period`, `time`,
+ * `dayMonthWeekday`) yıl veya gün içermedikleri için **bilinçli olarak**
+ * reddedilir; eksik bilgiyi tahmin etmek sessiz hata üretirdi.
+ *
+ * Kapalı hoşgörü listesi: baştaki/sondaki boşluk · sıfır dolgusuz gün-ay
+ * ("5.1.2026") · ISO girdinin olduğu gibi kabulü · ay adında büyük/küçük
+ * harf farkı.
+ *
+ * Takvim doğrulaması giriş kapısında da uygulanır: "30.02.2024" -> null.
+ * Çözümlenemeyen girdide `null` döner (ABACUS-SPEC §2.1).
+ */
+export function parse(text: string | null | undefined): string | null {
+  if (text === null || text === undefined || typeof text !== 'string') return null;
+
+  const s = text.trim();
+  if (s === '') return null;
+
+  // 1) ISO girdi (çekirdeğin kanonik biçimi) olduğu gibi kabul edilir.
+  const isoMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (isoMatch) {
+    return buildIso(Number(isoMatch[1]), Number(isoMatch[2]), Number(isoMatch[3]), null, null);
+  }
+
+  // 2) short / dateTime: GG.AA.YYYY [SS:DD]
+  const dotted = s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})(?:\s+(\d{1,2}):(\d{2}))?$/);
+  if (dotted) {
+    const hour = dotted[4] === undefined ? null : Number(dotted[4]);
+    const minute = dotted[5] === undefined ? null : Number(dotted[5]);
+    return buildIso(Number(dotted[3]), Number(dotted[2]), Number(dotted[1]), hour, minute);
+  }
+
+  // 3) long: GG Ay YYYY
+  const worded = s.match(/^(\d{1,2})\s+([^\s\d]+)\s+(\d{4})$/);
+  if (worded) {
+    const monthWord = worded[2];
+    if (monthWord === undefined) return null;
+    const month = monthNumberOf(monthWord);
+    if (month === null) return null;
+    return buildIso(Number(worded[3]), month, Number(worded[1]), null, null);
+  }
+
+  return null;
+}
+
+/** Türkçe ay adından ay numarasını bulur (büyük/küçük harf duyarsız); yoksa null. */
+function monthNumberOf(word: string): number | null {
+  const w = toTrLower(word);
+  for (let i = 0; i < MONTH_NAMES_FULL.length; i++) {
+    const name = MONTH_NAMES_FULL[i];
+    if (name !== undefined && toTrLower(name) === w) return i + 1;
+  }
+  return null;
+}
+
+/** Takvim doğrulaması yapıp ISO metni kurar; geçersizde null. */
+function buildIso(
+  year: number,
+  month: number,
+  day: number,
+  hour: number | null,
+  minute: number | null
+): string | null {
+  const maxDay = daysInMonth(year, month);
+  if (maxDay === null || day < 1 || day > maxDay) return null;
+
+  const datePart = `${year}-${pad2(month)}-${pad2(day)}`;
+  if (hour === null || minute === null) return datePart;
+
+  if (hour > 23 || minute > 59) return null;
+  return `${datePart}T${pad2(hour)}:${pad2(minute)}`;
 }

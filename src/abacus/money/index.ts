@@ -1,6 +1,7 @@
 import { abs, div, floor, mod, round } from '../math';
 import { numberToWords } from '../text';
 import { formatMoney, groupThousands } from '../internal/money-format';
+import { parseMoney } from '../internal/money-parse';
 
 export type { FormatMoneyOptions } from '../internal/money-format';
 
@@ -20,6 +21,26 @@ export interface CompactMoneyOptions {
  * (dairesel import olmadan `text.suffix` tarafından da kullanılabilsin diye).
  */
 export const format = formatMoney;
+
+/**
+ * ABACUS para AYRIŞTIRMA motoru — `format`'ın aynası.
+ *
+ * Türkçe biçimli para metnini **kuruş tam sayısına** çevirir.
+ * `money.format`'ın ürettiği her biçimi geri okur; ayrıca kapalı bir hoşgörü
+ * listesi uygular (boşluk, eksik simge, eksik binlik ayraç, tek ondalık hane).
+ * Bunun dışındaki hiçbir biçim kabul edilmez — İngilizce biçim dâhil.
+ *
+ * Çözümlenemeyen girdide `null` döner (ABACUS-SPEC §2.1).
+ *
+ * `parseNumber` ile karıştırmayın: o ondalıklı bir `number` döner (1234.56),
+ * bu ise kuruş tam sayısı döner (123456). Kuruşa çevrim `math` üzerinden
+ * yapıldığı için float hatası oluşmaz.
+ *
+ * @example
+ * money.format(123456)      // "₺1.234,56"
+ * money.parse('₺1.234,56')  // 123456
+ */
+export const parse = parseMoney;
 
 /**
  * ABACUS yüzde biçimlendirme motoru (%12,3).
