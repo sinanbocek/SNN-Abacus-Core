@@ -4,6 +4,38 @@ Bu projedeki tüm önemli değişiklikler bu dosyada belgelenir.
 Format [Keep a Changelog](https://keepachangelog.com/tr/) temellidir;
 sürümleme [Semantic Versioning](https://semver.org/lang/tr/) kurallarına uyar.
 
+## [2.1.0] - 2026-08-30
+
+> Tümü **eklemeli**dir; hiçbir mevcut davranış değişmemiştir. v2.0.0'dan
+> yükseltme için kod değişikliği gerekmez.
+
+### Eklenenler — GİRİŞ KAPISI (parse yönü)
+
+Çekirdek bugüne kadar tek yönlüydü: temiz veriden temiz çıktı üretiyor, ama
+kirli girdiyi kabul etmiyordu. Kuruşa çevirme işi tüketiciye kalıyordu ve orada
+float hatası oluşuyordu (`parseNumber('19,99') * 100` = 1998.9999999999998).
+
+- **`money.parse(text)`** — Türkçe biçimli para metnini **kuruş tam sayısına**
+  çevirir. Çevrim `math` üzerinden yapılır; float hatası oluşmaz.
+- **`date.parse(text)`** — Türkçe biçimli tarih metnini ISO metnine çevirir.
+  Takvim doğrulaması giriş kapısında da uygulanır (`"30.02.2024"` → `null`).
+
+- **AYNA KURALI** (`ABACUS-SPEC §2.1`, normatif): *ABACUS kendi ürettiği her şeyi
+  geri okuyabilmelidir; ne fazlasını, ne eksiğini.* `parse(format(x)) === x`.
+  Kural iki özellik testiyle korunuyor: money için 5.000, date için 3.000 vaka.
+  Yanında KAPALI ve belgelenmiş bir hoşgörü listesi var; İngilizce biçim
+  (`"1,234.56"`) bilinçli olarak reddedilir.
+  Bilgi kaybeden stiller (`monthYear`, `dayMonth`, `period`, `time`) geri
+  okunamaz ve `null` döner — eksik bilgiyi tahmin etmek sessiz hata üretirdi.
+
+### Eklenenler — yerleştirme kuralı
+
+- **`AI-RULES §4.1`** — bir fonksiyonun çekirdeğe mi uygulamaya mı ait olduğu
+  artık sınanır: *"Başka bir şirketin, başka alandaki uygulaması bunu aynen
+  kullanabilir miydi?"* Tüketici proje taramasından gerçek örneklerle.
+  Hedef ölçütü netleştirildi: yerel kodun %100'ü değil, **genel kodun %100'ü
+  çekirdeğe, alan kodunun %0'ı.**
+
 ## [2.0.0] - 2026-08-24
 
 > **Kırıcı değişiklikler içerir** (aşağıda ayrı başlıkta listelenmiştir).
