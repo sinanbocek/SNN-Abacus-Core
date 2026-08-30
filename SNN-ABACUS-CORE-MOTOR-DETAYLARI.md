@@ -143,6 +143,50 @@ alanıdır (`opts.kurus`, "kuruş basamağı göster" boolean'ı). İkisi ayrıd
 Yüzde biçimi. Ondalık ayraç virgül. Örnek: `percent(12.345, 1) → "%12,3"` · `percent(2.5678, 2) → "%2,57"`
 · `percent(null) → "—"`.
 
+### Para birimi (v2.2.0) — VERİ, kod değil
+
+`FormatMoneyOptions.currency` yerleşik bir kod **veya** tam tanım nesnesi alır:
+
+```ts
+interface CurrencyDef { code: string; symbol: string; text: string; minorDigits: number }
+```
+
+Yerleşikler: `TRY` (₺/TL) · `USD` ($/USD) · `EUR` (€/EUR) · `GBP` (£/GBP) — hepsi 2 haneli.
+`money.knownCurrencyCodes()` bu listeyi döner.
+
+```ts
+money.format(123456, { kurus: true, currency: 'EUR' })   // "€1.234,56"
+money.format(123456, { kurus: true, currency: { code:'AZN', symbol:'₼', text:'AZN', minorDigits:2 } })
+```
+
+**Ayraçlar her zaman Türkçedir** (bkz. ABACUS-SPEC §2.0). Farklı ondalık haneli
+birimler desteklenir: JPY (0 hane) → `¥1.234`, KWD (3 hane) → `KD1.234,567`.
+Tanınmayan kod → `'—'`.
+
+⚠️ `parse` alt birim hanesini **2 kabul eder**; yerleşik dört birim de 2 hanelidir.
+JPY/KWD gibi birimler `format` ile üretilebilir ama `parse` ile okunamaz — bilinçli
+kapsam sınırı, testle çivilenmiştir.
+
+### `formatMajor(amountMajor, opts?): string`
+ANA BİRİMDEKİ sayıyı biçimlendirir (kuruş değil). Alt birime çevrim `math` üzerinden.
+`formatMajor(1234.56, { kurus: true })` → `"₺1.234,56"` · geçersizde `'—'`.
+
+### `toMinor(major: number, currency?): number | null`
+`parse`'ın **sayısal ikizi**: sayıyı alt birime çevirir. `toMinor(1234.56)` → `123456`
+· `toMinor(19.99)` → `1999` (ham `19.99*100` = 1998.9999999999998)
+· `toMinor(551.875)` → `55188` (half-up) · geçersizde **`null`** (sessizce 0 değil).
+
+### `formatMinorInput(minor, digits = 0): string`
+Giriş kutusunda gösterilecek **sade** metin (simge/kod yok). `parse` ile gidiş-dönüş
+uyumludur. `formatMinorInput(123456, 2)` → `"1.234,56"` · geçersizde `'—'`.
+
+### `decimal(value, digits = 1): string`
+Düz ondalık gösterim, ondalık ayracı virgül; gereksiz sıfır eklenmez.
+`decimal(2.5)` → `"2,5"` · `decimal(3)` → `"3"` · geçersizde `'—'`.
+
+### `ratio(value): string`
+`decimal`'in çifti: iki ondalık + `"x"`. `ratio(8.712)` → `"8,71x"` · geçersizde `'—'`.
+
 ### `parse(text: string | null | undefined): number | null`  — GİRİŞ KAPISI
 `format`'ın **aynası**: Türkçe biçimli para metnini **kuruş tam sayısına** çevirir.
 Kuruşa çevrim `math` üzerinden yapılır, bu yüzden elle `× 100` yapmanın ürettiği
@@ -156,7 +200,7 @@ Kabul edilenler = `format`'ın ürettiği tüm biçimler:
 (`",5"` = 50 kuruş).
 
 **Reddedilenler:** İngilizce biçim (`"1,234.56"`) · bozuk binlik gruplama (`"1.23"`)
-· ikiden fazla ondalık (`"1,234"`) · tanınmayan para birimi (`"1.234,56 EUR"`)
+· ikiden fazla ondalık (`"1,234"`) · tanınmayan para birimi (`"1.234,56 XYZ"`)
 · çöp/boş/null. Negatif sıfır dönmez.
 
 ### `parseNumber(val: string): number | null`

@@ -1,20 +1,28 @@
 /**
- * ABACUS dahili para biçimlendirme çekirdeği (yaprak modül — yalnız `math`'e bağlıdır).
+ * ABACUS dahili para biçimlendirme çekirdeği (yaprak modül).
  *
  * Amaç: `money.format`'ı hem `money` motorunun hem de `text.suffix`'in dairesel
  * import üretmeden kullanabilmesi. Genel (public) kapı `money.format`'tır;
  * bu modül dışa açık API değildir ve barrel üzerinden export edilmez.
  *
- * Davranış birebir korunmuştur (v1.1.0 ile fark yok).
+ * Ayraçlar HER ZAMAN Türkçedir (binlik '.', ondalık ','); para birimi yalnız
+ * simgeyi, metin kodunu ve ondalık hane sayısını belirler.
+ * Bkz. `internal/currency-registry` — sorumluluk ayrımı orada açıklanmıştır.
  */
 
 import { abs, div, floor, mod, round } from '../math';
+import type { CurrencyRef } from './currency-registry';
+import { minorFactor, resolveCurrency } from './currency-registry';
 
 export interface FormatMoneyOptions {
   kurus?: boolean;
   form?: 'symbol' | 'text';
   negative?: 'minus' | 'paren';
-  currency?: 'TRY' | 'USD';
+  /**
+   * Yerleşik kod ('TRY' | 'USD' | 'EUR' | 'GBP') veya tam tanım nesnesi.
+   * Tanınmayan kod verilirse '—' döner (uydurma yapılmaz).
+   */
+  currency?: CurrencyRef;
 }
 
 /** Binlik ayraç ekleyici (Intl / toLocale kullanmadan) */
@@ -22,28 +30,34 @@ export function groupThousands(n: number): string {
   return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 }
 
+/** Alt birim kısmını sabit haneye sıfır dolgular ("5" -> "05"). */
+function padMinor(value: number, digits: number): string {
+  let s = String(value);
+  while (s.length < digits) s = `0${s}`;
+  return s;
+}
+
 /**
  * ABACUS para biçimlendirme motoru (TCMB kurallarına uygun).
- * Girdi kuruş bazlı tam sayıdır (2323223 kuruş = 23.232,23 TL).
- * Tüm matematiksel işlemler math motoru üzerinden yürütülür (ham Math.* kullanımı yoktur).
+ * Girdi ALT BİRİM tam sayısıdır (2323223 kuruş = 23.232,23 TL).
+ * Tüm matematiksel işlemler math motoru üzerinden yürütülür.
  */
 export function formatMoney(kurus: number | null | undefined, opts?: FormatMoneyOptions): string {
   if (kurus === null || kurus === undefined || !Number.isFinite(kurus)) {
     return '—';
   }
 
-  const showKurus = opts?.kurus ?? false;
+  const cur = resolveCurrency(opts?.currency);
+  if (cur === null) return '—';
+
+  const showKurus = (opts?.kurus ?? false) && cur.minorDigits > 0;
   const form = opts?.form ?? 'symbol';
   const negativeMode = opts?.negative ?? 'minus';
-  const cur = opts?.currency ?? 'TRY';
-  const symbol = cur === 'USD' ? '$' : '₺';
-  const textCode = cur === 'USD' ? 'USD' : 'TL';
+  const factor = minorFactor(cur);
 
   if (kurus === 0) {
-    if (form === 'text') {
-      return showKurus ? `0,00 ${textCode}` : `0 ${textCode}`;
-    }
-    return showKurus ? '0,00' : '0';
+    const zero = showKurus ? `0,${padMinor(0, cur.minorDigits)}` : '0';
+    return form === 'text' ? `${zero} ${cur.text}` : zero;
   }
 
   const isNegative = kurus < 0;
@@ -52,19 +66,19 @@ export function formatMoney(kurus: number | null | undefined, opts?: FormatMoney
   let formattedNum = '';
 
   if (showKurus) {
-    const tlDiv = div(absKurus, 100);
-    const tl = tlDiv !== null ? floor(tlDiv) : 0;
-    const kMod = mod(absKurus, 100);
-    const k = kMod !== null ? round(kMod, 0) : 0;
-    const kStr = k < 10 ? `0${k}` : `${k}`;
-    formattedNum = `${groupThousands(tl)},${kStr}`;
+    const majorDiv = div(absKurus, factor);
+    const major = majorDiv !== null ? floor(majorDiv) : 0;
+    const minorMod = mod(absKurus, factor);
+    const minor = minorMod !== null ? round(minorMod, 0) : 0;
+    formattedNum = `${groupThousands(major)},${padMinor(minor, cur.minorDigits)}`;
   } else {
-    const tlDiv = div(absKurus, 100);
-    const roundedTL = tlDiv !== null ? round(tlDiv, 0) : 0;
-    formattedNum = groupThousands(roundedTL);
+    const majorDiv = div(absKurus, factor);
+    const roundedMajor = majorDiv !== null ? round(majorDiv, 0) : 0;
+    formattedNum = groupThousands(roundedMajor);
   }
 
-  const resultWithForm = form === 'symbol' ? `${symbol}${formattedNum}` : `${formattedNum} ${textCode}`;
+  const resultWithForm =
+    form === 'symbol' ? `${cur.symbol}${formattedNum}` : `${formattedNum} ${cur.text}`;
 
   if (isNegative) {
     return negativeMode === 'paren' ? `(${resultWithForm})` : `-${resultWithForm}`;

@@ -361,7 +361,7 @@ describe('BELGE İDDİALARI — giriş kapısı (AYNA KURALI)', () => {
     expect(money.parse('1,234.56')).toBeNull();
     expect(money.parse('1.23')).toBeNull();
     expect(money.parse('1,234')).toBeNull();
-    expect(money.parse('1.234,56 EUR')).toBeNull();
+    expect(money.parse('1.234,56 XYZ')).toBeNull(); // EUR v2.2.0'da tanınır
     // float hatasi karsilastirmasi
     expect(money.parse('19,99')).toBe(1999);
     expect((money.parseNumber('19,99') as number) * 100).not.toBe(1999);
@@ -376,5 +376,44 @@ describe('BELGE İDDİALARI — giriş kapısı (AYNA KURALI)', () => {
     expect(date.parse('15/08/2026')).toBeNull();
     expect(date.parse('15-08-2026')).toBeNull();
     expect(date.parse('30.02.2024')).toBeNull();
+  });
+});
+
+describe('BELGE İDDİALARI — para birimi (v2.2.0)', () => {
+  it('SPEC §2.0: yerleşik birimler ve tüketici tanımı', () => {
+    expect(money.format(123456, { kurus: true, currency: 'EUR' })).toBe('€1.234,56');
+    expect(money.format(123456, { kurus: true, currency: 'GBP' })).toBe('£1.234,56');
+    expect(money.format(123456, {
+      kurus: true,
+      currency: { code: 'AZN', symbol: '₼', text: 'AZN', minorDigits: 2 },
+    })).toBe('₼1.234,56');
+    expect(money.knownCurrencyCodes()).toEqual(['EUR', 'GBP', 'TRY', 'USD']);
+  });
+
+  it('SPEC §2.0: ayraçlar her zaman Türkçe', () => {
+    expect(money.format(123456, { kurus: true, currency: 'USD' })).toBe('$1.234,56');
+    expect(money.format(123456, { kurus: true, currency: 'XYZ' })).toBe('—');
+  });
+
+  it('MOTOR-DETAYLARI: farklı ondalık haneli birimler', () => {
+    expect(money.format(1234, { kurus: true, currency: { code: 'JPY', symbol: '¥', text: 'JPY', minorDigits: 0 } })).toBe('¥1.234');
+    expect(money.format(1234567, { kurus: true, currency: { code: 'KWD', symbol: 'KD', text: 'KWD', minorDigits: 3 } })).toBe('KD1.234,567');
+  });
+
+  it('MOTOR-DETAYLARI: yeni money fonksiyonları', () => {
+    expect(money.formatMajor(1234.56, { kurus: true })).toBe('₺1.234,56');
+    expect(money.toMinor(1234.56)).toBe(123456);
+    expect(money.toMinor(19.99)).toBe(1999);
+    expect(money.toMinor(551.875)).toBe(55188);
+    expect(money.toMinor(NaN)).toBeNull();
+    expect(money.formatMinorInput(123456, 2)).toBe('1.234,56');
+    expect(money.decimal(2.5)).toBe('2,5');
+    expect(money.decimal(3)).toBe('3');
+    expect(money.ratio(8.712)).toBe('8,71x');
+  });
+
+  it('CHANGELOG: compact para birimi hatası düzeldi', () => {
+    expect(money.compact(123456789, { currency: 'USD' })).toBe('$1,23M');
+    expect(money.compact(123456789)).toBe('₺1,23M');
   });
 });

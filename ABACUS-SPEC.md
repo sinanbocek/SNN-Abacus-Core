@@ -64,7 +64,7 @@ silver.gramSilverPrice(31, 34.20);        // 3405 (kuruş)
 | Motor | Dışa açılan fonksiyonlar (tam liste) | Not |
 |---|---|---|
 | `math` | `add`, `sub`, `mul`, `div`\|null, `round` (half-up), `abs`, `floor`, `mod`\|null, `ratio`\|null, `percent`\|null, `pow`\|null, `log`\|null, `max`\|null | decimal.js kapsülü |
-| `money` | `format`, **`parse`\|null**, `percent`, `parseNumber`\|null, `fmtDecimalGrouped`, `formatGroupedInput`, `toWords`, `compact` | kuruş ↔ metin |
+| `money` | `format`, `parse`\|null, `formatMajor`, `toMinor`\|null, `formatMinorInput`, `decimal`, `ratio`, `percent`, `parseNumber`\|null, `fmtDecimalGrouped`, `formatGroupedInput`, `toWords`, `compact`, `knownCurrencyCodes` | alt birim ↔ metin |
 | `currency` | `convert(minor, rate)`\|null, `cross(minor, from, to)`\|null | kur parametreyle gelir |
 | `date` | `format`, **`parse`\|null**, `monthName`, `daysBetween`\|null, `daysUntil`\|null, `relative`, `dayName` | Intl'siz, TR, Europe/Istanbul |
 | `text` | `toAsciiLower`, `toTrLower`, `lower`, `upper`, `title`, `join`, `phone`, `whatsapp`, `email`, `website`, `websiteUrl`, `name`, `company`, `numberToWords`, `lastVowel`, `isBackVowel`, `isRoundedVowel`, `endsWithHardConsonant`, `endsWithVowel`, `suffix` | TR harf güvenli |
@@ -76,6 +76,35 @@ silver.gramSilverPrice(31, 34.20);        // 3405 (kuruş)
 | `unit` | `convert(value, from, to)`\|null, `categoryOf`\|null, `dataSize` + `ONS_TO_GRAM` | birim çevrimi |
 | `period` | `addDays`\|null, `addMonths`\|null, `startOfMonth`\|null, `endOfMonth`\|null, `quarterOf`\|null, `quarterRange`\|null, `monthsBetween`\|null, `isBetween`\|null | tarih ÜRETİR (`date` biçimlendirir) |
 | `collate` | `key`, `compare`, `sortBy` | Türkçe sıralama, `Intl.Collator` yok |
+
+### 2.0 PARA BİRİMİ VERİDİR (normatif)
+
+Para birimi **koda gömülmez**. `money` motorunun `currency` seçeneği yerleşik bir
+kod (`'TRY' | 'USD' | 'EUR' | 'GBP'`) **veya** tam bir tanım nesnesi alır:
+
+```ts
+money.format(123456, { currency: 'EUR' });
+money.format(123456, { currency: { code: 'AZN', symbol: '₼', text: 'AZN', minorDigits: 2 } });
+```
+
+Böylece **yeni bir para birimi için çekirdeğin güncellenmesi gerekmez.**
+
+**Sorumluluk ayrımı (bilinçli):**
+
+| Ne | Kime ait | Örnek |
+|---|---|---|
+| Simge, metin kodu, ondalık hane sayısı | **para birimi** | `€`, `EUR`, 2 |
+| Binlik/ondalık ayracı, simge konumu | **okuyucunun dili** | Türkçe: `1.234,56` |
+
+ABACUS **Türkçe yerelli** bir kütüphanedir: ayraçlar para birimi ne olursa olsun
+Türkçedir. Dolar da `$1.234,56` yazılır — çünkü sayfadaki diğer tüm sayılar öyle.
+Amerikan biçimi (`$1,234.56`) **kapsam dışıdır**; o, okuyucunun dili değişince
+gündeme gelir ve ayrı bir karardır.
+
+Tanınmayan bir para birimi KODU verilirse `'—'` / `null` döner; çekirdek simgeyi
+uydurmaz (§2.2).
+
+---
 
 ### 2.1 AYNA KURALI (normatif) — giriş kapısı
 

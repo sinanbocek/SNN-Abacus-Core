@@ -4,6 +4,42 @@ Bu projedeki tüm önemli değişiklikler bu dosyada belgelenir.
 Format [Keep a Changelog](https://keepachangelog.com/tr/) temellidir;
 sürümleme [Semantic Versioning](https://semver.org/lang/tr/) kurallarına uyar.
 
+## [2.2.0] - 2026-08-30
+
+### Eklenenler — PARA BİRİMİ ARTIK VERİ
+
+Eskiden `currency` seçeneği `'TRY' | 'USD'` biçiminde koda gömülüydü; EUR yazılamıyordu
+bile. Yeni bir para birimi eklemek her seferinde çekirdek güncellemesi gerektiriyordu.
+
+- **Yerleşik para birimleri:** TRY, USD, **EUR**, **GBP**.
+- **Tüketici kendi birimini verebilir** — çekirdeğin hiç duymadığı bir birim dâhil:
+  `money.format(x, { currency: { code: 'AZN', symbol: '₼', text: 'AZN', minorDigits: 2 } })`.
+  Böylece yeni para birimi için **çekirdeğin güncellenmesi gerekmez**.
+- **Farklı ondalık haneli birimler** desteklenir (JPY 0 hane, KWD 3 hane).
+- **Sorumluluk ayrımı belgelendi** (`ABACUS-SPEC §2.0`): simge/kod/hane sayısı para
+  birimine, ayraçlar okuyucunun diline aittir. ABACUS Türkçe yerellidir; dolar da
+  `$1.234,56` yazılır. Amerikan biçimi kapsam dışıdır.
+- `money.knownCurrencyCodes()` yerleşik kodları döner.
+
+### Düzeltilenler
+
+- **`money.compact` para birimi seçeneğini tümüyle yok sayıyordu.** `compact(x, {currency:'USD'})`
+  bile `₺` basıyordu. Artık seçilen birimi kullanıyor.
+
+### Eklenenler — money motoru tamamlandı
+
+- **`formatMajor(major, opts)`** — ana birimdeki sayıyı biçimlendirir (`1234.56` → `₺1.234,56`).
+- **`toMinor(major, currency?)`** — `parse`'ın sayısal ikizi: sayıyı alt birime çevirir.
+  Geçersizde `null`; sessizce 0 üretmez.
+- **`formatMinorInput(minor, digits)`** — giriş kutusunda gösterilecek sade metin.
+  `parse` ile gidiş-dönüş uyumludur.
+- **`decimal(value, digits)`** — düz ondalık gösterim, virgüllü (`2.5` → `"2,5"`).
+- **`ratio(value)`** — `decimal`'in çifti (`8.712` → `"8,71x"`).
+
+> Bu beş fonksiyon tüketici projelerde elle yazılmış hâlde bulunmuştu; yerleştirme
+> kuralına göre (AI-RULES §4.1) genel oldukları için çekirdeğe alındı.
+> `usd()` **alınmadı**: para biriminin veri olması onun yerini aldı.
+
 ## [Yayımlanmamış]
 
 ### Değişenler — sürüm ve güncelleme politikası

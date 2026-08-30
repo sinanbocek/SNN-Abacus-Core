@@ -9,10 +9,10 @@
 Projelerinize GitHub üzerinden doğrudan npm paketi olarak ekleyin:
 
 ```bash
-npm install github:sinanbocek/SNN-Abacus-Core#semver:^2.1.0
+npm install github:sinanbocek/SNN-Abacus-Core#semver:^2.2.0
 ```
 
-> **Sürüm politikası:** `#semver:^2.1.0` aralığı ile bağlanın. Yama ve ek özellik sürümleri (2.1.1, 2.2.0) **otomatik gelir**; kırıcı major sürüm (3.0.0) **gelmez** ve elle geçilir. `package-lock.json` tam commit'i sabitlediği için build'ler tekrarlanabilir kalır. Ayrıntı: [INSTALL.md §4](INSTALL.md).
+> **Sürüm politikası:** `#semver:^2.2.0` aralığı ile bağlanın. Yama ve ek özellik sürümleri (2.1.1, 2.2.0) **otomatik gelir**; kırıcı major sürüm (3.0.0) **gelmez** ve elle geçilir. `package-lock.json` tam commit'i sabitlediği için build'ler tekrarlanabilir kalır. Ayrıntı: [INSTALL.md §4](INSTALL.md).
 
 ```typescript
 import { money, math, tradingMath, date, gold, silver, unit, period, collate } from '@snn/abacus-core';
@@ -20,6 +20,7 @@ import { money, math, tradingMath, date, gold, silver, unit, period, collate } f
 // Para Biçimlendirme — ve geri okuma (AYNA KURALI)
 money.format(150000);                          // "₺1.500"
 money.parse('₺1.234,56');                      // 123456 (kuruş, float hatası yok)
+money.format(123456, { currency: 'EUR', kurus: true });  // "€1.234,56"
 date.parse('15.08.2026');                      // "2026-08-15"
 
 // Hassas Kuruş Matematiği
@@ -56,7 +57,7 @@ collate.sortBy(['zam', 'çam', 'dal']);    // ["çam", "dal", "zam"]
 | Motor | Klasör | Bir Satır Özeti |
 |---|---|---|
 | **`math`** | `src/abacus/math/` | `decimal.js` tabanlı hassas kuruş matematiği (IEEE-754 float hatasız toplama, çıkarma, çarpma, bölme, half-up yuvarlama). |
-| **`money`** | `src/abacus/money/` | TCMB standartlarında para biçimlendirme (`format`), **metinden kuruşa ayrıştırma (`parse`)**, tutar yazısı (`toWords`) ve compact kısaltma (`compact`: 1M, 1.5Mn). |
+| **`money`** | `src/abacus/money/` | Para biçimlendirme (`format`, `formatMajor`, `formatMinorInput`, `decimal`, `ratio`), metinden alt birime ayrıştırma (`parse`, `toMinor`), tutar yazısı (`toWords`), compact kısaltma (`compact`). **Para birimi veridir:** TRY/USD/EUR/GBP yerleşik, tüketici kendi birimini de verebilir. |
 | **`currency`** | `src/abacus/currency/` | Parametrik kur çevrimi (`convert`, `cross`). Kur enjeksiyon prensibiyle çalışır; dış HTTP/DB bağımlılığı yoktur. |
 | **`date`** | `src/abacus/date/` | `Intl` bağımsız Türkçe ISO tarih/saat biçimlendirme (`format`: short/long/dayMonth/monthYear/period/time/dateTime/dayMonthWeekday), ay adı (`monthName`), bağıl zaman (`relative`), gün farkı (`daysBetween`) ve gün adı (`dayName`). Saat dilimi: **Europe/Istanbul**. Takvim doğrulaması yapar (30 Şubat reddedilir). |
 | **`text`** | `src/abacus/text/` | Türkçe ek çekim fonetiği (`suffix`: 5 hâl + 6 iyelik + pronominal-n), harf dönüşümü (`upper`, `lower`, `title`), `join` ve metin normalizasyonları (`phone`, `email`, `website`, `name`, `company`). |
@@ -73,7 +74,7 @@ collate.sortBy(['zam', 'çam', 'dal']);    // ["çam", "dal", "zam"]
 
 ## 🧪 Kalite & Test Kapsamı
 
-- **416 Birim Testi:** %100 yeşil test güvencesi (`vitest`).
+- **455 Birim Testi:** %100 yeşil test güvencesi (`vitest`).
 - **Ölçülen Kapsam:** statements %91,2 · branches %86,2 · functions %99,0 · lines %96,5 — CI'da eşiklerle korunur (`npm run test:coverage`).
 - **TypeScript Strict:** Sıfır `any`, tam tip emniyeti.
 - **Belge İddiaları Test Edilir:** README/INSTALL/SPEC/MOTOR-DETAYLARI içindeki her kod örneği `docs-claims.test.ts` ile doğrulanır; belge ile kod ayrışırsa CI kırılır.

@@ -6,6 +6,7 @@
  */
 
 import { mul, round } from '../math';
+import { allSymbols, allTextCodes } from './currency-registry';
 
 /**
  * AYNA KURALI
@@ -15,6 +16,14 @@ import { mul, round } from '../math';
  * Kabul edilenler = `money.format`'ın ürettiği tüm biçimler:
  *   "₺23.232"  ·  "₺23.232,23"  ·  "-₺23.232"  ·  "(₺23.232)"
  *   "23.232 TL"  ·  "220,75 USD"  ·  "$220,75"  ·  "0"  ·  "0,00"
+ *
+ * Yerleşik tüm para birimlerinin simgesi (₺ $ € £) ve metin kodu
+ * (TL USD EUR GBP) tanınır. Tanınmayan birim reddedilir.
+ *
+ * NOT: Ayrıştırma alt birim hanesini 2 kabul eder (kuruş). Yerleşik dört
+ * birimin dördü de 2 hanelidir. Farklı haneli birimler (JPY 0, KWD 3)
+ * `format` tarafından ÜRETİLEBİLİR ama `parse` tarafından okunamaz;
+ * bu bilinçli bir kapsam sınırıdır ve testle çivilenmiştir.
  *
  * Ek olarak, KAPALI ve belgelenmiş bir hoşgörü listesi (kullanıcı yazarken
  * eksik bırakabilir):
@@ -86,19 +95,19 @@ export function parseMoney(text: string | null | undefined): number | null {
 /**
  * ABACUS'un ürettiği para simgesi / kodunu ayıklar.
  *
- * Tanınmayan para birimi ("1.234,56 EUR") için AYRI bir kontrol yoktur:
- * simge/kod ayıklanmadığında geriye kalan metin sayı gövdesi doğrulamasına
- * takılır ve zaten reddedilir. Ayrı kontrol ölü kod olurdu
- * (AI-RULES §2.4: kırmızı vermeyen koruma ölü koddur).
+ * Yerleşik kayıt defterindeki tüm simge ve metin kodları tanınır.
+ * Tanınmayan para birimi ("1.234,56 XYZ") için AYRI bir kontrol yoktur:
+ * kod ayıklanmadığında geriye kalan metin sayı gövdesi doğrulamasına takılır
+ * ve zaten reddedilir (AI-RULES §2.4: kırmızı vermeyen koruma ölü koddur).
  */
 function stripCurrency(input: string): string {
-  // Önde simge: ₺ veya $
-  if (input.startsWith('₺') || input.startsWith('$')) return input.slice(1);
-
-  // Sonda kod: " TL" veya " USD"
-  if (input.endsWith(' TL')) return input.slice(0, -3);
-  if (input.endsWith(' USD')) return input.slice(0, -4);
-
+  for (const sym of allSymbols()) {
+    if (input.startsWith(sym)) return input.slice(sym.length);
+  }
+  for (const code of allTextCodes()) {
+    const suffix = ` ${code}`;
+    if (input.endsWith(suffix)) return input.slice(0, -suffix.length);
+  }
   // Simge/kod yazılmamış (hoşgörü listesi md. 2)
   return input;
 }

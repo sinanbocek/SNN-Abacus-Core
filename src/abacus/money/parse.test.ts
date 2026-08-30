@@ -88,7 +88,7 @@ describe('money.parse — reddedilenler (ayna kuralının sınırı)', () => {
     expect(parse('-')).toBeNull();
     expect(parse(',')).toBeNull();
     expect(parse('₺')).toBeNull();
-    expect(parse('1.234,56 EUR')).toBeNull();
+    expect(parse('1.234,56 XYZ')).toBeNull(); // EUR v2.2.0'da tanınır oldu
   });
 
   it('birden fazla virgülü reddeder', () => {
