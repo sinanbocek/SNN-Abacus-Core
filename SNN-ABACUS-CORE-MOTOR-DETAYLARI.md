@@ -143,6 +143,22 @@ alanıdır (`opts.kurus`, "kuruş basamağı göster" boolean'ı). İkisi ayrıd
 Yüzde biçimi. Ondalık ayraç virgül. Örnek: `percent(12.345, 1) → "%12,3"` · `percent(2.5678, 2) → "%2,57"`
 · `percent(null) → "—"`.
 
+### `parse(text: string | null | undefined): number | null`  — GİRİŞ KAPISI
+`format`'ın **aynası**: Türkçe biçimli para metnini **kuruş tam sayısına** çevirir.
+Kuruşa çevrim `math` üzerinden yapılır, bu yüzden elle `× 100` yapmanın ürettiği
+float hatası oluşmaz (`parseNumber('19,99') * 100` = 1998.9999999999998; `parse('19,99')` = 1999).
+
+Kabul edilenler = `format`'ın ürettiği tüm biçimler:
+`"₺23.232"` · `"₺23.232,23"` · `"-₺23.232"` · `"(₺23.232)"` · `"23.232 TL"` · `"$220,75"` · `"220,75 USD"` · `"0"` · `"0,00"`
+
+**Kapalı hoşgörü listesi:** baştaki/sondaki boşluk · simge yazılmamış olabilir
+(`"1.234,56"`) · binlik ayraç yazılmamış olabilir (`"1234,56"`) · tek ondalık hane
+(`",5"` = 50 kuruş).
+
+**Reddedilenler:** İngilizce biçim (`"1,234.56"`) · bozuk binlik gruplama (`"1.23"`)
+· ikiden fazla ondalık (`"1,234"`) · tanınmayan para birimi (`"1.234,56 EUR"`)
+· çöp/boş/null. Negatif sıfır dönmez.
+
 ### `parseNumber(val: string): number | null`
 Binlik-ayraçlı metni ham sayıya çevirir (nokta binlik, virgül ondalık).
 **Çözümlenemeyen girdide `null` döner** (v1.1.0'da `0` dönüyordu; bu, "değer yok"
@@ -356,6 +372,24 @@ Saat stilleri (v2.0.0):
 - `time` → `"00:30"` — saat kısmı yoksa `'—'`
 - `dateTime` → `"25.08.2026 00:30"` — saat kısmı yoksa `'—'`
 - `dayMonthWeekday` → `"13 Ağustos Per."`
+
+### `parse(text: string | null | undefined): string | null`  — GİRİŞ KAPISI
+`format`'ın **aynası**: Türkçe biçimli tarih metnini ISO metnine çevirir.
+
+Yalnızca **bilgi kaybetmeyen** stiller geri okunur:
+- `short` → `parse('15.08.2026')` → `"2026-08-15"`
+- `long` → `parse('15 Ağustos 2026')` → `"2026-08-15"`
+- `dateTime` → `parse('25.08.2026 00:30')` → `"2026-08-25T00:30"`
+
+**Bilinçli olarak reddedilenler:** `dayMonth` (`"15 Ağu."` — yıl yok), `monthYear`
+(`"Ağustos 2026"` — gün yok), `period` (`"08/2026"`), `time` (`"00:30"` — tarih yok).
+Eksik bilgiyi tahmin etmek sessiz hata üretirdi.
+
+**Kapalı hoşgörü listesi:** boşluk · sıfır dolgusuz gün/ay (`"5.1.2026"`) · ISO
+girdinin olduğu gibi kabulü (`"2026-08-15"`) · ay adında büyük/küçük harf farkı.
+
+**Reddedilenler:** ABACUS'un üretmediği ayraçlar (`"15/08/2026"`, `"15-08-2026"`)
+· iki haneli yıl · tanınmayan ay adı · **var olmayan takvim günü** (`"30.02.2024"` → null).
 
 ### `monthName(month: number, form: NameForm = 'long'): string`
 Ay numarasından (1-12) Türkçe ay adı. `monthName(8) → "Ağustos"` · `monthName(8,'short') → "Ağu"`

@@ -325,3 +325,56 @@ describe('BELGE İDDİALARI — MIGRATION-v2.md', () => {
     expect([...['zam', 'çam', 'dal']].sort()).toEqual(['dal', 'zam', 'çam']);
   });
 });
+
+describe('BELGE İDDİALARI — giriş kapısı (AYNA KURALI)', () => {
+  it('SPEC §2.1: parse(format(x)) === x', () => {
+    expect(money.parse(money.format(123456, { kurus: true }))).toBe(123456);
+    expect(date.parse(date.format('2026-08-15', 'short'))).toBe('2026-08-15');
+    expect(date.parse(date.format('2026-08-15', 'long'))).toBe('2026-08-15');
+  });
+
+  it('SPEC §2.1: bilgi kaybeden çıktı geri okunamaz', () => {
+    expect(date.parse('Ağustos 2026')).toBeNull();
+    expect(date.parse('15 Ağu.')).toBeNull();
+    expect(date.parse('08/2026')).toBeNull();
+    expect(date.parse('00:30')).toBeNull();
+  });
+
+  it('README: hızlı başlangıç parse satırları', () => {
+    expect(money.parse('₺1.234,56')).toBe(123456);
+    expect(date.parse('15.08.2026')).toBe('2026-08-15');
+  });
+
+  it('MOTOR-DETAYLARI: money.parse örnekleri', () => {
+    expect(money.parse('₺23.232')).toBe(2323200);
+    expect(money.parse('₺23.232,23')).toBe(2323223);
+    expect(money.parse('-₺23.232')).toBe(-2323200);
+    expect(money.parse('(₺23.232)')).toBe(-2323200);
+    expect(money.parse('23.232 TL')).toBe(2323200);
+    expect(money.parse('$220,75')).toBe(22075);
+    expect(money.parse('220,75 USD')).toBe(22075);
+    expect(money.parse('0')).toBe(0);
+    expect(money.parse('0,00')).toBe(0);
+    expect(money.parse('1.234,56')).toBe(123456);
+    expect(money.parse('1234,56')).toBe(123456);
+    expect(money.parse('1,5')).toBe(150);
+    expect(money.parse('1,234.56')).toBeNull();
+    expect(money.parse('1.23')).toBeNull();
+    expect(money.parse('1,234')).toBeNull();
+    expect(money.parse('1.234,56 EUR')).toBeNull();
+    // float hatasi karsilastirmasi
+    expect(money.parse('19,99')).toBe(1999);
+    expect((money.parseNumber('19,99') as number) * 100).not.toBe(1999);
+  });
+
+  it('MOTOR-DETAYLARI: date.parse örnekleri', () => {
+    expect(date.parse('15.08.2026')).toBe('2026-08-15');
+    expect(date.parse('15 Ağustos 2026')).toBe('2026-08-15');
+    expect(date.parse('25.08.2026 00:30')).toBe('2026-08-25T00:30');
+    expect(date.parse('5.1.2026')).toBe('2026-01-05');
+    expect(date.parse('2026-08-15')).toBe('2026-08-15');
+    expect(date.parse('15/08/2026')).toBeNull();
+    expect(date.parse('15-08-2026')).toBeNull();
+    expect(date.parse('30.02.2024')).toBeNull();
+  });
+});

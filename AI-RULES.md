@@ -83,6 +83,50 @@ Assert değerleri **dış otoriteden** (piyasa/Darphane/resmi standart) gelir; k
 - Tüketici projeler mantığı **kopyalamaz**; `@snn/abacus-core`'u `npm install github:...` ile çeker.
 - Motor değişikliği yalnız bu repoda yapılır, sürüm (`CHANGELOG.md` + SemVer + git tag) ile dağıtılır.
 
+### 4.1 Yerleştirme Kuralı — Çekirdeğe mi, uygulamaya mı?
+
+Bu kural bağlayıcıdır. Yeni bir fonksiyonun nereye ait olduğu **tartışılmaz, sınanır.**
+
+> **SINAV:** Başka bir şirketin, başka bir alandaki uygulaması bu fonksiyonu
+> **aynen** kullanabilir miydi?
+>
+> - **Evet** → çekirdeğe girer.
+> - **Hayır** → tüketici projede kalır.
+
+**Pratik ayıraç:** fonksiyonun adında ya da imzasında **senin işine ait bir kavram**
+geçiyorsa (kasa, trade, pozisyon, ödeme, proje, tedarikçi, abone, sipariş…)
+uygulamaya aittir. Yalnızca **sayı, para, metin, tarih, birim** biliyorsa çekirdeğe aittir.
+
+**Gerçek örnekler** (2026-08 tarihli tüketici proje taramasından):
+
+| Fonksiyon | Karar | Gerekçe |
+|---|---|---|
+| `parseTLInputToKurus` | **çekirdek** | yalnız metin ve para bilir |
+| `normalizeStr` / `normalizeSearchKey` | **çekirdek** | yalnız metin bilir |
+| `decimal(value, digits)` | **çekirdek** | yalnız sayı bilir |
+| `daysBetween`, `roundSafe` | **çekirdek** | zaten çekirdekte var |
+| `computeTrade` | uygulama | "trade" alan kavramı |
+| `totalKasaTRY` | uygulama | "kasa" alan kavramı |
+| `checkPaymentStatus` | uygulama | "payment" alan kavramı |
+| `shouldAutoConfirm` | uygulama | iş kuralı, hesap değil |
+
+**Sınır durumları:**
+
+1. **Alan kavramı içeren ama genel bir çekirdeği olan fonksiyon** ikiye bölünür.
+   Genel kısım çekirdeğe, alan kısmı uygulamada kalır.
+   Örnek: `totalKasaTRY` uygulamada kalır ama içindeki toplama/kur çevrimi
+   `math` ve `currency` üzerinden yapılır.
+2. **Bir sabit iki uygulamada da aynıysa** çekirdeğe girer (ör. `ONS_TO_GRAM`).
+   Uygulamaya göre değişiyorsa (limitler, oranlar, eşikler) girmez —
+   çekirdek parametre olarak alır.
+3. **Emin değilsen çekirdeğe ALMA.** Çekirdeğe eklemek kolay, çıkarmak kırıcı
+   sürüm gerektirir (§4 dağıtım kuralı). Şüphe uygulamadan yana çözülür.
+
+**Hedef ölçütü:** Bir tüketici projeyi çekirdeğe taşırken hedef "yerel kodun
+%100'ünü çekirdeğe almak" DEĞİLDİR. Hedef: **genel kodun %100'ü çekirdeğe,
+alan kodunun %0'ı.** Yerel klasör kaybolmaz, küçülür ve doğru adı alır
+(`domain/abacus/` → `domain/<alan>/`).
+
 ---
 
 ## 5. Git ve Doğrulama Disiplini

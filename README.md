@@ -17,8 +17,10 @@ npm install github:sinanbocek/SNN-Abacus-Core#v1.1.0
 ```typescript
 import { money, math, tradingMath, date, gold, silver, unit, period, collate } from '@snn/abacus-core';
 
-// Para Biçimlendirme
+// Para Biçimlendirme — ve geri okuma (AYNA KURALI)
 money.format(150000);                          // "₺1.500"
+money.parse('₺1.234,56');                      // 123456 (kuruş, float hatası yok)
+date.parse('15.08.2026');                      // "2026-08-15"
 
 // Hassas Kuruş Matematiği
 math.add(10000, 5000);                         // 15000
@@ -54,7 +56,7 @@ collate.sortBy(['zam', 'çam', 'dal']);    // ["çam", "dal", "zam"]
 | Motor | Klasör | Bir Satır Özeti |
 |---|---|---|
 | **`math`** | `src/abacus/math/` | `decimal.js` tabanlı hassas kuruş matematiği (IEEE-754 float hatasız toplama, çıkarma, çarpma, bölme, half-up yuvarlama). |
-| **`money`** | `src/abacus/money/` | TCMB standartlarında para biçimlendirme (`format`), tutar yazısı (`toWords`) ve compact kısaltma (`compact`: 1M, 1.5Mn). |
+| **`money`** | `src/abacus/money/` | TCMB standartlarında para biçimlendirme (`format`), **metinden kuruşa ayrıştırma (`parse`)**, tutar yazısı (`toWords`) ve compact kısaltma (`compact`: 1M, 1.5Mn). |
 | **`currency`** | `src/abacus/currency/` | Parametrik kur çevrimi (`convert`, `cross`). Kur enjeksiyon prensibiyle çalışır; dış HTTP/DB bağımlılığı yoktur. |
 | **`date`** | `src/abacus/date/` | `Intl` bağımsız Türkçe ISO tarih/saat biçimlendirme (`format`: short/long/dayMonth/monthYear/period/time/dateTime/dayMonthWeekday), ay adı (`monthName`), bağıl zaman (`relative`), gün farkı (`daysBetween`) ve gün adı (`dayName`). Saat dilimi: **Europe/Istanbul**. Takvim doğrulaması yapar (30 Şubat reddedilir). |
 | **`text`** | `src/abacus/text/` | Türkçe ek çekim fonetiği (`suffix`: 5 hâl + 6 iyelik + pronominal-n), harf dönüşümü (`upper`, `lower`, `title`), `join` ve metin normalizasyonları (`phone`, `email`, `website`, `name`, `company`). |
@@ -71,7 +73,7 @@ collate.sortBy(['zam', 'çam', 'dal']);    // ["çam", "dal", "zam"]
 
 ## 🧪 Kalite & Test Kapsamı
 
-- **368 Birim Testi:** %100 yeşil test güvencesi (`vitest`).
+- **411 Birim Testi:** %100 yeşil test güvencesi (`vitest`).
 - **Ölçülen Kapsam:** statements %91,2 · branches %86,2 · functions %99,0 · lines %96,5 — CI'da eşiklerle korunur (`npm run test:coverage`).
 - **TypeScript Strict:** Sıfır `any`, tam tip emniyeti.
 - **Belge İddiaları Test Edilir:** README/INSTALL/SPEC/MOTOR-DETAYLARI içindeki her kod örneği `docs-claims.test.ts` ile doğrulanır; belge ile kod ayrışırsa CI kırılır.

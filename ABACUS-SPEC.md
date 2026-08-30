@@ -64,9 +64,9 @@ silver.gramSilverPrice(31, 34.20);        // 3405 (kuruş)
 | Motor | Dışa açılan fonksiyonlar (tam liste) | Not |
 |---|---|---|
 | `math` | `add`, `sub`, `mul`, `div`\|null, `round` (half-up), `abs`, `floor`, `mod`\|null, `ratio`\|null, `percent`\|null, `pow`\|null, `log`\|null, `max`\|null | decimal.js kapsülü |
-| `money` | `format`, `percent`, `parseNumber`\|null, `fmtDecimalGrouped`, `formatGroupedInput`, `toWords`, `compact` | kuruş → metin |
+| `money` | `format`, **`parse`\|null**, `percent`, `parseNumber`\|null, `fmtDecimalGrouped`, `formatGroupedInput`, `toWords`, `compact` | kuruş ↔ metin |
 | `currency` | `convert(minor, rate)`\|null, `cross(minor, from, to)`\|null | kur parametreyle gelir |
-| `date` | `format`, `monthName`, `daysBetween`\|null, `daysUntil`\|null, `relative`, `dayName` | Intl'siz, TR, Europe/Istanbul |
+| `date` | `format`, **`parse`\|null**, `monthName`, `daysBetween`\|null, `daysUntil`\|null, `relative`, `dayName` | Intl'siz, TR, Europe/Istanbul |
 | `text` | `toAsciiLower`, `toTrLower`, `lower`, `upper`, `title`, `join`, `phone`, `whatsapp`, `email`, `website`, `websiteUrl`, `name`, `company`, `numberToWords`, `lastVowel`, `isBackVowel`, `isRoundedVowel`, `endsWithHardConsonant`, `endsWithVowel`, `suffix` | TR harf güvenli |
 | `validate` | `vkn`, `tckn`, `ikn`, `iban`, `email` | resmî checksum, hepsi `boolean` |
 | `mask` | `money`, `vkn`, `iban`, `phone` | PII gizleme |
@@ -77,7 +77,33 @@ silver.gramSilverPrice(31, 34.20);        // 3405 (kuruş)
 | `period` | `addDays`\|null, `addMonths`\|null, `startOfMonth`\|null, `endOfMonth`\|null, `quarterOf`\|null, `quarterRange`\|null, `monthsBetween`\|null, `isBetween`\|null | tarih ÜRETİR (`date` biçimlendirir) |
 | `collate` | `key`, `compare`, `sortBy` | Türkçe sıralama, `Intl.Collator` yok |
 
-### 2.1 Dönüş Sözleşmeleri (normatif)
+### 2.1 AYNA KURALI (normatif) — giriş kapısı
+
+Çekirdek yalnız **dışa** değil, **içe** de çalışır. Ayrıştırma (parse) fonksiyonları
+şu kurala tabidir:
+
+> **ABACUS kendi ürettiği her şeyi geri okuyabilmelidir; ne fazlasını, ne eksiğini.**
+>
+> `parse(format(x)) === x`
+
+Bu kural üç işi birden yapar:
+1. **Sınırı çizer.** `"₺1.234,56"` kabul edilir (ABACUS üretir); `"1,234.56"`
+   (İngilizce) reddedilir (ABACUS üretmez).
+2. **Sınanabilir.** Özellik testiyle binlerce değer üzerinde otomatik doğrulanır.
+3. **Kapsam tartışmasını bitirir.** "Şu biçim de desteklensin" isteğinin cevabı
+   hazırdır: *ABACUS bunu üretiyor mu?*
+
+Kuralın yanında **KAPALI ve belgelenmiş** bir hoşgörü listesi bulunur (kullanıcının
+yazarken eksik bırakabileceği şeyler). Liste her motorun belgesinde yazılıdır ve
+genişletilmesi bilinçli bir karar gerektirir.
+
+**Bilgi kaybeden çıktı geri okunamaz.** `date.format(x, 'monthYear')` günü atar;
+bu yüzden `date.parse('Ağustos 2026')` `null` döner — eksik bilgiyi tahmin etmek
+sessiz hata üretirdi.
+
+---
+
+### 2.2 Dönüş Sözleşmeleri (normatif)
 
 Motorlar tek bir hata dili kullanmaz; **hangi işin hangi sentineli döndürdüğü kuraldır**:
 
