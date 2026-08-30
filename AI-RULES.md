@@ -83,6 +83,25 @@ Assert değerleri **dış otoriteden** (piyasa/Darphane/resmi standart) gelir; k
 - Tüketici projeler mantığı **kopyalamaz**; `@snn/abacus-core`'u `npm install github:...` ile çeker.
 - Motor değişikliği yalnız bu repoda yapılır, sürüm (`CHANGELOG.md` + SemVer + git tag) ile dağıtılır.
 
+### 4.0 SemVer artık bir TAAHHÜTTÜR
+
+Tüketici projeler `#semver:^X.Y.Z` aralığıyla bağlanır: **minor ve yama sürümleri
+onlara OTOMATİK iner.** Bu, sürüm numarasını bir etiketten sorumluluğa çevirir.
+
+- Kırıcı bir değişikliği **minor olarak çıkarmak, tüm tüketici projeleri sessizce
+  bozar.** Kırıcı değişiklik daima MAJOR'dur; istisnası yoktur.
+- "Küçük bir düzeltme, kimse fark etmez" diye düşünülen davranış değişiklikleri
+  de kırıcıdır. Ölçüt niyet değil, **tüketicinin gördüğü çıktıdır**.
+- Şüphe varsa MAJOR seçilir. Gereksiz major sürüm ucuzdur; sessiz kırılma değildir.
+
+**Makine zorlaması:** `src/abacus/api-surface.test.ts` dışa açılan her adı
+çiviler. Bir ad silinir/yeniden adlandırılırsa test kırılır ve MAJOR gerektiğini
+söyler; yeni ad eklenirse kırılır ve MINOR gerektiğini söyler. Listeyi güncellemek
+bilinçli bir adımdır — düşünmeden güncellenmez.
+
+> Not: Bu test yalnız ADLARI korur, davranışı değil. Davranış değişikliğini
+> yakalayan `docs-claims.test.ts` ve motor testleridir. İkisi birlikte çalışır.
+
 ### 4.1 Yerleştirme Kuralı — Çekirdeğe mi, uygulamaya mı?
 
 Bu kural bağlayıcıdır. Yeni bir fonksiyonun nereye ait olduğu **tartışılmaz, sınanır.**

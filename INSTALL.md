@@ -9,7 +9,7 @@ Bu rehber, **ABACUS Engine** (`@snn/abacus-core`) çekirdek motorunu herhangi bi
 Projelerinizin kök dizininde aşağıdaki komutu çalıştırarak `@snn/abacus-core` paketini doğrudan GitHub deposundan kurun:
 
 ```bash
-npm install github:sinanbocek/SNN-Abacus-Core#v1.1.0
+npm install github:sinanbocek/SNN-Abacus-Core#semver:^2.1.0
 ```
 
 > 💡 **Bağımlılık Notu:** Paket, hassas matematiksel işlemler için gereken `decimal.js` bağımlılığını otomatik olarak indirip projenize bağlar. Ekstra bir `decimal.js` kurulumu gerekmez.
@@ -69,11 +69,50 @@ console.log(collate.sortBy(['zam', 'çam', 'dal']));         // [ çam, dal, zam
 
 ---
 
-## 🔄 4. Paket Güncelleme Süreci
+## 🔄 4. Sürüm ve Güncelleme Politikası
 
-**v1.1.0 → v2.0.0 geçişi için ayrıntılı rehber: [MIGRATION-v2.md](MIGRATION-v2.md).**
+Çekirdek **SemVer**'e uyar. Tüketici projeler `#semver:^X.Y.Z` aralığıyla bağlanır;
+bu, güvenli güncellemelerin otomatik gelmesini, kırıcı olanların gelmemesini sağlar.
 
-Sürüm yükseltmek için tüketici projede pin'i elle yeni tag'e çekin (örn. `#v1.1.0` → `#v2.0.0`), sonra projenin karakterizasyon/birim testlerini çalıştırıp beklenmeyen değişiklik olmadığını doğrulayın. Otomatik `npm update` KULLANILMAZ — sürüm geçişi her zaman bilinçli ve test-korumalıdır.
+| Çekirdekte çıkan | Örnek | Tüketiciye ne olur |
+|---|---|---|
+| **Yama** (patch) | 2.1.0 → 2.1.1 | **otomatik gelir** |
+| **Ek özellik** (minor) | 2.1.0 → 2.2.0 | **otomatik gelir** |
+| **Kırıcı** (major) | 2.x → 3.0.0 | **GELMEZ** — `package.json` elle değiştirilir |
+
+### Bağlanma biçimleri
+
+```jsonc
+// ÖNERİLEN — minor ve yamalar otomatik, major asla
+"@snn/abacus-core": "github:sinanbocek/SNN-Abacus-Core#semver:^2.1.0"
+
+// Yalnız yama otomatik (daha muhafazakâr)
+"@snn/abacus-core": "github:sinanbocek/SNN-Abacus-Core#semver:~2.1.0"
+
+// Tam sabit — hiçbir güncelleme gelmez
+"@snn/abacus-core": "github:sinanbocek/SNN-Abacus-Core#v2.1.0"
+```
+
+> Doğrulandı (2026-08-30): `^2.0.0` aralığı 2.1.0'a çözülür, `~2.0.0` ve
+> `#v2.0.0` 2.0.0'da kalır.
+
+### Güncelleme ne zaman iner?
+
+`^` yazmak, her `npm install`'da sürümün değişeceği anlamına **gelmez**.
+`package-lock.json` tam commit'i sabitler; CI `npm ci` ile kurduğu sürece
+build'ler **tekrarlanabilir** kalır. Güncelleme yalnızca şu iki durumda iner:
+
+1. Biri `npm update @snn/abacus-core` çalıştırdığında
+2. Bir bot (Renovate / Dependabot) yeni etiketi görüp PR açtığında
+
+İkinci yol önerilir: PR açılır → **o projenin kendi testleri çalışır** →
+yeşilse birleştirilir. Otomatik ama körü körüne değil.
+
+### Major sürüme geçiş
+
+Otomatik gelmez ve gelmemelidir. Geçiş için `MIGRATION-*.md` belgesi okunur,
+pin elle yükseltilir, projenin testleri çalıştırılır.
+v1.1.0 → v2.0.0 için: [MIGRATION-v2.md](MIGRATION-v2.md).
 
 ---
 

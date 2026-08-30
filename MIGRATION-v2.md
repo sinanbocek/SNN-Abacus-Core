@@ -26,8 +26,13 @@ vermesindedir.
 Kurulum:
 
 ```bash
-npm install github:sinanbocek/SNN-Abacus-Core#v2.0.0
+npm install github:sinanbocek/SNN-Abacus-Core#semver:^2.1.0
 ```
+
+> **Pin biçimini de değiştirin.** v1.1.0'da sabit tag (`#v1.1.0`) kullanılıyordu.
+> v2'den itibaren aralık (`#semver:^2.1.0`) önerilir: yama ve ek özellik
+> sürümleri otomatik gelir, kırıcı major sürüm gelmez.
+> Ayrıntı: [INSTALL.md §4](INSTALL.md).
 
 ---
 
@@ -204,7 +209,7 @@ Yeni `kind` alanı: `'mobile' | 'landline' | 'special' | null`
 ## Adım 4 — Yükseltmeyi doğrula
 
 ```bash
-npm install github:sinanbocek/SNN-Abacus-Core#v2.0.0
+npm install github:sinanbocek/SNN-Abacus-Core#semver:^2.1.0
 npm test
 ```
 

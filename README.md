@@ -9,10 +9,10 @@
 Projelerinize GitHub üzerinden doğrudan npm paketi olarak ekleyin:
 
 ```bash
-npm install github:sinanbocek/SNN-Abacus-Core#v1.1.0
+npm install github:sinanbocek/SNN-Abacus-Core#semver:^2.1.0
 ```
 
-> **Üretim projeleri her zaman bir sürüm tag'ine pinlemelidir** (örn. `#v1.1.0`). Yükseltme, tag'i elle yeni sürüme çekip tüketici projenin testlerini çalıştırarak yapılır — otomatik güncelleme kullanılmaz.
+> **Sürüm politikası:** `#semver:^2.1.0` aralığı ile bağlanın. Yama ve ek özellik sürümleri (2.1.1, 2.2.0) **otomatik gelir**; kırıcı major sürüm (3.0.0) **gelmez** ve elle geçilir. `package-lock.json` tam commit'i sabitlediği için build'ler tekrarlanabilir kalır. Ayrıntı: [INSTALL.md §4](INSTALL.md).
 
 ```typescript
 import { money, math, tradingMath, date, gold, silver, unit, period, collate } from '@snn/abacus-core';
@@ -73,7 +73,7 @@ collate.sortBy(['zam', 'çam', 'dal']);    // ["çam", "dal", "zam"]
 
 ## 🧪 Kalite & Test Kapsamı
 
-- **411 Birim Testi:** %100 yeşil test güvencesi (`vitest`).
+- **416 Birim Testi:** %100 yeşil test güvencesi (`vitest`).
 - **Ölçülen Kapsam:** statements %91,2 · branches %86,2 · functions %99,0 · lines %96,5 — CI'da eşiklerle korunur (`npm run test:coverage`).
 - **TypeScript Strict:** Sıfır `any`, tam tip emniyeti.
 - **Belge İddiaları Test Edilir:** README/INSTALL/SPEC/MOTOR-DETAYLARI içindeki her kod örneği `docs-claims.test.ts` ile doğrulanır; belge ile kod ayrışırsa CI kırılır.
@@ -88,4 +88,5 @@ collate.sortBy(['zam', 'çam', 'dal']);    // ["çam", "dal", "zam"]
 3. **Sıfır Ham toLowerCase / toUpperCase**: Türkçe harf dönüşümleri (`İ->i`, `I->ı`) `text.lower` ve `text.upper` ile yapılır.
 4. **Parametresiz Date Yok**: `relative` ve `daysUntil` fonksiyonları bugün tarihini parametre olarak alır. Girdi her zaman **ISO string**'dir, `Date` nesnesi değildir.
 5. **Sıfır Sessiz Varsayılan**: `|| 0` ve `?? 0` kalıpları ESLint ile `error` seviyesinde yasaktır; geçersiz girdi ABACUS-SPEC §2.1'deki sentinel ile bildirilir.
-6. **Single Source of Truth**: Motor güncellemeleri yalnızca `SNN-Abacus-Core` reposunda yapılır; tüketici projeler pin'i elle yeni sürüm tag'ine çekerek alır (otomatik `npm update` kullanılmaz).
+6. **Single Source of Truth**: Motor güncellemeleri yalnızca `SNN-Abacus-Core` reposunda yapılır; tüketici projeler `#semver:^X.Y.Z` aralığıyla alır. Kırıcı (major) sürümler asla otomatik inmez.
+7. **API Yüzeyi Kilitli**: Dışa açılan her ad `api-surface.test.ts` ile çivilenmiştir; bir ad silinirse test kırılır ve major sürüm gerektiği görülür.

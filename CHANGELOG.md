@@ -4,6 +4,26 @@ Bu projedeki tüm önemli değişiklikler bu dosyada belgelenir.
 Format [Keep a Changelog](https://keepachangelog.com/tr/) temellidir;
 sürümleme [Semantic Versioning](https://semver.org/lang/tr/) kurallarına uyar.
 
+## [Yayımlanmamış]
+
+### Değişenler — sürüm ve güncelleme politikası
+
+- **Tüketiciler artık `#semver:^X.Y.Z` aralığıyla bağlanır.** Yama ve ek özellik
+  sürümleri otomatik iner; kırıcı major sürüm inmez ve elle geçilir.
+  Önceki politika ("otomatik güncelleme kullanılmaz") bunun yerini aldı.
+  `package-lock.json` tam commit'i sabitlediği için build'ler tekrarlanabilir
+  kalır; güncelleme yalnız `npm update` ya da bot PR'ı ile iner.
+  `INSTALL.md §4` yeniden yazıldı.
+- **`AI-RULES §4.0`** — SemVer artık bir taahhüttür: minor otomatik indiği için
+  kırıcı değişikliği minor olarak çıkarmak tüm tüketicileri sessizce bozar.
+
+### Eklenenler
+
+- **`api-surface.test.ts`** — genel API yüzeyi kilidi. Dışa açılan her ad
+  çivilenmiştir: bir ad silinirse test "SİLİNEN ADLAR / MAJOR gerekir" diyerek
+  kırılır, yeni ad eklenirse "YENİ ADLAR / MINOR gerekir" diyerek kırılır.
+  Yeni sürüm politikasının makine zorlaması (AI-RULES §1).
+
 ## [2.1.0] - 2026-08-30
 
 > Tümü **eklemeli**dir; hiçbir mevcut davranış değişmemiştir. v2.0.0'dan
