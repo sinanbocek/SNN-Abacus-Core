@@ -1,7 +1,7 @@
 import { div, floor, mod } from '../math';
 import { formatMoney } from '../internal/money-format';
 import { isEmailShaped } from '../internal/patterns';
-import { toAsciiLower as leafAsciiLower, toTrLower as leafTrLower, toTrUpper } from '../internal/tr-case';
+import { foldChar, toAsciiLower as leafAsciiLower, toTrLower as leafTrLower, toTrUpper } from '../internal/tr-case';
 
 export interface NumberToWordsOptions {
   spaced?: boolean;
@@ -104,6 +104,39 @@ export const toAsciiLower = leafAsciiLower;
  */
 export const toTrLower = leafTrLower;
 
+
+/**
+ * ARAMA ANAHTARI — metni aramada karşılaştırılabilir bir anahtara çevirir.
+ *
+ * `lower` Türkçe-doğrudur ama arama için katıdır: `lower('Ismail')` = "ısmail",
+ * `lower('İsmail')` = "ismail" — ikisi eşleşmez ve kullanıcı aradığını bulamaz.
+ * `searchKey` her ikisini de "ismail" yapar.
+ *
+ * Yapılanlar: Türkçe harfleri ASCII'ye katlar (ç→c, ğ→g, ı/i/I/İ→i, ö→o, ş→s,
+ * ü→u, şapkalılar dâhil), ASCII küçültür, baştaki/sondaki boşluğu atar ve iç
+ * boşlukları teke indirir.
+ *
+ * ⚠️ KAPSAM SINIRI (bilinçli): noktalama ve boşluklar SİLİNMEZ. Bu daha agresif
+ * bir karardır ve uygulamaya aittir; çekirdek en az yıkıcı olanı yapar.
+ * İhtiyaç duyan tüketici `searchKey(x).replace(/[^a-z0-9]/g, '')` ekleyebilir.
+ *
+ * ⚠️ `collate.key` ile KARIŞTIRILMAMALI: bu ARAMA anahtarıdır (ç ile c aynı
+ * sayılır); `collate.key` SIRALAMA anahtarıdır (ç ile c ayrı harftir).
+ *
+ * @example text.searchKey('Çağrı Öztürk')  // "cagri ozturk"
+ */
+export function searchKey(value: string | null | undefined): string {
+  if (!value) return '';
+
+  let out = '';
+  for (let i = 0; i < value.length; i++) {
+    const ch = value[i];
+    if (ch === undefined) continue;
+    out += foldChar(ch);
+  }
+
+  return out.trim().replace(/\s+/g, ' ');
+}
 
 /** Türkçe harf küçültme motoru (toTrLower takma adı, ABACUS-SPEC §3.5-c) */
 export const lower = toTrLower;

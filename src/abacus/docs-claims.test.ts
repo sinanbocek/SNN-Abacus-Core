@@ -417,3 +417,22 @@ describe('BELGE İDDİALARI — para birimi (v2.2.0)', () => {
     expect(money.compact(123456789)).toBe('₺1,23M');
   });
 });
+
+describe('BELGE İDDİALARI — v2.3.0', () => {
+  it('MOTOR-DETAYLARI: text.searchKey', () => {
+    expect(text.searchKey('Çağrı Öztürk')).toBe('cagri ozturk');
+    expect(text.searchKey('İSMAİL')).toBe('ismail');
+    expect(text.searchKey('  Ali   Veli  ')).toBe('ali veli');
+    expect(text.searchKey(null)).toBe('');
+    // lower bunu yapamaz — searchKey'in var olus sebebi
+    expect(text.lower('Ismail')).not.toBe(text.lower('İsmail'));
+    expect(text.searchKey('Ismail')).toBe(text.searchKey('İsmail'));
+  });
+
+  it('MOTOR-DETAYLARI: money.percent showPositiveSign', () => {
+    expect(money.percent(12.345, 1, { showPositiveSign: true })).toBe('%+12,3');
+    expect(money.percent(-12.345, 1, { showPositiveSign: true })).toBe('%-12,3');
+    expect(money.percent(0, 1, { showPositiveSign: true })).toBe('%0');
+    expect(money.percent(12.345)).toBe('%12,3');
+  });
+});

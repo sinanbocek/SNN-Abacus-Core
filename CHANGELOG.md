@@ -4,6 +4,30 @@ Bu projedeki tüm önemli değişiklikler bu dosyada belgelenir.
 Format [Keep a Changelog](https://keepachangelog.com/tr/) temellidir;
 sürümleme [Semantic Versioning](https://semver.org/lang/tr/) kurallarına uyar.
 
+## [2.3.0] - 2026-08-30
+
+> Tümü eklemelidir; hiçbir mevcut davranış değişmemiştir.
+
+### Eklenenler
+
+- **`text.searchKey(value)`** — ARAMA ANAHTARI. Denetim raporu B11-e'de sahadan
+  bildirilen ve doğrulanan boşluk: `lower('Ismail')` = "ısmail" ile
+  `lower('İsmail')` = "ismail" eşleşmiyordu, kullanıcı aradığını bulamıyordu.
+  `searchKey` her ikisini de `"ismail"` yapar.
+  Türkçe harfleri ASCII'ye katlar, ASCII küçültür, boşlukları teke indirir.
+  **Kapsam sınırı (bilinçli):** noktalama ve boşluklar silinmez — daha agresif
+  temizlik uygulamanın kararıdır.
+  ⚠️ `collate.key` ile karıştırılmamalı: bu ARAMA anahtarıdır (ç = c),
+  `collate.key` SIRALAMA anahtarıdır (ç ≠ c).
+
+  > İki tüketici projede birbirinden bağımsız olarak elle yazılmış hâlde
+  > bulundu (`normalizeStr`, `normalizeSearchKey`); yerleştirme kuralı
+  > (AI-RULES §4.1) gereği çekirdeğe alındı.
+
+- **`money.percent`'e `showPositiveSign` seçeneği** — pozitif değerlere `+`
+  ekler (`"%+12,3"`). Sıfıra işaret eklenmez. Değişim/fark tablolarında yönü
+  görünür kılmak içindir. Varsayılan davranış değişmedi.
+
 ## [2.2.0] - 2026-08-30
 
 ### Eklenenler — PARA BİRİMİ ARTIK VERİ

@@ -96,3 +96,34 @@ export function toTrUpper(str: string): string {
   }
   return res;
 }
+
+/**
+ * ARAMA için Türkçe harfleri ASCII karşılığına katlar.
+ *
+ * Küçültmeden FARKLIDIR: `toTrLower` Türkçe-doğrudur (I -> ı) ama arama için
+ * katıdır; burada I ve İ'nin ikisi de 'i' olur ki "Ismail" yazan "İsmail"i
+ * bulabilsin.
+ */
+const TR_FOLD_MAP: Record<string, string> = {
+  'ç': 'c', 'Ç': 'c',
+  'ğ': 'g', 'Ğ': 'g',
+  // 'I' ve 'i' satırları ASCII küçültme dalıyla AYNI sonucu verir; mutasyon
+  // testi ikisini ayırt edemez. Bilerek duruyorlar: searchKey'in var oluş
+  // sebebini gösteriyorlar — Türkçe küçültmede I -> ı olurdu, burada I -> i.
+  'ı': 'i', 'I': 'i',
+  'i': 'i', 'İ': 'i',
+  'ö': 'o', 'Ö': 'o',
+  'ş': 's', 'Ş': 's',
+  'ü': 'u', 'Ü': 'u',
+  'â': 'a', 'Â': 'a',
+  'î': 'i', 'Î': 'i',
+  'û': 'u', 'Û': 'u',
+};
+
+/** Bir karakteri arama katlamasından geçirir; haritada yoksa ASCII küçültür. */
+export function foldChar(ch: string): string {
+  const mapped = TR_FOLD_MAP[ch];
+  if (mapped !== undefined) return mapped;
+  if (ch >= 'A' && ch <= 'Z') return String.fromCharCode(ch.charCodeAt(0) + 32);
+  return ch;
+}

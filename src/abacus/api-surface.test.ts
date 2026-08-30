@@ -23,7 +23,7 @@ import * as abacus from './index';
  * `docs-claims.test.ts` ve motor testleri korur.
  */
 
-/** v2.2.0 itibarıyla dışa açık yüzey. Motor -> dışa açılan adlar. */
+/** v2.3.0 itibarıyla dışa açık yüzey. Motor -> dışa açılan adlar. */
 const API_SURFACE: Record<string, string[]> = {
   math: [
     'abs', 'add', 'div', 'floor', 'log', 'max', 'mod', 'mul', 'percent',
@@ -37,7 +37,8 @@ const API_SURFACE: Record<string, string[]> = {
   text: [
     'company', 'email', 'endsWithHardConsonant', 'endsWithVowel', 'isBackVowel',
     'isRoundedVowel', 'join', 'lastVowel', 'lower', 'name', 'numberToWords',
-    'phone', 'suffix', 'title', 'toAsciiLower', 'toTrLower', 'upper', 'website',
+    'phone', 'searchKey', 'suffix', 'title', 'toAsciiLower', 'toTrLower', 'upper',
+    'website',
     'websiteUrl', 'whatsapp',
   ],
   date: [

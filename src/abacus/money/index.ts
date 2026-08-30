@@ -130,13 +130,27 @@ export const parse = parseMoney;
  * ABACUS yüzde biçimlendirme motoru (%12,3).
  * Null / undefined / NaN için '—' (tire) döndürür.
  */
-export function percent(value: number | null | undefined, digits = 1): string {
+export interface PercentOptions {
+  /**
+   * Pozitif değerlerin önüne '+' koyar ("%+12,3"). Değişim/fark gösteren
+   * tablolarda yönü görünür kılmak için kullanılır.
+   * Sıfıra işaret eklenmez — sıfır ne artı ne eksidir.
+   */
+  showPositiveSign?: boolean;
+}
+
+export function percent(
+  value: number | null | undefined,
+  digits = 1,
+  opts?: PercentOptions
+): string {
   if (value === null || value === undefined || !Number.isFinite(value)) {
     return '—';
   }
   const rounded = round(value, digits);
   const roundedStr = String(rounded).replace('.', ',');
-  return `%${roundedStr}`;
+  const sign = opts?.showPositiveSign === true && rounded > 0 ? '+' : '';
+  return `%${sign}${roundedStr}`;
 }
 
 /**

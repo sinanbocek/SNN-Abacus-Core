@@ -142,6 +142,9 @@ alanıdır (`opts.kurus`, "kuruş basamağı göster" boolean'ı). İkisi ayrıd
 ### `percent(value: number | null | undefined, digits = 1): string`
 Yüzde biçimi. Ondalık ayraç virgül. Örnek: `percent(12.345, 1) → "%12,3"` · `percent(2.5678, 2) → "%2,57"`
 · `percent(null) → "—"`.
+`opts.showPositiveSign` ile pozitif değerlere `+` eklenir:
+`percent(12.345, 1, { showPositiveSign: true }) → "%+12,3"`. Sıfıra işaret
+eklenmez. Değişim/fark tablolarında yönü görünür kılmak içindir.
 
 ### Para birimi (v2.2.0) — VERİ, kod değil
 
@@ -502,6 +505,24 @@ Geçersizde `stored`/`display` boş, `valid: false`, `raw` korunur.
 (ama ilk kelimeyse büyük), kısaltmalar (TYC/A.Ş.) korunur. Örnek: `title('ahmet yılmaz') → "Ahmet Yılmaz"`
 · `title('iSTANBUL') → "İstanbul"` · `title('abc san ve tic') → "Abc San ve Tic"` · `title('ve abc') → "Ve Abc"`
 · `title('tyc grup') → "TYC Grup"`.
+
+### `searchKey(value: string | null | undefined): string`  — ARAMA ANAHTARI
+Metni aramada karşılaştırılabilir bir anahtara çevirir. `lower` Türkçe-doğrudur
+ama arama için katıdır: `lower('Ismail')` = "ısmail", `lower('İsmail')` = "ismail"
+— ikisi eşleşmez. `searchKey` her ikisini de `"ismail"` yapar.
+
+Türkçe harfleri ASCII'ye katlar (ç→c · ğ→g · ı/i/I/İ→i · ö→o · ş→s · ü→u ·
+â→a · î→i · û→u), ASCII küçültür, baştaki/sondaki boşluğu atar, iç boşlukları
+teke indirir.
+
+Örnek: `searchKey('Çağrı Öztürk') → "cagri ozturk"` · `searchKey('İSMAİL') → "ismail"`
+· `searchKey('  Ali   Veli  ') → "ali veli"` · `searchKey(null) → ""`.
+
+⚠️ **Kapsam sınırı (bilinçli):** noktalama ve boşluklar SİLİNMEZ. Daha agresif
+temizlik uygulamanın kararıdır: `searchKey(x).replace(/[^a-z0-9]/g, '')`.
+
+⚠️ **`collate.key` ile karıştırmayın:** bu ARAMA anahtarıdır (ç ile c aynı sayılır);
+`collate.key` SIRALAMA anahtarıdır (ç ile c ayrı harftir).
 
 ### `join(items: string[]): string`
 Türkçe liste bağlama ("A, B ve C"). Boş elemanlar elenir. Örnek: `join(['Ali','Veli']) → "Ali ve Veli"`
