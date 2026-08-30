@@ -13,6 +13,9 @@ export type DateFormatStyle =
 
 export type NameForm = 'short' | 'long';
 
+/** `relative` çıktı stili. Bkz. `relative`. */
+export type RelativeStyle = 'plain' | 'natural';
+
 const MONTH_NAMES_FULL = [
   'Ocak',
   'Şubat',
@@ -248,8 +251,20 @@ export function daysUntil(iso: string, today: string): number | null {
   return daysBetween(today, iso);
 }
 
-/** Bugüne göre Türkçe bağıl zaman ifadesi döner (bugün / dün / yarın / N gün önce/sonra) */
-export function relative(iso: string, today: string): string {
+/**
+ * Bugüne göre Türkçe bağıl zaman ifadesi.
+ *
+ * - `'plain'` (varsayılan): bugün · dün · yarın · N gün önce/sonra
+ * - `'natural'`: yakın gelecekte GÜN ADI kullanır —
+ *   2-6 gün → "Perşembe günü" · 7-13 gün → "haftaya Perşembe"
+ *
+ * ⚠️ Doğal stil yalnız GELECEĞİ zenginleştirir. Geçmiş sayısal kalır:
+ * "geçen Perşembe" hem üç gün öncesini hem iki hafta öncesini anlatabildiği
+ * için belirsizdir ve çekirdek tahmin etmez (bilinçli kapsam sınırı).
+ *
+ * Geçersiz veya var olmayan tarihte '—'.
+ */
+export function relative(iso: string, today: string, style: RelativeStyle = 'plain'): string {
   const diff = daysUntil(iso, today);
   if (diff === null) return '—';
 
@@ -262,7 +277,38 @@ export function relative(iso: string, today: string): string {
     return `${absDiff} gün önce`;
   }
 
+  if (style === 'natural' && diff >= 2 && diff <= 13) {
+    const gun = dayName(iso, 'long');
+    if (gun !== '—') {
+      return diff <= 6 ? `${gun} günü` : `haftaya ${gun}`;
+    }
+  }
+
   return `${diff} gün sonra`;
+}
+
+/**
+ * İki tarihi GÜN düzeyinde karşılaştırır. Saat kısmı yok sayılır; saat dilimi
+ * çevrimi (Europe/Istanbul) uygulandıktan SONRAKİ gün esas alınır.
+ *
+ * Karşılaştırılamayan girdide `null` döner — `false` değil. "Hayır" ile
+ * "bilemedim" birbirinden ayrılır (ABACUS-SPEC §2.2).
+ */
+export function isBefore(isoA: string, isoB: string): boolean | null {
+  const fark = daysBetween(isoA, isoB);
+  return fark === null ? null : fark > 0;
+}
+
+/** `isBefore`'un çifti. Geçersiz girdide null. */
+export function isAfter(isoA: string, isoB: string): boolean | null {
+  const fark = daysBetween(isoA, isoB);
+  return fark === null ? null : fark < 0;
+}
+
+/** İki tarihin aynı güne düşüp düşmediği. Geçersiz girdide null. */
+export function isSameDay(isoA: string, isoB: string): boolean | null {
+  const fark = daysBetween(isoA, isoB);
+  return fark === null ? null : fark === 0;
 }
 
 /**

@@ -79,6 +79,21 @@ Kalan. **Payda `0` ise `null`.** Örnek: `mod(2323223, 100) → 23` · `mod(2323
 Katsayı (pay/payda). **Payda `≤ 0` ise `null`** (negatif dahil). Örnek: `ratio(300, 100) → 3`
 · `ratio(5, 0) → null` · `ratio(5, -10) → null`.
 
+### `equals(a, b, tolerance = 0): boolean`
+Toleranslı eşitlik; sınır **dâhil** (`<=`). Float karşılaştırmasında `a === b`
+yanıltıcıdır (`0.1 + 0.2 !== 0.3`); bu fonksiyon tuzağı görünür kılar.
+`equals(0.1 + 0.2, 0.3) → false` · `equals(0.1 + 0.2, 0.3, 1e-7) → true`.
+Sonlu olmayan girdi ve negatif tolerans `false` üretir (ayrı koruma yoktur —
+`abs()` negatif olmaz, `NaN <= x` zaten false).
+
+### `percentChange(current, previous): number | null`
+İki ölçüm arasındaki **değişim** yüzdesi: `((yeni - eski) / eski) * 100`.
+`percent(pay, payda)` ile karıştırmayın — o bir oranın yüzdesidir.
+`percentChange(150, 100) → 50` · `percentChange(50, 100) → -50` · `percentChange(0.3, 0.1) → 200`
+(ham aritmetik 199.99999999999997 verirdi).
+**`previous <= 0` → `null`** (`percent` ile aynı kural): negatif/sıfır tabanda
+işaret ters döner ve sessiz 0 "değişim yok" ile karışır.
+
 ### `percent(pay: number, payda: number): number | null`
 Yüzde (pay/payda×100). **Payda `≤ 0` ise `null`.** Örnek: `percent(25, 100) → 25` · `percent(1, 0) → null`
 · `percent(1, 3) → 33.333...` (`round(res, 4) → 33.3333`).
@@ -442,6 +457,13 @@ girdinin olduğu gibi kabulü (`"2026-08-15"`) · ay adında büyük/küçük ha
 Ay numarasından (1-12) Türkçe ay adı. `monthName(8) → "Ağustos"` · `monthName(8,'short') → "Ağu"`
 · `monthName(0) → "—"` · `monthName(13) → "—"`.
 
+### `isBefore(isoA, isoB)` · `isAfter(isoA, isoB)` · `isSameDay(isoA, isoB)`
+GÜN düzeyinde karşılaştırma; saat kısmı yok sayılır, saat dilimi çevrimi sonrası
+gün esas alınır. Aynı gün ne önce ne sonradır.
+`isBefore('2026-08-15','2026-08-16') → true` · `isSameDay('2026-08-15T09:00','2026-08-15T23:00') → true`
+· `isSameDay('2026-08-15T21:30:00Z','2026-08-16') → true` (İstanbul çevrimi).
+**Geçersiz girdide `null`** — `false` değil: "hayır" ile "karşılaştıramadım" ayrılır.
+
 ### `daysBetween(isoA: string, isoB: string): number | null`
 Gün farkı (`isoB - isoA`), UTC gün bazında. Geçersiz girdide `null`.
 Örnek: `daysBetween('2026-08-10', '2026-08-15') → 5` · `daysBetween('2026-08-15', '2026-08-10') → -5`
@@ -451,10 +473,16 @@ Gün farkı (`isoB - isoA`), UTC gün bazında. Geçersiz girdide `null`.
 Bugünden hedefe gün farkı (`iso - today`); `daysBetween(today, iso)` sarmalayıcısı. **Bugün parametre.**
 Örnek: `daysUntil('2026-08-20', '2026-08-15') → 5` · `daysUntil('2026-08-10', '2026-08-15') → -5`.
 
-### `relative(iso: string, today: string): string`
+### `relative(iso, today, style: RelativeStyle = 'plain'): string`
 Türkçe bağıl zaman. **Bugün parametre** (saf/deterministik). Geçersizde `'—'`.
 Örnek: `relative('2026-08-15', '2026-08-15') → "bugün"` · `dün` (-1) · `yarın` (+1)
 · `relative('2026-08-12', '2026-08-15') → "3 gün önce"` · `relative('2026-08-18', '2026-08-15') → "3 gün sonra"`.
+
+**`style: 'natural'`** yakın geleceği gün adıyla söyler:
+2-6 gün → `"Perşembe günü"` · 7-13 gün → `"haftaya Perşembe"` · 14+ → sayıya döner.
+⚠️ Yalnız GELECEĞİ zenginleştirir; geçmiş sayısal kalır — "geçen Perşembe" hem üç
+gün öncesini hem iki hafta öncesini anlatabildiği için belirsizdir, çekirdek
+tahmin etmez (bilinçli kapsam sınırı).
 
 ### `dayName(iso: string, form: NameForm = 'short'): string`
 Türkçe gün adı, **İstanbul gününe göre**. Varsayılan kısa (Paz/Pzt/...),

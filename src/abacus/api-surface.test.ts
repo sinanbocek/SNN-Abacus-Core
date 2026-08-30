@@ -23,11 +23,11 @@ import * as abacus from './index';
  * `docs-claims.test.ts` ve motor testleri korur.
  */
 
-/** v2.3.0 itibarıyla dışa açık yüzey. Motor -> dışa açılan adlar. */
+/** v2.4.0 itibarıyla dışa açık yüzey. Motor -> dışa açılan adlar. */
 const API_SURFACE: Record<string, string[]> = {
   math: [
-    'abs', 'add', 'div', 'floor', 'log', 'max', 'mod', 'mul', 'percent',
-    'pow', 'ratio', 'round', 'sub',
+    'abs', 'add', 'div', 'equals', 'floor', 'log', 'max', 'mod', 'mul',
+    'percent', 'percentChange', 'pow', 'ratio', 'round', 'sub',
   ],
   money: [
     'compact', 'decimal', 'fmtDecimalGrouped', 'format', 'formatGroupedInput',
@@ -42,7 +42,8 @@ const API_SURFACE: Record<string, string[]> = {
     'websiteUrl', 'whatsapp',
   ],
   date: [
-    'dayName', 'daysBetween', 'daysUntil', 'format', 'monthName', 'parse', 'relative',
+    'dayName', 'daysBetween', 'daysUntil', 'format', 'isAfter', 'isBefore',
+    'isSameDay', 'monthName', 'parse', 'relative',
   ],
   currency: ['convert', 'cross'],
   validate: ['email', 'iban', 'ikn', 'tckn', 'vkn'],

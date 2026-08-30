@@ -63,10 +63,10 @@ silver.gramSilverPrice(31, 34.20);        // 3405 (kuruş)
 
 | Motor | Dışa açılan fonksiyonlar (tam liste) | Not |
 |---|---|---|
-| `math` | `add`, `sub`, `mul`, `div`\|null, `round` (half-up), `abs`, `floor`, `mod`\|null, `ratio`\|null, `percent`\|null, `pow`\|null, `log`\|null, `max`\|null | decimal.js kapsülü |
+| `math` | `add`, `sub`, `mul`, `div`\|null, `round` (half-up), `abs`, `floor`, `mod`\|null, `ratio`\|null, `percent`\|null, **`percentChange`\|null**, **`equals`**, `pow`\|null, `log`\|null, `max`\|null | decimal.js kapsülü |
 | `money` | `format`, `parse`\|null, `formatMajor`, `toMinor`\|null, `formatMinorInput`, `decimal`, `ratio`, `percent`, `parseNumber`\|null, `fmtDecimalGrouped`, `formatGroupedInput`, `toWords`, `compact`, `knownCurrencyCodes` | alt birim ↔ metin |
 | `currency` | `convert(minor, rate)`\|null, `cross(minor, from, to)`\|null | kur parametreyle gelir |
-| `date` | `format`, **`parse`\|null**, `monthName`, `daysBetween`\|null, `daysUntil`\|null, `relative`, `dayName` | Intl'siz, TR, Europe/Istanbul |
+| `date` | `format`, `parse`\|null, `monthName`, `daysBetween`\|null, `daysUntil`\|null, `relative`, `dayName`, **`isBefore`\|null**, **`isAfter`\|null**, **`isSameDay`\|null** | Intl'siz, TR, Europe/Istanbul |
 | `text` | `toAsciiLower`, `toTrLower`, `lower`, `upper`, `title`, `join`, **`searchKey`**, `phone`, `whatsapp`, `email`, `website`, `websiteUrl`, `name`, `company`, `numberToWords`, `lastVowel`, `isBackVowel`, `isRoundedVowel`, `endsWithHardConsonant`, `endsWithVowel`, `suffix` | TR harf güvenli |
 | `validate` | `vkn`, `tckn`, `ikn`, `iban`, `email` | resmî checksum, hepsi `boolean` |
 | `mask` | `money`, `vkn`, `iban`, `phone` | PII gizleme |

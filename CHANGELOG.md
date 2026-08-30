@@ -4,6 +4,36 @@ Bu projedeki tüm önemli değişiklikler bu dosyada belgelenir.
 Format [Keep a Changelog](https://keepachangelog.com/tr/) temellidir;
 sürümleme [Semantic Versioning](https://semver.org/lang/tr/) kurallarına uyar.
 
+## [2.4.0] - 2026-08-30
+
+> Tümü eklemelidir; hiçbir mevcut davranış değişmemiştir.
+> Dördü de SNN-Gunum-Var denetiminde elle yazılmış hâlde bulundu ve
+> yerleştirme kuralı (AI-RULES §4.1) gereği genel oldukları için alındı.
+
+### Eklenenler — math
+
+- **`math.equals(a, b, tolerance = 0)`** — toleranslı eşitlik, sınır dâhil (`<=`).
+  Float karşılaştırmasında `a === b` yanıltıcıdır (`0.1 + 0.2 !== 0.3`).
+  Sonlu olmayan girdi ve negatif tolerans `false` üretir; bunun için ayrı koruma
+  YOKTUR — `abs()` negatif olmaz, `NaN <= x` zaten false. Mutasyon testi ayrı
+  korumanın ölü kod olduğunu gösterdi ve kaldırıldı.
+- **`math.percentChange(current, previous)`** — iki ölçüm arasındaki değişim
+  yüzdesi. `percent(pay, payda)` ile karıştırılmamalı.
+  **`previous <= 0` → `null`** (`percent` ile aynı kural). Sahadaki yerel sürüm
+  burada sessizce `0` dönüyordu ve "değişim yok" ile "hesaplanamadı" karışıyordu.
+
+### Eklenenler — date
+
+- **`date.isBefore` / `isAfter` / `isSameDay`** — GÜN düzeyinde karşılaştırma.
+  Saat yok sayılır; Europe/Istanbul çevrimi sonrası gün esas alınır.
+  **Geçersiz girdide `null`**, `false` değil: "hayır" ile "karşılaştıramadım"
+  ayrılır. `period.isBetween`'in eksik çiftini tamamlar.
+- **`date.relative`'e `style` parametresi** — `'natural'` yakın geleceği gün
+  adıyla söyler: 2-6 gün → `"Perşembe günü"`, 7-13 gün → `"haftaya Perşembe"`,
+  14+ → sayıya döner. Varsayılan `'plain'` davranışı değişmedi.
+  ⚠️ Yalnız GELECEĞİ zenginleştirir; geçmiş sayısal kalır — "geçen Perşembe"
+  belirsiz olduğu için çekirdek tahmin etmez (bilinçli kapsam sınırı).
+
 ## [2.3.0] - 2026-08-30
 
 > Tümü eklemelidir; hiçbir mevcut davranış değişmemiştir.

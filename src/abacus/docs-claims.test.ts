@@ -436,3 +436,39 @@ describe('BELGE İDDİALARI — v2.3.0', () => {
     expect(money.percent(12.345)).toBe('%12,3');
   });
 });
+
+describe('BELGE İDDİALARI — v2.4.0', () => {
+  it('MOTOR-DETAYLARI: math.equals', () => {
+    expect(math.equals(0.1 + 0.2, 0.3)).toBe(false);
+    expect(math.equals(0.1 + 0.2, 0.3, 1e-7)).toBe(true);
+    expect(math.equals(NaN, NaN)).toBe(false);
+    expect(math.equals(1, 1, -0.5)).toBe(false);
+  });
+
+  it('MOTOR-DETAYLARI: math.percentChange', () => {
+    expect(math.percentChange(150, 100)).toBe(50);
+    expect(math.percentChange(50, 100)).toBe(-50);
+    expect(math.percentChange(0.3, 0.1)).toBe(200);
+    expect(math.percentChange(100, 0)).toBeNull();
+    expect(math.percentChange(100, -50)).toBeNull();
+    // ham aritmetik yanlis sonuc verirdi
+    expect(((0.3 - 0.1) / 0.1) * 100).not.toBe(200);
+  });
+
+  it('MOTOR-DETAYLARI: date karşılaştırma', () => {
+    expect(date.isBefore('2026-08-15', '2026-08-16')).toBe(true);
+    expect(date.isAfter('2026-08-15', '2026-08-16')).toBe(false);
+    expect(date.isSameDay('2026-08-15T09:00:00', '2026-08-15T23:00:00')).toBe(true);
+    expect(date.isSameDay('2026-08-15T21:30:00Z', '2026-08-16')).toBe(true);
+    expect(date.isBefore('2024-02-30', '2026-01-01')).toBeNull();
+  });
+
+  it('MOTOR-DETAYLARI: relative doğal stil', () => {
+    const bugun = '2026-08-15';
+    expect(date.relative('2026-08-17', bugun, 'natural')).toBe('Pazartesi günü');
+    expect(date.relative('2026-08-22', bugun, 'natural')).toBe('haftaya Cumartesi');
+    expect(date.relative('2026-08-29', bugun, 'natural')).toBe('14 gün sonra');
+    expect(date.relative('2026-08-12', bugun, 'natural')).toBe('3 gün önce');
+    expect(date.relative('2026-08-18', bugun)).toBe('3 gün sonra');
+  });
+});
