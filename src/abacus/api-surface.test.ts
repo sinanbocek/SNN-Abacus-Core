@@ -23,10 +23,10 @@ import * as abacus from './index';
  * `docs-claims.test.ts` ve motor testleri korur.
  */
 
-/** v2.5.0 itibarıyla dışa açık yüzey. Motor -> dışa açılan adlar. */
+/** v2.6.0 itibarıyla dışa açık yüzey. Motor -> dışa açılan adlar. */
 const API_SURFACE: Record<string, string[]> = {
   math: [
-    'abs', 'add', 'div', 'equals', 'floor', 'log', 'max', 'mod', 'mul',
+    'abs', 'add', 'div', 'equals', 'floor', 'irr', 'log', 'max', 'mod', 'mul',
     'percent', 'percentChange', 'pow', 'ratio', 'round', 'sub',
   ],
   money: [

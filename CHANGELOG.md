@@ -4,6 +4,90 @@ Bu projedeki tüm önemli değişiklikler bu dosyada belgelenir.
 Format [Keep a Changelog](https://keepachangelog.com/tr/) temellidir;
 sürümleme [Semantic Versioning](https://semver.org/lang/tr/) kurallarına uyar.
 
+## [2.6.0] - 2026-09-01
+
+> **Tüketici raporu #2 §1 ve raporu #1 §6 karşılığı.** Tümü eklemelidir;
+> hiçbir mevcut davranış değişmemiştir.
+>
+> Rapor #2'de 9 aday `AI-RULES §4.1` sınavından geçirilmiş, 1'i geçmişti
+> (`math.irr`). Kısa talep listesi ihmalden değil elemeden geliyordu; aynı
+> disiplin çekirdek tarafında da uygulandı — bkz. "Alınmayanlar".
+
+### Eklenenler — math
+
+- **`math.irr(cashFlows, guess?)`** — iç verim oranı. Nakit akışını sıfır
+  bugünkü değere eşitleyen **dönemsel** oranı bulur.
+
+  **Neden:** Kredinin gerçek maliyeti yalnız faiz değildir. Tüketicinin
+  ekranı %0 faizli ama 450 TL masraflı bir kredide **%0,00** gösteriyordu;
+  masraf 20.000 TL olsaydı yine %0,00 gösterecekti (gerçek maliyet ≈ %4,3).
+
+  Sözleşme: işaret değişimi yoksa · 2'den az eleman · sonlu olmayan değer ·
+  kök kuşatılamazsa · yakınsamazsa → **`null`** (sessiz 0 değil).
+  Dönen oran **dönemseldir**; yıllığa çevirmek çağıranın işidir.
+
+  Yöntem ikiye bölmedir (bisection): Newton-Raphson yatık akışlarda `r = -1`
+  tekilliğine savrulabilirken bisection kök kuşatıldığında yakınsamayı
+  garanti eder. Arama tavanı dönemsel %100.000'dir; ötesi `null` döner.
+
+  ⚠️ Birden çok kök varsa **ilk bulunan** döner (standart yaklaşım). Böyle
+  akışlarda IRR anlamlı bir ölçüt değildir; MIRR gerekir, o ayrı bir iştir.
+
+### Eklenenler — money
+
+- **`FormatMoneyOptions.digits`** — yerleşik para biriminin ondalık hane
+  sayısını geçersiz kılar; **simge ve kısaltma çekirdekte kalır**.
+
+  Önceden dört haneli TL yazmak isteyen tüketici tanımın tamamını yeniden
+  yazmak zorundaydı, yani çekirdeğin sahip olduğu `₺` ve `TL` verilerini
+  kopyalıyordu. Bu, tüketicide "görünen TL etiketinin tek sahibi vardır"
+  kuralını çiğniyordu.
+
+  Geçerli aralık 0..4 arası tam sayı; dışında `'—'`. `formatMajor`'da alt
+  birime çevrim de bu hane sayısıyla yapılır.
+
+  ⚠️ `money.parse` alt birim hanesini 2 kabul eder; `digits` ile üretilen
+  dört haneli çıktı `parse` ile geri okunamaz (JPY/KWD ile aynı kapsam sınırı).
+
+### Alınmayanlar — ve gerekçeleri
+
+Rapor #2 §2 çekirdek ekibinin görüşünü sordu. Kararlar:
+
+- **`npv` dışa açılmadı.** IRR içeride hesaplıyor, ama rapor onu açıkça talep
+  ETMEDİ. AI-RULES §4.1 Kural 3 gereği gerçek bir ekranda ihtiyaç doğmadan ad
+  eklenmez. Gerçek ihtiyaç geldiğinde tek satırlık bir MINOR sürüm.
+- **KKDF/BSMV mekaniği alınmadı.** `gold.PURITY` emsali tutmuyor: o örnekler
+  çekirdekte **Türk oldukları için değil SABİT oldukları için** duruyor
+  (Kural 2). Darphane saflığı her uygulamada aynı sayıdır; KKDF/BSMV oranları
+  değildir — raporun kendisi de "parametre olmalı" diyor. Oran parametreye
+  çevrildiğinde geriye `math`'in zaten sunduğu çarpma kalıyor, alan kavramı
+  taşıyan bir ad ise kalıyor. Sabit olan çekirdeğe girer, Türk olan değil.
+- **`pmt` / `amortize` / `dayCount` alınmadı.** Tüketicinin kendi elemesine
+  katılıyoruz. Ek gerekçe: annüite planında son taksite artık kuruş bindirme
+  politikası bir TERCİHTİR, tek doğrusu yoktur. Tek tüketiciyle o politikayı
+  çekirdeğe çivilersek ikinci tüketicide kırıcı sürümle değiştirmek gerekir.
+- **Ürün/sınıflandırma katmanı** (kredi türleri, vade ayrımı, erken kapama)
+  §4.1'e takılıyor; tartışma yok.
+
+### Test
+
+- 552 → **583 birim testi**. Yeni dosyalar: `math/irr.test.ts`,
+  `money/digits.test.ts`.
+- **Mutasyon doğrulaması (AI-RULES §2.3):** `irr`'in 7 korumasının 7'si de
+  bozulduğunda kırmızı veriyor. Bu sırada **dört ölü koruma bulundu ve
+  kaldırıldı** (`rate <= -1`, `iskonto.isZero()`, ayrı `length < 2` ve
+  `Number.isFinite` kontrolleri, zıt-işaret kontrolü, ipucu erken dönüşü) —
+  hepsi tek bir işaret-değişimi kapısı tarafından zaten karşılanıyordu.
+  §2.4: kırmızı vermeyen koruma ölü koddur. `math.equals`'ta da aynı karar
+  verilmişti.
+- **Assert değerleri dış otoriteden:** `irr([1000,-600,-600])` kökü kapalı
+  formdan gelir (`3x²+3x-5=0`, `x=(√69-3)/6`); üretim vakası bağımsız bir
+  50 basamaklı çözücüyle doğrulandı. Hiçbir beklenen değer kodun çıktısından
+  kopyalanmadı.
+- API yüzeyi kilidi `math.irr` ile güncellendi (eklemeli → MINOR).
+
+---
+
 ## [2.5.0] - 2026-09-01
 
 > **Tüketici raporu karşılığı.** SNN Portföy Yönetimi'nin çekirdeği gerçek bir

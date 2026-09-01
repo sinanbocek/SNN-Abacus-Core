@@ -134,3 +134,173 @@ export function percentChange(current: number, previous: number): number | null 
   if (oran === null) return null;
   return mul(oran, 100);
 }
+
+/**
+ * Bugünkü net değer (NPV) — `irr`'in iç hesabı.
+ *
+ * DIŞA AÇILMAZ. Tüketici raporu #2 §1 bunu açıkça talep ETMEDİ ve
+ * AI-RULES §4.1 Kural 3 gereği ("emin değilsen çekirdeğe alma") gerçek bir
+ * ekranda ihtiyaç doğmadan genel API'ye ad eklenmez. Gerçek ihtiyaç geldiğinde
+ * dışa açmak tek satırlık bir MINOR sürümdür.
+ *
+ * ÖNKOŞUL: `rate > -1`. `r = -1`'de (1+r)^t sıfırdır ve NPV tanımsız olur.
+ * Bu önkoşulu ÇAĞIRAN sağlar: `irr` hem `guess`'i (`guess > -1`) hem de kök
+ * arama adaylarını -1'in üstünde tutar, ikiye bölme de aralığın dışına çıkmaz.
+ *
+ * Burada ayrıca bir `rate <= -1` koruması YOKTUR: mutasyon testi o korumanın
+ * hiçbir testi kırmadığını, yani ulaşılamaz olduğunu gösterdi (AI-RULES §2.4 —
+ * kırmızı vermeyen koruma ölü koddur). Önkoşul değişirse bu not da değişmeli.
+ */
+function npvInternal(rate: number, cashFlows: readonly number[]): number | null {
+  let toplam = new D(0);
+  for (let t = 0; t < cashFlows.length; t++) {
+    const akis = cashFlows[t];
+    // noUncheckedIndexedAccess gereği tip düzeyinde zorunlu; döngü sınırları
+    // dizinin kendi uzunluğundan geldiği için çalışma zamanında oluşmaz.
+    if (akis === undefined) return null;
+    toplam = toplam.plus(new D(String(akis)).dividedBy(new D(String(1 + rate)).pow(t)));
+  }
+  const sonuc = toplam.toNumber();
+  return Number.isFinite(sonuc) ? sonuc : null;
+}
+
+/** `irr` yakınsama eşiği: NPV bu değerin altına inince kök kabul edilir. */
+const IRR_NPV_EPSILON = 1e-10;
+
+/**
+ * `irr` oran çözünürlüğü: aralık bu kadar daralınca kök kabul edilir.
+ *
+ * 1e-15 bilinçlidir. Finansal oranlar çok küçük olabilir — raporun üretim
+ * vakasında aylık kök 7,7e-5'tir — ve gevşek bir eşik orada anlamlı
+ * basamakları kaybettirir. Bisection bu çözünürlüğe ~50 adımda ulaşır,
+ * iterasyon tavanının çok altında.
+ */
+const IRR_RATE_EPSILON = 1e-15;
+
+/** `irr` iterasyon tavanı; aşılırsa yanlış sayı yerine null döner. */
+const IRR_MAX_ITER = 200;
+
+/** `irr` kök tarama tavanı: dönemsel %100.000'e kadar aranır. */
+const IRR_MAX_RATE = 1000;
+
+/**
+ * İç verim oranı (Internal Rate of Return).
+ *
+ * Nakit akışı dizisini sıfır bugünkü değere eşitleyen DÖNEMSEL oranı bulur.
+ * `cashFlows[0]` bugünkü (0. dönem) akıştır, `cashFlows[t]` t. dönem akışıdır.
+ *
+ * **İşaret sözleşmesi:** giren para pozitif, çıkan para negatif — ya da tersi.
+ * Fonksiyon işaret yönünden bağımsızdır; yalnızca en az bir işaret değişimi arar.
+ *
+ * **Dönen değer dizinin dönem birimindedir:** aylık akış verilirse aylık oran
+ * döner. Yıllığa çevirmek çağıranın işidir: `math.pow(1 + r, 12) - 1`.
+ *
+ * `null` döner:
+ * - dizi 2'den az eleman içeriyorsa
+ * - dizide işaret değişimi yoksa (çözüm tanımsız)
+ * - sonlu olmayan değer varsa
+ * - yakınsama sağlanamazsa (iterasyon sınırı)
+ *
+ * ⚠️ **Birden çok kök:** akış ikiden fazla işaret değiştiriyorsa (Descartes
+ * işaret kuralı) denklemin birden çok gerçek kökü olabilir. Bu fonksiyon
+ * **ilk bulduğu kökü** döner — standart yaklaşımdır. Böyle akışlarda IRR
+ * anlamlı bir ölçüt değildir; MIRR gerekir ve o ayrı bir fonksiyondur.
+ *
+ * Yöntem: işaret değişimine dayalı ikiye bölme (bisection). Newton-Raphson
+ * daha hızlıdır ama yatık akışlarda `-1` tekilliğine savrulabilir; bisection
+ * kök aralığı bulunduğunda yakınsamayı GARANTİ eder ve finansal akış
+ * uzunluklarında (yüzlerce dönem) ölçülebilir bir maliyeti yoktur.
+ *
+ * @example math.irr([1000, -600, -600])   // ≈ 0.130662
+ * @example math.irr([1000, -500, -500])   // 0
+ * @example math.irr([1000, 500])          // null (işaret değişimi yok)
+ */
+export function irr(cashFlows: readonly number[], guess?: number): number | null {
+  let pozitifVar = false;
+  let negatifVar = false;
+  for (const akis of cashFlows) {
+    if (akis > 0) pozitifVar = true;
+    if (akis < 0) negatifVar = true;
+  }
+
+  /*
+   * TEK KAPI: işaret değişimi yoksa NPV hiçbir oranda sıfırlanmaz; çözüm
+   * tanımsızdır. Bu kontrol sözleşmenin ÜÇ maddesini birden karşılar ve
+   * mutasyon testiyle ölçüldüğü doğrulandı (kaldırılınca `[0,0,0]` için
+   * yanlışlıkla bir sayı dönüyor):
+   *
+   *  - 2'den az eleman: tek elemanlı ya da boş dizide işaret değişimi olamaz.
+   *  - NaN / Infinity: `NaN > 0` ve `NaN < 0` ikisi de false olduğundan
+   *    sonsuz/tanımsız değerler bayrak açtırmaz ve akış burada elenir.
+   *  - Tümü aynı işaretli akış.
+   *
+   * Ayrı `length < 2` ve `Number.isFinite` korumaları BİLİNÇLİ olarak yoktur:
+   * mutasyon testi ikisinin de hiçbir testi kırmadığını, yani ölü kod
+   * olduklarını gösterdi (AI-RULES §2.4). `math.equals`'ta da aynı karar
+   * verilmişti. Davranış sözleşmesi testlerle çivilidir; buraya bir koruma
+   * eklemeden önce onu KIRMIZI yapan bir test yazın.
+   */
+  if (!pozitifVar || !negatifVar) return null;
+
+  // `guess` bir başlangıç ipucudur; geçerliyse önce onun etrafına bakılır.
+  const ipucu = guess !== undefined && Number.isFinite(guess) && guess > -1 ? guess : 0.1;
+
+  // Kökü içine alan bir aralık aranır. Alt sınır -1'e yaklaşır ama ona
+  // DEĞMEZ: r = -1'de (1+r)^t sıfırdır ve NPV tanımsız olur.
+  const aday = [ipucu, 0, 0.1, -0.5, -0.9, -0.99, 1, 10, 100, IRR_MAX_RATE];
+  let alt: number | null = null;
+  let ust: number | null = null;
+  let altNpv = 0;
+  let ustNpv = 0;
+
+  for (const r of aday) {
+    const deger = npvInternal(r, cashFlows);
+    if (deger === null) continue;
+    if (deger === 0) return r;
+
+    if (deger > 0) {
+      if (ust === null || r < ust) {
+        ust = r;
+        ustNpv = deger;
+      }
+    } else if (alt === null || r < alt) {
+      alt = r;
+      altNpv = deger;
+    }
+  }
+
+  // Kök tarama aralığında kuşatılamadıysa (ör. dönemsel %100.000'in üstündeki
+  // bir kök) yanlış bir sayı yerine null döner.
+  if (alt === null || ust === null) return null;
+
+  /*
+   * Burada ayrıca bir "uçların işaretleri zıt mı" kontrolü YOKTUR: `alt` yalnız
+   * NPV < 0 olan adaylardan, `ust` yalnız NPV > 0 olanlardan seçilir (NPV = 0
+   * zaten yukarıda kökü döndürür), dolayısıyla zıtlık yapısal olarak garantidir.
+   * Mutasyon testi de o kontrolün hiçbir testi kırmadığını gösterdi
+   * (AI-RULES §2.4 — kırmızı vermeyen koruma ölü koddur).
+   */
+  let dusuk = alt < ust ? alt : ust;
+  let yuksek = alt < ust ? ust : alt;
+  let dusukNpv = alt < ust ? altNpv : ustNpv;
+
+  for (let i = 0; i < IRR_MAX_ITER; i++) {
+    const orta = add(dusuk, yuksek) / 2;
+    const ortaNpv = npvInternal(orta, cashFlows);
+    if (ortaNpv === null) return null;
+
+    if (abs(ortaNpv) <= IRR_NPV_EPSILON || sub(yuksek, dusuk) <= IRR_RATE_EPSILON) {
+      return orta;
+    }
+
+    if (ortaNpv * dusukNpv > 0) {
+      dusuk = orta;
+      dusukNpv = ortaNpv;
+    } else {
+      yuksek = orta;
+    }
+  }
+
+  // Yakınsamadıysa yanlış bir sayı dönmektense boş dönülür.
+  return null;
+}

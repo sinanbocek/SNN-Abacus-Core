@@ -12,7 +12,7 @@
 
 import { abs, div, floor, mod, round } from '../math';
 import type { CurrencyRef } from './currency-registry';
-import { minorFactor, resolveCurrency } from './currency-registry';
+import { minorFactor, resolveCurrency, withDigits } from './currency-registry';
 
 export interface FormatMoneyOptions {
   kurus?: boolean;
@@ -23,6 +23,20 @@ export interface FormatMoneyOptions {
    * Tanınmayan kod verilirse '—' döner (uydurma yapılmaz).
    */
   currency?: CurrencyRef;
+  /**
+   * Ondalık hane sayısını para biriminin `minorDigits` değerinden BAĞIMSIZ
+   * olarak belirler (v2.6.0). Yerleşik bir birimin simgesi ve kısaltması
+   * korunurken yalnız hane sayısı değiştirilmek istendiğinde kullanılır:
+   *
+   *   money.formatMajor(1.2345, { currency: 'TRY', digits: 4, kurus: true })
+   *   // "₺1,2345" — TRY tanımını kopyalamaya gerek yok
+   *
+   * Geçerli aralık 0..4 arası tam sayıdır; dışında '—' döner.
+   *
+   * ⚠️ `money.parse` alt birim hanesini 2 KABUL EDER; `digits` ile üretilen
+   * dört haneli çıktı `parse` ile geri okunamaz. Bilinçli kapsam sınırıdır.
+   */
+  digits?: number;
 }
 
 /** Binlik ayraç ekleyici (Intl / toLocale kullanmadan) */
@@ -47,7 +61,10 @@ export function formatMoney(kurus: number | null | undefined, opts?: FormatMoney
     return '—';
   }
 
-  const cur = resolveCurrency(opts?.currency);
+  const resolved = resolveCurrency(opts?.currency);
+  if (resolved === null) return '—';
+
+  const cur = withDigits(resolved, opts?.digits);
   if (cur === null) return '—';
 
   const showKurus = (opts?.kurus ?? false) && cur.minorDigits > 0;

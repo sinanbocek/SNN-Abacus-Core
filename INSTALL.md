@@ -9,7 +9,7 @@ Bu rehber, **ABACUS Engine** (`@snn/abacus-core`) çekirdek motorunu herhangi bi
 Projelerinizin kök dizininde aşağıdaki komutu çalıştırarak `@snn/abacus-core` paketini doğrudan GitHub deposundan kurun:
 
 ```bash
-npm install github:sinanbocek/SNN-Abacus-Core#semver:^2.5.0
+npm install github:sinanbocek/SNN-Abacus-Core#semver:^2.6.0
 ```
 
 > 💡 **Bağımlılık Notu:** Paket, hassas matematiksel işlemler için gereken `decimal.js` bağımlılığını otomatik olarak indirip projenize bağlar. Ekstra bir `decimal.js` kurulumu gerekmez.
@@ -104,6 +104,31 @@ Tutarlarınız ana birimde saklanıyorsa `formatMajor` / `compactMajor` kullanı
 Bu karışıklığı derleme hattınızda yakalamak için §6'daki yayınlanan ESLint
 yapılandırmasını ekleyin.
 
+### Dört haneli tutarlar — `digits` (v2.6.0)
+
+Yerleşik bir para biriminin yalnız hane sayısını değiştirmek için tanımın
+tamamını kopyalamak gerekmez; simge ve kısaltma çekirdekte kalır:
+
+```typescript
+console.log(money.formatMajor(1.2345, { currency: 'TRY', digits: 4, kurus: true })); // ₺1,2345
+```
+
+Geçerli aralık 0..4 arası tam sayıdır; dışında `'—'` döner.
+
+### Gerçek maliyet / getiri — `math.irr` (v2.6.0)
+
+Bir kredinin gerçek maliyeti yalnız faiz değildir; dosya masrafı ve sigorta da
+nakit akışındadır. `irr` akışın tamamı üzerinden **dönemsel** oranı verir:
+
+```typescript
+// 900.000 TL kredi, 450 TL dosya masrafı, 12 × 75.000 TL taksit
+const aylik = math.irr([899550, ...Array<number>(12).fill(-75000)]);  // ≈ 0.0000769
+const yillik = math.pow(1 + (aylik as number), 12);                   // ≈ 1.000924
+```
+
+Dönen oran **dönemseldir** — yıllığa çevirmek çağıranın işidir. İşaret değişimi
+olmayan akışta `null` döner; sessizce 0 dönmez.
+
 ### Yüzde işareti — renkle anlatılan arayüzler
 
 ```typescript
@@ -129,7 +154,7 @@ bu, güvenli güncellemelerin otomatik gelmesini, kırıcı olanların gelmemesi
 
 ```jsonc
 // ÖNERİLEN — minor ve yamalar otomatik, major asla
-"@snn/abacus-core": "github:sinanbocek/SNN-Abacus-Core#semver:^2.5.0"
+"@snn/abacus-core": "github:sinanbocek/SNN-Abacus-Core#semver:^2.6.0"
 
 // Yalnız yama otomatik (daha muhafazakâr)
 "@snn/abacus-core": "github:sinanbocek/SNN-Abacus-Core#semver:~2.1.0"

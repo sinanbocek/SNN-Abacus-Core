@@ -3,7 +3,12 @@ import { numberToWords } from '../text';
 import { formatMoney, groupThousands } from '../internal/money-format';
 import { parseMoney } from '../internal/money-parse';
 import type { CurrencyDef, CurrencyRef } from '../internal/currency-registry';
-import { knownCurrencyCodes, minorFactor, resolveCurrency } from '../internal/currency-registry';
+import {
+  knownCurrencyCodes,
+  minorFactor,
+  resolveCurrency,
+  withDigits,
+} from '../internal/currency-registry';
 
 export type { CurrencyDef, CurrencyRef };
 export { knownCurrencyCodes };
@@ -34,7 +39,11 @@ export const format = formatMoney;
  * ANA BİRİMDEKİ bir sayıyı biçimlendirir (kuruş değil, lira/dolar).
  * Alt birime çevrim `math` üzerinden yapılır; float hatası oluşmaz.
  *
+ * `digits` verilirse alt birime çevrim de O hane sayısıyla yapılır; yoksa
+ * 1,2345 önce kuruşa yuvarlanır ve dört haneli çıktı anlamını kaybederdi.
+ *
  * @example money.formatMajor(1234.56, { kurus: true })  // "₺1.234,56"
+ * @example money.formatMajor(1.2345, { digits: 4, kurus: true })  // "₺1,2345"
  */
 export function formatMajor(
   amountMajor: number | null | undefined,
@@ -43,12 +52,15 @@ export function formatMajor(
   if (amountMajor === null || amountMajor === undefined || !Number.isFinite(amountMajor)) {
     return '—';
   }
-  const cur = resolveCurrency(opts?.currency);
+  const resolved = resolveCurrency(opts?.currency);
+  if (resolved === null) return '—';
+
+  const cur = withDigits(resolved, opts?.digits);
   if (cur === null) return '—';
 
   const minor = toMinor(amountMajor, cur);
   if (minor === null) return '—';
-  return format(minor, opts);
+  return format(minor, { ...opts, currency: cur });
 }
 
 /**

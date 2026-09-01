@@ -110,6 +110,55 @@ Doğal logaritma (ln). **`x ≤ 0` veya geçersizse `null`.** Örnek: `log(1.10)
 En büyük değer. **Boş dizi veya tüm değerler geçersizse `null`** (sonsuz değerler elenir).
 Örnek: `max(1, 5, 10, 3) → 10` · `max(-10, 1) → 1` · `max() → null`.
 
+### `irr(cashFlows: readonly number[], guess?): number | null` — v2.6.0
+
+**İç verim oranı (Internal Rate of Return).** Nakit akışı dizisini sıfır bugünkü
+değere eşitleyen **dönemsel** oranı bulur.
+
+- `cashFlows[0]` bugünkü (0. dönem) akıştır, `cashFlows[t]` t. dönem akışıdır.
+- **İşaret sözleşmesi:** giren para pozitif, çıkan para negatif — ya da tersi.
+  Fonksiyon işaret yönünden bağımsızdır, yalnızca en az bir işaret değişimi arar.
+- **Dönen değer dizinin dönem birimindedir.** Aylık akış verilirse AYLIK oran
+  döner; yıllığa çevirmek çağıranın işidir: `math.pow(1 + r, 12) - 1`.
+
+**Neden var:** Bir kredinin gerçek maliyeti yalnız faizden ibaret değildir; dosya
+masrafı ve sigorta primi de nakit akışındadır. Yalnız faize bakan bir hesap,
+%0 faizli ama 450 TL masraflı bir kredide **%0,00** gösterir — kullanıcı 450 TL
+ödemiş olmasına rağmen. IRR bu sapmayı kapatır.
+
+**`null` döner:** işaret değişimi yoksa (çözüm tanımsız) · 2'den az eleman ·
+sonlu olmayan değer · kök arama aralığında kuşatılamazsa · yakınsamazsa.
+İlk üçü tek bir işaret-değişimi kapısıyla elenir; ayrı korumalar bilinçli
+olarak yoktur (mutasyon testi ölü olduklarını gösterdi).
+
+```
+irr([1000, -600, -600])   → 0.130662386...   (kapalı form: x = (√69-3)/6)
+irr([1000, -500, -500])   → 0                (tam sıfır — maliyet yok)
+irr([-100, 300])          → 2                (dönemsel %200)
+irr([1000, 500])          → null             (işaret değişimi yok)
+irr([1000])  · irr([])    → null
+irr([1000, NaN])          → null
+```
+
+**Yöntem:** işaret değişimine dayalı ikiye bölme (bisection). Newton-Raphson
+daha hızlıdır ama yatık akışlarda `r = -1` tekilliğine savrulabilir; bisection
+kök kuşatıldığında yakınsamayı **garanti eder** ve finansal akış uzunluklarında
+(yüzlerce dönem) ölçülebilir maliyeti yoktur.
+
+⚠️ **Arama tavanı:** kök dönemsel **%100.000**'e kadar aranır. Ötesindeki kökler
+bulunamaz ve **`null`** döner — sessiz yanlış sayı yerine. Bilinçli kapsam sınırı.
+
+⚠️ **Birden çok kök:** akış ikiden fazla işaret değiştiriyorsa (Descartes işaret
+kuralı) denklemin birden çok gerçek kökü olabilir. Fonksiyon **ilk bulduğu kökü**
+döner — standart yaklaşımdır. Böyle akışlarda IRR anlamlı bir ölçüt değildir;
+MIRR gerekir ve o ayrı bir fonksiyondur.
+
+> **`npv` neden dışa açık değil?** IRR içeride NPV hesaplar, ama `npv` genel
+> API'ye eklenmedi: tüketici raporu onu açıkça talep ETMEDİ ve AI-RULES §4.1
+> Kural 3 gereği ("emin değilsen çekirdeğe alma") gerçek bir ekranda ihtiyaç
+> doğmadan ad eklenmez. Gerçek ihtiyaç geldiğinde dışa açmak tek satırlık bir
+> MINOR sürümdür.
+
 ### `math` — entegrasyon notları
 - Bu motor saf sayısal; kuruş/birim ayrımı yapmaz — çağıran birim tutarlılığından sorumlu.
 - Ham `Math.*` kullanan kod bu motora taşınabilir. **Half-up farkına dikkat:** JS `Math.round(-2.5) = -2`,
@@ -204,6 +253,33 @@ kapsam sınırı, testle çivilenmiştir.
 ### `formatMajor(amountMajor, opts?): string`
 ANA BİRİMDEKİ sayıyı biçimlendirir (kuruş değil). Alt birime çevrim `math` üzerinden.
 `formatMajor(1234.56, { kurus: true })` → `"₺1.234,56"` · geçersizde `'—'`.
+
+### `FormatMoneyOptions.digits` — hane sayısını geçersiz kılma (v2.6.0)
+
+Yerleşik bir para biriminin **yalnız** ondalık hane sayısını değiştirir; simgesi
+ve metin kısaltması çekirdekte kalır.
+
+```ts
+money.formatMajor(1.2345, { currency: 'TRY', digits: 4, kurus: true })  // "₺1,2345"
+money.format(12345, { currency: 'TRY', digits: 4, kurus: true })        // "₺1,2345"
+```
+
+Önceden bunun tek yolu tanımın tamamını yeniden yazmaktı — yani çekirdeğin
+sahip olduğu iki veriyi (`₺` ve `TL`) tüketiciye kopyalatmaktı:
+
+```ts
+// v2.5.0'da yapmak zorunda kalınan (artık gereksiz):
+money.formatMajor(1.2345, { currency: { code:'TRY', symbol:'₺', text:'TL', minorDigits:4 } })
+```
+
+- Geçerli aralık **0..4 arası tam sayı**; dışında `'—'` döner (sessizce yok sayılmaz).
+- Tüketicinin verdiği tam tanımın hanesini de geçersiz kılar.
+- `formatMajor`'da alt birime çevrim de bu hane sayısıyla yapılır; yoksa 1,2345
+  önce kuruşa yuvarlanır ve dört haneli çıktı anlamını kaybederdi.
+
+⚠️ `money.parse` alt birim hanesini **2 kabul eder**; `digits` ile üretilen dört
+haneli çıktı `parse` ile geri okunamaz. Bu, JPY/KWD için zaten var olan kapsam
+sınırının aynısıdır.
 
 > ⚠️ **ALT BİRİM / ANA BİRİM AYRIMI — en sık yapılan hata.** `format` ve
 > `compact` **alt birim** (kuruş), `formatMajor` ve `compactMajor` **ana birim**

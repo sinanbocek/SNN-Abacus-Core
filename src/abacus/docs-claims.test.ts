@@ -532,3 +532,41 @@ describe('BELGE İDDİALARI — v2.5.0 (tüketici raporu karşılığı)', () =>
     expect(money.compact(1500)).toBe('₺15');
   });
 });
+
+describe('BELGE İDDİALARI — v2.6.0 (tüketici raporu #2 karşılığı)', () => {
+  it('MOTOR-DETAYLARI: math.irr örnek bloğu', () => {
+    const kok = math.irr([1000, -600, -600]);
+    expect(kok).not.toBeNull();
+    // Kapalı form: x = (√69-3)/6 · r = 1/x - 1
+    expect(math.equals(kok as number, 0.13066238629180748, 1e-9)).toBe(true);
+    expect(math.irr([1000, -500, -500])).toBe(0);
+    expect(math.equals(math.irr([-100, 300]) as number, 2, 1e-9)).toBe(true);
+    expect(math.irr([1000, 500])).toBeNull();
+    expect(math.irr([1000])).toBeNull();
+    expect(math.irr([])).toBeNull();
+    expect(math.irr([1000, NaN])).toBeNull();
+  });
+
+  it('MOTOR-DETAYLARI: irr dönemseldir, yıllığa çevrim çağıranın işi', () => {
+    const aylik = math.irr([899550, ...Array<number>(12).fill(-75000)]) as number;
+    const yillik = math.pow(1 + aylik, 12) as number;
+    expect(math.equals(yillik - 1, 0.0009237993397638396, 1e-12)).toBe(true);
+  });
+
+  it('MOTOR-DETAYLARI: irr arama tavanı üstü null döner', () => {
+    expect(math.irr([-1, 2000])).toBeNull();
+  });
+
+  it('MOTOR-DETAYLARI + INSTALL: FormatMoneyOptions.digits', () => {
+    expect(money.formatMajor(1.2345, { currency: 'TRY', digits: 4, kurus: true })).toBe('₺1,2345');
+    expect(money.format(12345, { currency: 'TRY', digits: 4, kurus: true })).toBe('₺1,2345');
+    // Tam tanım kopyalamakla aynı sonuç — kopya artık gereksiz
+    expect(
+      money.formatMajor(1.2345, {
+        currency: { code: 'TRY', symbol: '₺', text: 'TL', minorDigits: 4 },
+        kurus: true,
+      })
+    ).toBe('₺1,2345');
+    expect(money.formatMajor(1.2345, { digits: 5 })).toBe('—');
+  });
+});

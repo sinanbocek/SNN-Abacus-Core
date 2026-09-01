@@ -87,6 +87,24 @@ function isValidDef(def: CurrencyDef): boolean {
 }
 
 /**
+ * Bir tanımın hane sayısını `digits` ile geçersiz kılar (v2.6.0).
+ *
+ * Tüketici raporu #1 §6: yerleşik bir birimin YALNIZ hane sayısını değiştirmek
+ * isteyen tüketici, tanımın tamamını yeniden yazmak zorunda kalıyordu — yani
+ * çekirdeğin sahip olduğu simgeyi ve metin kısaltmasını kopyalıyordu. Bu
+ * fonksiyon o kopyayı gereksiz kılar: simge ve kısaltma kayıt defterinde kalır.
+ *
+ * `digits` verilmezse tanım OLDUĞU GİBİ döner (davranış değişmez).
+ * Geçersiz `digits` değerinde `null` döner — sessizce yok sayılmaz; sınır
+ * `isValidDef` ile aynıdır (0..4 arası tam sayı).
+ */
+export function withDigits(def: CurrencyDef, digits: number | undefined): CurrencyDef | null {
+  if (digits === undefined) return def;
+  if (!Number.isInteger(digits) || digits < 0 || digits > 4) return null;
+  return { ...def, minorDigits: digits };
+}
+
+/**
  * Bir alt birim değerini ana birime bölmek için gereken katsayı.
  * minorDigits = 2 -> 100 · 0 -> 1 · 3 -> 1000
  */
