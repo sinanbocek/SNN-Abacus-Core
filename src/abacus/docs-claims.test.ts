@@ -472,3 +472,63 @@ describe('BELGE İDDİALARI — v2.4.0', () => {
     expect(date.relative('2026-08-18', bugun)).toBe('3 gün sonra');
   });
 });
+
+describe('BELGE İDDİALARI — v2.5.0 (tüketici raporu karşılığı)', () => {
+  it('INSTALL.md §3: Supabase / PostgREST zaman damgaları', () => {
+    expect(date.format('2026-08-31T06:17:08.317236+00:00')).toBe('31.08.2026');
+    expect(date.format('2026-07-21 10:00:00+00', 'dayMonth')).toBe('21 Tem.');
+  });
+
+  it('INSTALL.md §3: aylık gruplama anahtarı YYYY-MM', () => {
+    expect(date.format('2026-09', 'monthYear')).toBe('Eylül 2026');
+    expect(date.format('2026-09', 'period')).toBe('09/2026');
+    expect(date.format('2026-09')).toBe('—');
+  });
+
+  it('INSTALL.md §3: alt birim / ana birim ayrımı', () => {
+    expect(money.formatMajor(1500)).toBe('₺1.500');
+    expect(money.format(1500)).toBe('₺15');
+    expect(money.compactMajor(1500000, { style: 'B/Mn/Mr' })).toBe('₺1,5Mn');
+  });
+
+  it('INSTALL.md §3: yüzde işaret modu', () => {
+    expect(money.percent(-3.2, 1)).toBe('%-3,2');
+    expect(money.percent(-3.2, 1, { sign: 'never' })).toBe('%3,2');
+    expect(money.percent(3.2, 1, { sign: 'always' })).toBe('%+3,2');
+  });
+
+  it('MOTOR-DETAYLARI: date kabul edilen girdi biçimleri tablosu', () => {
+    expect(date.format('2026-07-21T10:59:59.999999+03:00', 'time')).toBe('10:59');
+    const beklenen = date.format('2026-07-21T10:00:00+03:00', 'dateTime');
+    expect(date.format('2026-07-21T10:00:00+0300', 'dateTime')).toBe(beklenen);
+    expect(date.format('2026-07-21T10:00:00+03', 'dateTime')).toBe(beklenen);
+    expect(date.daysBetween('2026-09', '2026-10')).toBeNull();
+    expect(date.dayName('2026-09')).toBe('—');
+    expect(date.format('2026-09', 'long')).toBe('—');
+    expect(date.format('2026-09', 'dayMonth')).toBe('—');
+  });
+
+  it('MOTOR-DETAYLARI: money.percent işaret modu tablosu', () => {
+    expect(money.percent(-3.2, 1, { sign: 'auto' })).toBe('%-3,2');
+    expect(money.percent(3.2, 1, { sign: 'auto' })).toBe('%3,2');
+    expect(money.percent(0, 1, { sign: 'auto' })).toBe('%0');
+    expect(money.percent(-3.2, 1, { sign: 'always' })).toBe('%-3,2');
+    expect(money.percent(0, 1, { sign: 'always' })).toBe('%0');
+    expect(money.percent(3.2, 1, { sign: 'never' })).toBe('%3,2');
+    expect(money.percent(0, 1, { sign: 'never' })).toBe('%0');
+    expect(money.percent(-0.04, 1, { sign: 'never' })).toBe('%0');
+  });
+
+  it('MOTOR-DETAYLARI: compactMajor örnekleri', () => {
+    expect(money.compactMajor(1500000, { style: 'B/Mn/Mr' })).toBe('₺1,5Mn');
+    expect(money.compactMajor(1500000)).toBe('₺1,5M');
+    expect(money.compactMajor(1500)).toBe('₺1,5K');
+    expect(money.compactMajor(999)).toBe('₺999');
+    expect(money.compactMajor(-1500000, { style: 'B/Mn/Mr' })).toBe('-₺1,5Mn');
+    expect(money.compactMajor(0)).toBe('0');
+    expect(money.compactMajor(null)).toBe('—');
+    expect(money.compactMajor(NaN)).toBe('—');
+    expect(money.compactMajor(1500, { currency: 'YOK' })).toBe('—');
+    expect(money.compact(1500)).toBe('₺15');
+  });
+});

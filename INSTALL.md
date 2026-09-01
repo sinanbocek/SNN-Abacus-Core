@@ -9,7 +9,7 @@ Bu rehber, **ABACUS Engine** (`@snn/abacus-core`) çekirdek motorunu herhangi bi
 Projelerinizin kök dizininde aşağıdaki komutu çalıştırarak `@snn/abacus-core` paketini doğrudan GitHub deposundan kurun:
 
 ```bash
-npm install github:sinanbocek/SNN-Abacus-Core#semver:^2.4.0
+npm install github:sinanbocek/SNN-Abacus-Core#semver:^2.5.0
 ```
 
 > 💡 **Bağımlılık Notu:** Paket, hassas matematiksel işlemler için gereken `decimal.js` bağımlılığını otomatik olarak indirip projenize bağlar. Ekstra bir `decimal.js` kurulumu gerekmez.
@@ -67,6 +67,51 @@ console.log(collate.sortBy(['zam', 'çam', 'dal']));         // [ çam, dal, zam
 > ISO değerleri (`...Z`, `...+02:00`) **Europe/Istanbul** saatine çevrilir; bu
 > tarihi de bir gün ileri/geri alabilir.
 
+### Supabase / PostgREST zaman damgaları (v2.5.0)
+
+Postgres `timestamptz` alanları mikrosaniye taşır; PostgREST bunu JSON'a
+`2026-08-31T06:17:08.317236+00:00` biçiminde yazar. Motor bu biçimi **doğrudan**
+kabul eder — tüketicinin `iso.slice(0, 10)` gibi bir kırpma yapması gerekmez:
+
+```typescript
+console.log(date.format('2026-08-31T06:17:08.317236+00:00'));   // 31.08.2026
+console.log(date.format('2026-07-21 10:00:00+00', 'dayMonth')); // 21 Tem.
+```
+
+Kabul edilen ayırıcılar: `T` veya boşluk. Kabul edilen saat dilimi ekleri:
+`Z` · `+HH` · `+HHMM` · `+HH:MM`. Kesirli saniye ayrıştırılır ve **atılır**
+(çekirdek dakika çözünürlüğünde biçimlendirir).
+
+### Aylık gruplama anahtarı `YYYY-MM` (v2.5.0)
+
+Gün bileşenini zaten kullanmayan iki stil ay anahtarını okur:
+
+```typescript
+console.log(date.format('2026-09', 'monthYear'));  // Eylül 2026
+console.log(date.format('2026-09', 'period'));     // 09/2026
+console.log(date.format('2026-09'));               // —  (gün gösteren stil kabul etmez)
+```
+
+### Alt birim / ana birim — 100 kat hata riski
+
+```typescript
+console.log(money.formatMajor(1500));   // ₺1.500   ← ana birim (lira)
+console.log(money.format(1500));        // ₺15      ← alt birim (kuruş)
+console.log(money.compactMajor(1500000, { style: 'B/Mn/Mr' }));  // ₺1,5Mn
+```
+
+Tutarlarınız ana birimde saklanıyorsa `formatMajor` / `compactMajor` kullanın.
+Bu karışıklığı derleme hattınızda yakalamak için §6'daki yayınlanan ESLint
+yapılandırmasını ekleyin.
+
+### Yüzde işareti — renkle anlatılan arayüzler
+
+```typescript
+console.log(money.percent(-3.2, 1));                      // %-3,2
+console.log(money.percent(-3.2, 1, { sign: 'never' }));   // %3,2   ← yön renkle anlatılır
+console.log(money.percent(3.2, 1, { sign: 'always' }));   // %+3,2
+```
+
 ---
 
 ## 🔄 4. Sürüm ve Güncelleme Politikası
@@ -84,7 +129,7 @@ bu, güvenli güncellemelerin otomatik gelmesini, kırıcı olanların gelmemesi
 
 ```jsonc
 // ÖNERİLEN — minor ve yamalar otomatik, major asla
-"@snn/abacus-core": "github:sinanbocek/SNN-Abacus-Core#semver:^2.4.0"
+"@snn/abacus-core": "github:sinanbocek/SNN-Abacus-Core#semver:^2.5.0"
 
 // Yalnız yama otomatik (daha muhafazakâr)
 "@snn/abacus-core": "github:sinanbocek/SNN-Abacus-Core#semver:~2.1.0"
@@ -130,6 +175,33 @@ v1.1.0 → v2.0.0 için: [MIGRATION-v2.md](MIGRATION-v2.md).
 ---
 
 ## 📜 6. ESLint Kısıtlama Kuralları (`eslint.config.js`)
+
+### 6.1 Çekirdeğin yayınladığı yapılandırma (v2.5.0) — ÖNCE BUNU EKLEYİN
+
+Çekirdek artık `@snn/abacus-core/eslint` alt yolundan paylaşılabilir bir flat
+config yayınlar. Bu, alt birim / ana birim karışıklığını (`money.format` ile
+`money.formatMajor` arasındaki 100 kat farkı) derleme hattınıza bağlar:
+
+```js
+// eslint.config.js
+import abacus from '@snn/abacus-core/eslint';
+
+export default [
+  ...abacus.configs.recommended,
+  // ... kendi yapılandırmanız (aşağıdaki §6.2)
+];
+```
+
+Tutarları gerçekten kuruş olarak tutan kod için kural bilinçli olarak geçilir:
+
+```ts
+// eslint-disable-next-line no-restricted-properties -- tutar kuruş cinsinden
+const etiket = money.format(satir.tutar_kurus);
+```
+
+Ayrıntı: [SNN-ABACUS-CORE-MOTOR-DETAYLARI.md § Yayınlanan ESLint yapılandırması](SNN-ABACUS-CORE-MOTOR-DETAYLARI.md).
+
+### 6.2 Ev kuralları (elle eklenir)
 
 Frontend veya domain katmanlarında ABACUS dışı ham matematik/format ve string dönüşümü kullanımını engellemek için projenize aşağıdaki ESLint kısıtlamalarını eklemeniz önerilir:
 

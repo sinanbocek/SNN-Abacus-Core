@@ -154,12 +154,28 @@ alanıdır (`opts.kurus`, "kuruş basamağı göster" boolean'ı). İkisi ayrıd
 - `format(2323250) → "₺23.233"` (kuruşsuz gösterimde half-up: 23.232,50 → 23.233)
 - `format(22075, { currency: 'USD' }) → "$221"` · `format(22075, { currency: 'USD', kurus: true }) → "$220,75"`
 
-### `percent(value: number | null | undefined, digits = 1): string`
+### `percent(value: number | null | undefined, digits = 1, opts?): string`
 Yüzde biçimi. Ondalık ayraç virgül. Örnek: `percent(12.345, 1) → "%12,3"` · `percent(2.5678, 2) → "%2,57"`
 · `percent(null) → "—"`.
-`opts.showPositiveSign` ile pozitif değerlere `+` eklenir:
-`percent(12.345, 1, { showPositiveSign: true }) → "%+12,3"`. Sıfıra işaret
-eklenmez. Değişim/fark tablolarında yönü görünür kılmak içindir.
+
+**İşaret modu — `opts.sign` (v2.5.0):** `PercentSign = 'auto' | 'always' | 'never'`.
+
+| Mod | Davranış | `-3.2` | `3.2` | `0` |
+|---|---|---|---|---|
+| `'auto'` (varsayılan) | eksi görünür, artı görünmez | `"%-3,2"` | `"%3,2"` | `"%0"` |
+| `'always'` | artı da yazılır | `"%-3,2"` | `"%+3,2"` | `"%0"` |
+| `'never'` | hiç işaret yazılmaz | `"%3,2"` | `"%3,2"` | `"%0"` |
+
+Sıfıra hiçbir modda işaret eklenmez — sıfır ne artı ne eksidir.
+
+`'never'`, yönü **renkle** (yeşil/kırmızı) anlatan finansal arayüzler içindir.
+Onsuz tüketici `percent(abs(v), 1)` yazmak zorunda kalıyordu; o sarmalama
+unutulunca eksi işareti kırmızı renkle üst üste binip çift olumsuzlama gibi
+okunuyordu. İşaretsizleştirme **yuvarlamadan sonra** yapılır, bu yüzden
+`percent(-0.04, 1, { sign: 'never' })` → `"%0"` (asla `"%-0"`).
+
+`showPositiveSign?: boolean` **@deprecated (v2.5.0)** — `sign: 'always'`
+karşılığıdır, geriye dönük uyum için korunur. **`sign` verilirse yok sayılır.**
 
 ### Para birimi (v2.2.0) — VERİ, kod değil
 
@@ -188,6 +204,14 @@ kapsam sınırı, testle çivilenmiştir.
 ### `formatMajor(amountMajor, opts?): string`
 ANA BİRİMDEKİ sayıyı biçimlendirir (kuruş değil). Alt birime çevrim `math` üzerinden.
 `formatMajor(1234.56, { kurus: true })` → `"₺1.234,56"` · geçersizde `'—'`.
+
+> ⚠️ **ALT BİRİM / ANA BİRİM AYRIMI — en sık yapılan hata.** `format` ve
+> `compact` **alt birim** (kuruş), `formatMajor` ve `compactMajor` **ana birim**
+> (lira) okur. Aynı sayı iki kapıda 100 kat farklı sonuç verir:
+> `formatMajor(1500) → "₺1.500"` ama `format(1500) → "₺15"`. Hata SESSİZDİR —
+> ekranda makul görünen yanlış bir sayı çıkar. Çekirdek bu riski tüketicinin
+> derleme hattına bağlayan bir ESLint yapılandırması yayınlar; bkz.
+> [Yayınlanan ESLint yapılandırması](#yayınlanan-eslint-yapılandırması).
 
 ### `toMinor(major: number, currency?): number | null`
 `parse`'ın **sayısal ikizi**: sayıyı alt birime çevirir. `toMinor(1234.56)` → `123456`
@@ -268,6 +292,23 @@ terfi eder (ör. 999.999 TL → ₺1M). Örnekler:
 - `compact(50000) → "₺500"` (1.000 TL altı, normal format) · `compact(-123456789) → "-₺1,23M"`
 - `compact(0) → "0"` · `compact(null) → "—"` · `compact(123456789, { form: 'text' }) → "1,23M TL"`
 - Ölçek sınırı: `compact(99999900) → "₺1M"` · `compact(99999990000) → "₺1B"` · `compact(99990000) → "₺999,9K"` (atlamaz)
+
+### `compactMajor(amountMajor, opts?): string` — v2.5.0
+`compact`'in **ana birim** ikizi; `format` / `formatMajor` çiftiyle simetriktir.
+Aynı `CompactMoneyOptions` seçeneklerini alır.
+
+Grafik ekseni gibi tutarları ana birimde tutan her yerde tüketicinin
+`compact(money.toMinor(v) ?? 0, opts)` çevrimini elle yazmasını gereksiz kılar —
+o `?? 0` kalıbı geçersiz girdiyi **sessizce sıfıra** çeviriyordu (ABACUS-SPEC
+§0.5 ihlali). `compactMajor` geçersiz girdide `'—'` döner.
+
+- `compactMajor(1500000, { style: 'B/Mn/Mr' }) → "₺1,5Mn"` · `compactMajor(1500000) → "₺1,5M"`
+- `compactMajor(1500) → "₺1,5K"` · `compactMajor(999) → "₺999"` (1.000 ANA birim altı kısaltılmaz)
+- `compactMajor(-1500000, { style: 'B/Mn/Mr' }) → "-₺1,5Mn"` · `compactMajor(0) → "0"`
+- `compactMajor(null) → "—"` · `compactMajor(NaN) → "—"` · `compactMajor(1500, { currency: 'YOK' }) → "—"`
+
+⚠️ Eşik **ana birim** üzerindedir: `compactMajor(1500)` → `"₺1,5K"`, çünkü 1500
+lira 1.000 lirayı aşar. Aynı sayı `compact(1500)` ile 15 lira demektir → `"₺15"`.
 
 ### `money` — entegrasyon notları
 - **Girdi kuruş, integer.** Float birim kullanan tüketici, `format`'a vermeden önce `×100` + `math.round`; çıktı zaten string.
@@ -394,6 +435,41 @@ bağımsız, deterministik).
 
 **Bağımlılık:** `math` (abs/div/round/sub).
 
+### KABUL EDİLEN GİRDİ BİÇİMLERİ (v2.5.0'da genişletildi)
+
+Motorun ne yediği daha önce belgelenmemişti; tüketiciler biçimi deneyerek
+buluyordu. Kabul edilen dilbilgisi şudur:
+
+```
+YYYY-MM-DD [ T | boşluk ] HH:MM [ :SS ] [ .kesir ] [ saat dilimi eki ]
+YYYY-MM                                                (yalnız monthYear / period)
+```
+
+| Parça | Kabul edilen | Örnek |
+|---|---|---|
+| Tarih | `YYYY-MM-DD` · `YYYY-MM` (kısıtlı) | `2026-07-21` · `2026-09` |
+| Ayırıcı | `T` **veya boşluk** | `...21T10:00` · `...21 10:00` |
+| Saniye | isteğe bağlı | `10:00` · `10:00:00` |
+| Kesirli saniye | `.` + en az bir hane — **ayrıştırılır ve ATILIR** | `.123` · `.123456` |
+| Saat dilimi | `Z` · `+HH` · `+HHMM` · `+HH:MM` | `Z` · `+00` · `+0300` · `+03:00` |
+
+**Neden önemli — Supabase / PostgREST:** Postgres `timestamptz` alanları
+varsayılan olarak mikrosaniye taşır ve PostgREST bunu JSON'a
+`2026-08-31T06:17:08.317236+00:00` biçiminde yazar. v2.4.0 ve öncesi kesirli
+saniyeyi REDDEDİYORDU; sonuç sessizdi — ekranda yalnızca `'—'` beliriyor,
+kimse fark etmiyordu. v2.5.0 bu biçimi doğrudan kabul eder; tüketicinin
+`iso.slice(0, 10)` gibi bir kırpma yapması **gerekmez**.
+
+```ts
+date.format('2026-08-31T06:17:08.317236+00:00')  // "31.08.2026"  (v2.4.0: "—")
+date.format('2026-07-21 10:00:00+00', 'dayMonth') // "21 Tem."     (v2.4.0: "—")
+```
+
+⚠️ **Kesirli saniye atılır, yuvarlanmaz.** Çekirdek dakika çözünürlüğünde
+biçimlendirir: `format('2026-07-21T10:59:59.999999+03:00', 'time')` → `"10:59"`.
+
+⚠️ **`YYYY-MM` yalnız iki stilde geçerlidir** — bkz. `format`.
+
 **⚠️ KRİTİK — Europe/Istanbul (v2.0.0'dan itibaren):** Saat dilimi eki TAŞIYAN ISO
 değerleri (`...Z`, `...+02:00`) **İstanbul saatine (sabit UTC+3)** çevrilir; bu, saatle
 birlikte **tarihi de** ileri/geri alabilir. Saat dilimi eki OLMAYAN değerler
@@ -417,13 +493,31 @@ v1.1.0 bu tarihleri geçerli sayıyor ve `daysBetween` sessizce kayıyordu.
 · `NameForm = 'short' | 'long'`.
 
 ### `format(iso: string | null | undefined, style: DateFormatStyle = 'short'): string`
-ISO tarihi Türkçe metne çevirir. ISO'nun saat kısmı (`T...`) yok sayılır. Geçersiz/null/boş/hatalı → `'—'`.
+ISO tarihi Türkçe metne çevirir. Geçersiz/null/boş/hatalı → `'—'`.
+
+⚠️ Saat kısmı **yok sayılmaz** — saat dilimi eki taşıyorsa tarihi kaydırabilir
+(yukarıdaki Europe/Istanbul uyarısı). v1.1.0'da yok sayılırdı; bu belge satırı
+v2.0.0'dan beri yanlıştı ve v2.5.0'da düzeltildi.
 Stiller (örnek: `2026-08-15`):
 - `short` (varsayılan) → `"15.08.2026"` (GG.AA.YYYY, sıfır-dolgulu)
 - `long` → `"15 Ağustos 2026"` (GG Ay YYYY, gün sıfır-dolgusuz: `2026-12-01` → `"1 Aralık 2026"`)
 - `dayMonth` → `"15 Ağu."` (GG kısaAy.)
 - `monthYear` → `"Ağustos 2026"`
 - `period` → `"08/2026"` (AA/YYYY)
+
+**`YYYY-MM` girdisi (v2.5.0):** Aylık gruplama yapan ekranların doğal anahtarı
+`YYYY-MM`'dir. `monthYear` ve `period` gün bileşenini zaten kullanmadığı için
+bu girdiyi kabul eder:
+
+- `format('2026-09', 'monthYear') → "Eylül 2026"` · `format('2026-09', 'period') → "09/2026"`
+
+Gün GÖSTEREN stiller onu **kabul etmez** ve `'—'` döner — ayın 1'ini uydurmak
+sessiz bir hata olurdu:
+
+- `format('2026-09') → "—"` · `format('2026-09', 'long') → "—"` · `format('2026-09', 'dayMonth') → "—"`
+
+Gün aritmetiği de kabul etmez: `daysBetween('2026-09', '2026-10') → null` ·
+`dayName('2026-09') → "—"`. Ay üzerinde aritmetik için `period` motorunu kullanın.
 Diğer örnekler:
 - `format('2026-01-05') → "05.01.2026"` (tek hane sıfır-dolgulu)
 - `format('2026-08-15T21:30:00Z') → "16.08.2026"` (İstanbul saatine çevrilir)
@@ -889,3 +983,73 @@ Yeni dizi döner, **girdiyi değiştirmez**. Anahtar eleman başına bir kez hes
 Eşit anahtarlarda özgün sıra korunur (`Array.sort` ES2019'dan beri kararlıdır).
 `sortBy(['zam','çam','dal']) → ['çam','dal','zam']`
 (ham `Array.sort()` aynı girdide `['dal','zam','çam']` verir — motorun varlık sebebi).
+
+---
+
+## Yayınlanan ESLint yapılandırması
+
+**v2.5.0'da eklendi.** Çekirdek artık `@snn/abacus-core/eslint` alt yolundan
+paylaşılabilir bir ESLint **flat config** yayınlar.
+
+**Neden var:** `money.format` alt birim (kuruş), `money.formatMajor` ana birim
+(lira) okur. Bir geliştirici — veya bir AI asistanı — doğal olarak önce
+`money.format`'a uzanır. Tutarlar ana birimde saklanıyorsa sonuç **100 kat**
+hatalı çıkar ve hata **sessizdir**: ekranda makul görünen yanlış bir sayı.
+
+```
+money.formatMajor(1500)  ->  "₺1.500"
+money.format(1500)       ->  "₺15"      ← aynı sayı, 100 kat fark
+```
+
+Bu, kırıcı bir yeniden adlandırma (`formatMinor` / `formatMajor`) yerine
+seçilmiştir; o değişiklik MAJOR sürüm ve tüm tüketicilerde göç demektir.
+
+### Kurulum
+
+```js
+// tüketicinin eslint.config.js dosyası
+import abacus from '@snn/abacus-core/eslint';
+
+export default [
+  ...abacus.configs.recommended,
+  // ... kendi yapılandırmanız
+];
+```
+
+Varsayılan kapsam proje genelindeki ts / tsx / js / jsx dosyalarıdır. Daraltmak için:
+
+```js
+{ ...abacus.configs.recommended[0], files: ['src/ui/**'] }
+```
+
+### Neyi yakalar
+
+| Çağrı | Sonuç |
+|---|---|
+| `money.format(v)` | **hata** — ana birimdeyse `money.formatMajor` önerilir |
+| `money.compact(v)` | **hata** — ana birimdeyse `money.compactMajor` önerilir |
+| `money.formatMajor(v)` · `money.compactMajor(v)` | temiz |
+| `money.percent` · `money.parse` · `money.toMinor` · `money.toWords` | temiz |
+| `date.format(v)` | temiz (kural `money` nesnesine bakar) |
+
+### Bilinçli alt birim kullanımı
+
+Tutarları gerçekten kuruş olarak tutan kod için doğru çağrı `money.format`'tır;
+kural o durumda açıkça geçilir:
+
+```ts
+// eslint-disable-next-line no-restricted-properties -- tutar kuruş cinsinden
+const etiket = money.format(satir.tutar_kurus);
+```
+
+⚠️ Kural **ada** bakar, **tipe** değil. `money.format` yazan her çağrıyı
+işaretler; `format` adını başka bir nesneden çağıran kod etkilenmez. Buna
+karşılık tutarı ara bir değişkene alıp çağıran kod (`const f = money.format`)
+yakalanmaz — kural bir güvenlik ağıdır, kanıt değil.
+
+`abacus.minorUnitGates` ile kural nesnelerini kendi `no-restricted-properties`
+yapılandırmanızla birleştirebilirsiniz.
+
+> Bu yapılandırmanın kendisi testlidir: `src/abacus/eslint-config.test.ts`
+> ESLint'i programatik olarak koşturur ve kuralın gerçekten ne yakaladığını
+> ölçer (AI-RULES §1 — her kuralın bir zorlayıcısı olur).

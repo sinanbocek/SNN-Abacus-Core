@@ -4,6 +4,91 @@ Bu projedeki tüm önemli değişiklikler bu dosyada belgelenir.
 Format [Keep a Changelog](https://keepachangelog.com/tr/) temellidir;
 sürümleme [Semantic Versioning](https://semver.org/lang/tr/) kurallarına uyar.
 
+## [2.5.0] - 2026-09-01
+
+> **Tüketici raporu karşılığı.** SNN Portföy Yönetimi'nin çekirdeği gerçek bir
+> ekranda (SNN Fon üye ekstresi) kullanırken bildirdiği 5 maddenin tamamı
+> karşılandı. **Tümü eklemelidir; hiçbir mevcut davranış değişmemiştir.**
+
+### Düzeltmeler — date (rapor §1, YÜKSEK öncelik)
+
+- **Kesirli saniye artık kabul edilir.** Postgres `timestamptz` alanları
+  mikrosaniye taşır; PostgREST bunu JSON'a
+  `2026-08-31T06:17:08.317236+00:00` biçiminde yazar. v2.4.0 bu girdiyi
+  reddediyordu ve sonuç **sessizdi** — ekranda yalnızca `'—'` beliriyordu.
+  Supabase tabanlı her tüketici bu duvara çarpıyordu.
+  Kesirli kısım ayrıştırılır ve **atılır**; çekirdek dakika çözünürlüğünde
+  biçimlendirir.
+- **Çıplak `+HH` saat dilimi eki artık kabul edilir** (`...10:00:00+00`).
+  Boşluklu Postgres ayırıcısı (`YYYY-MM-DD HH:MM:SS`) v2.4.0'da zaten
+  çalışıyordu; kırılan yalnızca iki haneli offset'ti. Kabul edilen ekler:
+  `Z` · `+HH` · `+HHMM` · `+HH:MM`.
+
+### Eklenenler — date (rapor §4)
+
+- **`format` artık `YYYY-MM` girdisini kabul eder** — ama YALNIZ `monthYear` ve
+  `period` stillerinde; bu ikisi gün bileşenini zaten kullanmıyor. Aylık
+  gruplama yapan ekranların doğal anahtarı budur.
+  Gün GÖSTEREN stiller (`short`, `long`, `dayMonth`, `dayMonthWeekday`, `time`,
+  `dateTime`) ve gün aritmetiği (`daysBetween`, `dayName`, `relative`) onu
+  **kabul etmez** — ayın 1'ini uydurmak sessiz bir hata olurdu.
+
+### Eklenenler — money (rapor §2 ve §3)
+
+- **`money.percent` için `sign` seçeneği** — `PercentSign = 'auto' | 'always' | 'never'`.
+  `'never'` hiç işaret yazmaz; yönü **renkle** (yeşil/kırmızı) anlatan finansal
+  arayüzler içindir. Onsuz tüketici `percent(abs(v), 1)` yazmak zorunda
+  kalıyordu ve o sarmalama unutulunca eksi işareti kırmızı renkle üst üste
+  binip çift olumsuzlama gibi okunuyordu. İşaretsizleştirme **yuvarlamadan
+  sonra** yapılır: `percent(-0.04, 1, { sign: 'never' })` → `"%0"`, asla `"%-0"`.
+  `showPositiveSign` **@deprecated** ama çalışmaya devam eder; `sign`
+  verildiğinde yok sayılır.
+- **`money.compactMajor(amountMajor, opts?)`** — `compact`'in ana birim ikizi,
+  `format` / `formatMajor` çiftiyle simetrik. Tüketici
+  `compact(money.toMinor(v) ?? 0, opts)` çevrimini elle yazıyordu; o `?? 0`
+  kalıbı geçersiz girdiyi sessizce sıfıra çeviriyordu (ABACUS-SPEC §0.5
+  ihlali). `compactMajor` geçersiz girdide `'—'` döner.
+
+### Eklenenler — yayınlanan ESLint yapılandırması (rapor §5, a seçeneği)
+
+- **`@snn/abacus-core/eslint`** — çekirdek artık paylaşılabilir bir ESLint flat
+  config yayınlar. Daha önce hiç yoktu: `eslint.config.js` ne `files[]` içinde
+  ne de `exports` altındaydı.
+  `money.format` ve `money.compact` **alt birim** (kuruş), `formatMajor` ve
+  `compactMajor` **ana birim** (lira) okur; aynı sayı iki kapıda **100 kat**
+  farklı sonuç verir ve hata sessizdir. Kural bu riski tüketicinin derleme
+  hattına bağlar; bilinçli alt birim kullanımı `eslint-disable` ile geçilir.
+  Kırıcı yeniden adlandırma (`formatMinor`/`formatMajor`, rapor §5-b) yerine
+  seçildi — o MAJOR sürüm ve tüm tüketicilerde göç demektir.
+  Yapılandırmanın kendisi testlidir: `eslint-config.test.ts` ESLint'i
+  programatik koşturup kuralın gerçekten ne yakaladığını ölçer.
+
+### Belgeler
+
+Rapor haklı olarak şunu söyledi: bir davranış belgede yoksa tüketici onu
+bilemez. Boşluklu Postgres biçiminin zaten çalıştığı hiçbir yerde yazmıyordu.
+
+- **`date` motoruna KABUL EDİLEN GİRDİ BİÇİMLERİ tablosu eklendi** — motorun ne
+  yediği ilk kez açıkça belgelendi (ayırıcı, saniye, kesirli saniye, saat
+  dilimi eki).
+- **Bayat belge satırı düzeltildi:** MOTOR-DETAYLARI `format` girişi hâlâ
+  v1.1.0'dan kalma "ISO'nun saat kısmı yok sayılır" diyordu; bu satır v2.0.0'dan
+  beri yanlıştı ve hemen altındaki örnekle çelişiyordu.
+- Alt birim / ana birim ayrımı `formatMajor` girişinde uyarı kutusuna alındı.
+- INSTALL.md'ye Supabase damgaları, `YYYY-MM` anahtarı, birim ayrımı ve yüzde
+  işaret modu için çalışan örnekler eklendi; §6 yayınlanan yapılandırmayla
+  başlayacak şekilde ikiye ayrıldı.
+- Yeni bölüm: **Yayınlanan ESLint yapılandırması** (MOTOR-DETAYLARI).
+- Eklenen belge örneklerinin tamamı `docs-claims.test.ts` ile çivilendi.
+
+### Test
+
+- 473 → **552 birim testi**. Yeni dosyalar: `date/timestamp.test.ts`,
+  `money/compact-major.test.ts`, `eslint-config.test.ts`.
+- API yüzeyi kilidi `money.compactMajor` ile güncellendi (eklemeli → minor).
+
+---
+
 ## [2.4.0] - 2026-08-30
 
 > Tümü eklemelidir; hiçbir mevcut davranış değişmemiştir.

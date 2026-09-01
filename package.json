@@ -1,6 +1,6 @@
 {
   "name": "@snn/abacus-core",
-  "version": "2.4.0",
+  "version": "2.5.0",
   "description": "ABACUS Engine — Finansal ve Kurumsal Hesaplama & Biçimlendirme Referans Çekirdeği (SSOT)",
   "type": "module",
   "sideEffects": false,
@@ -12,10 +12,15 @@
       "types": "./src/abacus/index.ts",
       "import": "./src/abacus/index.ts",
       "default": "./src/abacus/index.ts"
+    },
+    "./eslint": {
+      "import": "./eslint/index.js",
+      "default": "./eslint/index.js"
     }
   },
   "files": [
     "src",
+    "eslint",
     "README.md",
     "INSTALL.md",
     "MIGRATION-v2.md",

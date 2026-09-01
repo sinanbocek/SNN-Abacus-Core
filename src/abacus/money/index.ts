@@ -52,6 +52,31 @@ export function formatMajor(
 }
 
 /**
+ * ANA BİRİMDEKİ bir sayıyı KISALTILMIŞ biçimde gösterir (kuruş değil, lira).
+ * `compact`'in ana birim ikizidir; `format` / `formatMajor` çiftiyle simetriktir.
+ *
+ * Grafik ekseni gibi tutarları ana birimde tutan her yerde tüketicinin
+ * `compact(toMinor(v) ?? 0, opts)` çevrimini elle yazmasını gereksiz kılar —
+ * o `?? 0` kalıbı geçersiz girdiyi sessizce sıfıra çeviriyordu.
+ *
+ * @example money.compactMajor(1500000, { style: 'B/Mn/Mr' })  // "₺1,5Mn"
+ */
+export function compactMajor(
+  amountMajor: number | null | undefined,
+  opts?: CompactMoneyOptions
+): string {
+  if (amountMajor === null || amountMajor === undefined || !Number.isFinite(amountMajor)) {
+    return '—';
+  }
+  const cur = resolveCurrency(opts?.currency);
+  if (cur === null) return '—';
+
+  const minor = toMinor(amountMajor, cur);
+  if (minor === null) return '—';
+  return compact(minor, { ...opts, currency: cur });
+}
+
+/**
  * ANA BİRİMDEKİ bir SAYIYI alt birim tam sayısına çevirir (metin değil —
  * metin için `parse` kullanın). `parse`'ın sayısal ikizidir.
  *
@@ -127,18 +152,46 @@ export function ratio(value: number | null | undefined): string {
 export const parse = parseMoney;
 
 /**
- * ABACUS yüzde biçimlendirme motoru (%12,3).
- * Null / undefined / NaN için '—' (tire) döndürür.
+ * `percent` işaret modu (v2.5.0).
+ *
+ * - `'auto'`   — varsayılan: eksi görünür, artı görünmez ("%-3,2" · "%3,2").
+ * - `'always'` — artı da yazılır ("%+3,2"); `showPositiveSign: true` karşılığı.
+ * - `'never'`  — hiç işaret yazılmaz ("%3,2"); yönü RENKLE anlatan finansal
+ *   arayüzler için. Tüketicinin `Math.abs(v)` yazmasını gereksiz kılar —
+ *   o çağrı unutulduğunda eksi işareti kırmızı renkle üst üste binip çift
+ *   olumsuzlama gibi okunuyordu.
+ *
+ * Sıfıra hiçbir modda işaret eklenmez — sıfır ne artı ne eksidir.
  */
+export type PercentSign = 'auto' | 'always' | 'never';
+
 export interface PercentOptions {
   /**
    * Pozitif değerlerin önüne '+' koyar ("%+12,3"). Değişim/fark gösteren
    * tablolarda yönü görünür kılmak için kullanılır.
    * Sıfıra işaret eklenmez — sıfır ne artı ne eksidir.
+   *
+   * @deprecated v2.5.0: `sign: 'always'` kullanın. Geriye dönük uyum için
+   * korunur; `sign` verildiğinde YOK SAYILIR.
    */
   showPositiveSign?: boolean;
+  /**
+   * İşaret modu. Verilirse `showPositiveSign`'ı geçersiz kılar.
+   * Varsayılan `'auto'` — v2.4.0 davranışının aynısı.
+   */
+  sign?: PercentSign;
 }
 
+/**
+ * ABACUS yüzde biçimlendirme motoru (%12,3).
+ * Null / undefined / NaN için '—' (tire) döndürür.
+ *
+ * @example
+ * money.percent(3.2, 1)                     // "%3,2"
+ * money.percent(-3.2, 1)                    // "%-3,2"
+ * money.percent(-3.2, 1, { sign: 'never' }) // "%3,2"
+ * money.percent(3.2, 1, { sign: 'always' }) // "%+3,2"
+ */
 export function percent(
   value: number | null | undefined,
   digits = 1,
@@ -148,9 +201,18 @@ export function percent(
     return '—';
   }
   const rounded = round(value, digits);
-  const roundedStr = String(rounded).replace('.', ',');
-  const sign = opts?.showPositiveSign === true && rounded > 0 ? '+' : '';
-  return `%${sign}${roundedStr}`;
+
+  // `sign` verilmişse o kazanır; verilmemişse eski `showPositiveSign` okunur.
+  const mode: PercentSign =
+    opts?.sign ?? (opts?.showPositiveSign === true ? 'always' : 'auto');
+
+  // 'never' modunda eksiyi metinden düşürürüz — işaret çağıran tarafta
+  // (renkle) anlatılıyor. Yuvarlama SONRASI mutlak değer alınır ki
+  // "-0,04" birinci basamakta "%0" olsun, "%-0" değil.
+  const shown = mode === 'never' ? abs(rounded) : rounded;
+  const shownStr = String(shown).replace('.', ',');
+  const sign = mode === 'always' && rounded > 0 ? '+' : '';
+  return `%${sign}${shownStr}`;
 }
 
 /**

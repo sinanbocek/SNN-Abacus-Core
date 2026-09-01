@@ -9,10 +9,10 @@
 Projelerinize GitHub üzerinden doğrudan npm paketi olarak ekleyin:
 
 ```bash
-npm install github:sinanbocek/SNN-Abacus-Core#semver:^2.4.0
+npm install github:sinanbocek/SNN-Abacus-Core#semver:^2.5.0
 ```
 
-> **Sürüm politikası:** `#semver:^2.4.0` aralığı ile bağlanın. Yama ve ek özellik sürümleri (2.1.1, 2.2.0) **otomatik gelir**; kırıcı major sürüm (3.0.0) **gelmez** ve elle geçilir. `package-lock.json` tam commit'i sabitlediği için build'ler tekrarlanabilir kalır. Ayrıntı: [INSTALL.md §4](INSTALL.md).
+> **Sürüm politikası:** `#semver:^2.5.0` aralığı ile bağlanın. Yama ve ek özellik sürümleri (2.1.1, 2.2.0) **otomatik gelir**; kırıcı major sürüm (3.0.0) **gelmez** ve elle geçilir. `package-lock.json` tam commit'i sabitlediği için build'ler tekrarlanabilir kalır. Ayrıntı: [INSTALL.md §4](INSTALL.md).
 
 ```typescript
 import { money, math, tradingMath, date, gold, silver, unit, period, collate } from '@snn/abacus-core';
@@ -57,9 +57,9 @@ collate.sortBy(['zam', 'çam', 'dal']);    // ["çam", "dal", "zam"]
 | Motor | Klasör | Bir Satır Özeti |
 |---|---|---|
 | **`math`** | `src/abacus/math/` | `decimal.js` tabanlı hassas kuruş matematiği (float hatasız dört işlem, half-up yuvarlama), toleranslı eşitlik (`equals`) ve değişim yüzdesi (`percentChange`). |
-| **`money`** | `src/abacus/money/` | Para biçimlendirme (`format`, `formatMajor`, `formatMinorInput`, `decimal`, `ratio`), metinden alt birime ayrıştırma (`parse`, `toMinor`), tutar yazısı (`toWords`), compact kısaltma (`compact`). **Para birimi veridir:** TRY/USD/EUR/GBP yerleşik, tüketici kendi birimini de verebilir. |
+| **`money`** | `src/abacus/money/` | Para biçimlendirme (`format`, `formatMajor`, `formatMinorInput`, `decimal`, `ratio`), metinden alt birime ayrıştırma (`parse`, `toMinor`), tutar yazısı (`toWords`), compact kısaltma (`compact`, `compactMajor`), yüzde biçimi işaret moduyla (`percent` — `sign: 'auto' | 'always' | 'never'`). **Alt birim / ana birim ayrımı:** `format` ve `compact` kuruş, `formatMajor` ve `compactMajor` lira okur; çekirdek bu karışıklığı yakalayan bir ESLint yapılandırması yayınlar. **Para birimi veridir:** TRY/USD/EUR/GBP yerleşik, tüketici kendi birimini de verebilir. |
 | **`currency`** | `src/abacus/currency/` | Parametrik kur çevrimi (`convert`, `cross`). Kur enjeksiyon prensibiyle çalışır; dış HTTP/DB bağımlılığı yoktur. |
-| **`date`** | `src/abacus/date/` | `Intl` bağımsız Türkçe ISO tarih/saat biçimlendirme (`format`: short/long/dayMonth/monthYear/period/time/dateTime/dayMonthWeekday), ay adı (`monthName`), bağıl zaman (`relative`), gün farkı (`daysBetween`) ve gün adı (`dayName`). Saat dilimi: **Europe/Istanbul**. Takvim doğrulaması yapar (30 Şubat reddedilir). |
+| **`date`** | `src/abacus/date/` | `Intl` bağımsız Türkçe ISO tarih/saat biçimlendirme (`format`: short/long/dayMonth/monthYear/period/time/dateTime/dayMonthWeekday), ay adı (`monthName`), bağıl zaman (`relative`), gün farkı (`daysBetween`) ve gün adı (`dayName`). Saat dilimi: **Europe/Istanbul**. Takvim doğrulaması yapar (30 Şubat reddedilir). Girdi olarak Postgres/PostgREST damgalarını doğrudan kabul eder (kesirli saniye, boşluklu ayırıcı, `+HH` eki); `monthYear`/`period` ayrıca `YYYY-MM` ay anahtarını okur. |
 | **`text`** | `src/abacus/text/` | Arama anahtarı (`searchKey`), Türkçe ek çekim fonetiği (`suffix`: 5 hâl + 6 iyelik + pronominal-n), harf dönüşümü (`upper`, `lower`, `title`), `join` ve metin normalizasyonları (`phone`, `email`, `website`, `name`, `company`). |
 | **`validate`** | `src/abacus/validate/` | Türkiye resmi kurum checksum algoritmaları (`vkn`, `tckn`, `iban` TR mod-97), `ikn` formatı ve `email` doğrulaması. |
 | **`mask`** | `src/abacus/mask/` | Gösterim amaçlı PII gizleme motoru (`money`, `vkn`, `iban`, `phone`). Saklanan veriyi asla mutasyona uğratmaz. |
@@ -74,8 +74,8 @@ collate.sortBy(['zam', 'çam', 'dal']);    // ["çam", "dal", "zam"]
 
 ## 🧪 Kalite & Test Kapsamı
 
-- **504 Birim Testi:** %100 yeşil test güvencesi (`vitest`).
-- **Ölçülen Kapsam:** statements %91,2 · branches %86,2 · functions %99,0 · lines %96,5 — CI'da eşiklerle korunur (`npm run test:coverage`).
+- **552 Birim Testi:** %100 yeşil test güvencesi (`vitest`).
+- **Ölçülen Kapsam:** statements %91,6 · branches %87,6 · functions %99,2 · lines %97,1 — CI'da eşiklerle korunur (`npm run test:coverage`).
 - **TypeScript Strict:** Sıfır `any`, tam tip emniyeti.
 - **Belge İddiaları Test Edilir:** README/INSTALL/SPEC/MOTOR-DETAYLARI içindeki her kod örneği `docs-claims.test.ts` ile doğrulanır; belge ile kod ayrışırsa CI kırılır.
 - **Sıfır Dış Bağımlılık (Hassas Matematik Hariç):** Yalnızca `decimal.js` kullanır.
@@ -91,3 +91,4 @@ collate.sortBy(['zam', 'çam', 'dal']);    // ["çam", "dal", "zam"]
 5. **Sıfır Sessiz Varsayılan**: `|| 0` ve `?? 0` kalıpları ESLint ile `error` seviyesinde yasaktır; geçersiz girdi ABACUS-SPEC §2.1'deki sentinel ile bildirilir.
 6. **Single Source of Truth**: Motor güncellemeleri yalnızca `SNN-Abacus-Core` reposunda yapılır; tüketici projeler `#semver:^X.Y.Z` aralığıyla alır. Kırıcı (major) sürümler asla otomatik inmez.
 7. **API Yüzeyi Kilitli**: Dışa açılan her ad `api-surface.test.ts` ile çivilenmiştir; bir ad silinirse test kırılır ve major sürüm gerektiği görülür.
+8. **Alt Birim / Ana Birim Ayrımı**: `format` ve `compact` **kuruş**, `formatMajor` ve `compactMajor` **lira** okur — aynı sayı iki kapıda 100 kat farklı sonuç verir ve hata sessizdir. Çekirdek bu riski tüketicinin derleme hattına bağlayan bir ESLint yapılandırması yayınlar: `import abacus from '@snn/abacus-core/eslint'` (bkz. [INSTALL.md §6.1](INSTALL.md)).

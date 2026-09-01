@@ -78,6 +78,19 @@ interface DateParts {
   hour: number;
   minute: number;
   hasTime: boolean;
+  /** Girdi gün bileşeni taşımıyordu (`YYYY-MM`); `day` 1'e varsayılmıştır. */
+  monthOnly: boolean;
+}
+
+/** `parseIso` hoşgörü ayarı. Bkz. `parseIso`. */
+interface ParseIsoOptions {
+  /**
+   * `YYYY-MM` girdisini kabul eder ve `day`'i 1 varsayar (`monthOnly: true`).
+   * YALNIZ gün bileşenini zaten kullanmayan `format` stilleri için açılır;
+   * gün aritmetiği yapan hiçbir yerde açılmaz — yoksa çekirdek var olmayan
+   * bir günü (ayın 1'i) uydurmuş olur.
+   */
+  allowMonthOnly?: boolean;
 }
 
 /** Yılın artık yıl olup olmadığını döner (Gregoryen kuralı). */
@@ -101,26 +114,37 @@ function daysInMonth(year: number, month: number): number | null {
  * - Z veya +HH:MM eki VARSA değer İstanbul saatine çevrilir; bu, tarihi de
  *   ileri veya geri alabilir.
  *
+ * Kabul edilen girdi biçimleri (v2.5.0):
+ * - Tarih ayırıcısı: `T` veya boşluk (`2026-07-21 10:00:00+00:00` — Postgres).
+ * - Kesirli saniye: `.123` / `.123456` — ayrıştırılır ve ATILIR (çekirdek
+ *   dakika çözünürlüğünde biçimlendirir; PostgREST mikrosaniye taşır).
+ * - Saat dilimi eki: `Z` · `+03` · `+0300` · `+03:00`.
+ *
  * Geçersiz biçim veya var olmayan takvim gününde (ör. 2024-02-30) null döner.
  */
-function parseIso(iso: string | null | undefined): DateParts | null {
+function parseIso(iso: string | null | undefined, opts?: ParseIsoOptions): DateParts | null {
   if (!iso || typeof iso !== 'string') return null;
 
   const match = iso.match(
-    /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2}))?\s*(Z|[+-]\d{2}:?\d{2})?)?$/
+    /^(\d{4})-(\d{2})(?:-(\d{2}))?(?:[T ](\d{2}):(\d{2})(?::(\d{2}))?(?:\.\d+)?\s*(Z|[+-]\d{2}(?::?\d{2})?)?)?$/
   );
   if (!match) return null;
 
   const year = Number(match[1]);
   const month = Number(match[2]);
-  const day = Number(match[3]);
+
+  const monthOnly = match[3] === undefined;
+  // `YYYY-MM` yalnız izin verildiğinde ve saat bileşeni YOKKEN kabul edilir;
+  // "2026-09T10:00" gibi gününü kaybetmiş bir zaman damgası geçerli değildir.
+  if (monthOnly && (opts?.allowMonthOnly !== true || match[4] !== undefined)) return null;
+  const day = monthOnly ? 1 : Number(match[3]);
 
   const maxDay = daysInMonth(year, month);
   if (maxDay === null || day < 1 || day > maxDay) return null;
 
   const hasTime = match[4] !== undefined && match[5] !== undefined;
   if (!hasTime) {
-    return { year, month, day, hour: 0, minute: 0, hasTime: false };
+    return { year, month, day, hour: 0, minute: 0, hasTime: false, monthOnly };
   }
 
   const hour = Number(match[4]);
@@ -130,7 +154,7 @@ function parseIso(iso: string | null | undefined): DateParts | null {
 
   const zone = match[7];
   if (zone === undefined) {
-    return { year, month, day, hour, minute, hasTime: true };
+    return { year, month, day, hour, minute, hasTime: true, monthOnly };
   }
 
   const zoneOffsetMinutes = parseZoneOffset(zone);
@@ -148,16 +172,21 @@ function parseIso(iso: string | null | undefined): DateParts | null {
     hour: shifted.getUTCHours(),
     minute: shifted.getUTCMinutes(),
     hasTime: true,
+    monthOnly,
   };
 }
 
-/** Z veya +HH:MM / +HHMM saat dilimi ekini dakikaya çevirir; geçersizse null. */
+/**
+ * Saat dilimi ekini dakikaya çevirir; geçersizse null.
+ * Kabul edilen biçimler: `Z` · `+HH` · `+HHMM` · `+HH:MM`.
+ * Çıplak `+HH` (Postgres'in `+00` biçimi) v2.5.0'da eklendi.
+ */
 function parseZoneOffset(zone: string): number | null {
   if (zone === 'Z') return 0;
-  const m = zone.match(/^([+-])(\d{2}):?(\d{2})$/);
-  if (!m || !m[1] || !m[2] || !m[3]) return null;
+  const m = zone.match(/^([+-])(\d{2})(?::?(\d{2}))?$/);
+  if (!m || !m[1] || !m[2]) return null;
   const hours = Number(m[2]);
-  const minutes = Number(m[3]);
+  const minutes = m[3] === undefined ? 0 : Number(m[3]);
   if (hours > 14 || minutes > 59) return null;
   const total = hours * 60 + minutes;
   return m[1] === '-' ? -total : total;
@@ -186,9 +215,15 @@ function weekdayIndex(parts: DateParts): number | null {
  * ISO string girdi alır; `Date` nesnesi KABUL ETMEZ.
  * Intl / toLocale kullanılmadan, sabit ad dizileriyle çalışır.
  * Geçersiz biçim veya var olmayan takvim gününde '—' döner.
+ *
+ * v2.5.0: `monthYear` ve `period` stilleri gün bileşenini zaten kullanmadığı
+ * için `YYYY-MM` girdisini de kabul eder (aylık gruplamanın doğal anahtarı).
+ * Diğer stiller gün bileşenini ZORUNLU tutar — gün gösteren bir çıktı için
+ * ayın 1'ini uydurmak sessiz bir hata olurdu.
  */
 export function format(iso: string | null | undefined, style: DateFormatStyle = 'short'): string {
-  const parts = parseIso(iso);
+  const monthOnlyStyle = style === 'monthYear' || style === 'period';
+  const parts = parseIso(iso, { allowMonthOnly: monthOnlyStyle });
   if (parts === null) return '—';
 
   const fullMonth = MONTH_NAMES_FULL[parts.month - 1];
