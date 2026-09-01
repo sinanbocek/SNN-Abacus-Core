@@ -4,14 +4,83 @@ Bu projedeki tüm önemli değişiklikler bu dosyada belgelenir.
 Format [Keep a Changelog](https://keepachangelog.com/tr/) temellidir;
 sürümleme [Semantic Versioning](https://semver.org/lang/tr/) kurallarına uyar.
 
+## [2.7.0] - 2026-09-01
+
+> Tümü eklemelidir; hiçbir mevcut davranış değişmemiştir.
+> Talep kaynağı ve kararlar: [`GERI-BILDIRIM-KAYDI.md`](GERI-BILDIRIM-KAYDI.md).
+
+### Eklenenler — date
+
+- **`date.weekday(iso)`** — haftanın günü SAYI olarak: **0 = Pazar … 6 = Cumartesi**.
+  Geçersiz tarihte `null` (`0` değil — 0 geçerli bir gündür).
+
+  `dayName`'in sayısal ikizi. Haftanın günü çoğu zaman bir gösterim değil bir
+  KARAR girdisidir; sayısal karşılık olmadığı için iş kuralları görüntü metnine
+  bağlanıyordu (`dayName(iso) === 'Cts'`). Kısaltma bir gün değişse o kural
+  sessizce yanlış çalışırdı: ne tip hatası ne test kırmızısı.
+
+- **`date.isWeekend(iso)`** — Cumartesi/Pazar mı. Geçersiz tarihte `null`
+  (`false` değil): "hayır" ile "karşılaştıramadım" ayrılır.
+
+  ⚠️ Bu **takvim** bilgisidir, **iş günü** bilgisi değildir. Resmî tatiller
+  kapsam dışıdır ve öyle kalacaktır: tatil takvimi sabit değildir
+  (AI-RULES §4.1 Kural 2).
+
+  İkisi de saat dilimi çevrimini uygular; saat taşıyan damgada gün kayabilir.
+
+### Eklenenler — math
+
+- **`math.ceil(x)`** — yukarı yuvarlama. `floor`'un simetriği
+  (`ceil(x) === -floor(-x)`). Yuvarlamanın üç yönünden ikisi çekirdekteydi,
+  bu üçüncüsü.
+
+- **`math.log10(x)`** — ONLUK logaritma. `x <= 0` veya geçersizde `null`.
+
+  ⚠️ **`log(x) / log(10)` ile taklit edilemez** ve bu sessiz bir hatadır.
+  `math.log` sonucunu `toNumber()` ile float'a düşürür; hassasiyet orada
+  kaybolur ve tam onluk kuvvetlerde bölme bir epsilon aşağıda kalır:
+
+  ```
+  div(log(1000), log(10))     -> 2.9999999999999996  → floor -> 2  ✘
+  div(log(1000000), log(10))  -> 5.999999999999999   → floor -> 5  ✘
+  log10(1000)                 -> 3                   → floor -> 3  ✔
+  ```
+
+  Büyüklük mertebesi bir basamak kayar; ondan türetilen grafik eksen adımı on
+  kat yanlış olur. `decimal.js` 10 tabanını doğrudan hesapladığı için `log10`'da
+  bu kayma yoktur.
+
+### Belgeler
+
+- **`date` motoru başlığına `period` yönlendirmesi eklendi.** İki modülün
+  ayrımı tüketici tarafında görünmüyordu: `date` tarih işlerinin doğal ilk
+  durağı olduğu için gün/ay aritmetiğinin komşu modülde olduğu fark edilmiyor
+  ve `addDays` / `quarterOf` / `quarterRange` elle yeniden yazılıyordu.
+  **`date` sorgular, `period` üretir.**
+
+- **Yeni dosya: [`GERI-BILDIRIM-KAYDI.md`](GERI-BILDIRIM-KAYDI.md).** Tüketici
+  talepleri ve verilen kararlar artık tek bir kayıtta tutuluyor —
+  **reddedilenler gerekçeleriyle birlikte.** Amaç, aynı talebin yeniden
+  gönderilmesini önlemek: talep göndermeden önce oraya bakılır. `README.md` ve
+  `CHANGELOG.md` bu anlatıyı artık taşımıyor; onlar ne olduğunu anlatır, kayıt
+  neden ve kimin isteğiyle olduğunu.
+
+### Test
+
+- 583 → **610 birim testi**. Yeni dosyalar: `date/weekday.test.ts`,
+  `math/ceil-log10.test.ts`.
+- Mutasyon doğrulaması (AI-RULES §2.3): dört fonksiyonun 6 korumasının 6'sı da
+  bozulduğunda kırmızı veriyor; ölü kod yok.
+- Gün indeksleri bağımsız bir takvim kitaplığından alındı, bu motorun
+  çıktısından değil (AI-RULES §2).
+- API yüzeyi kilidi dört ad ile güncellendi (eklemeli → MINOR).
+
+---
+
 ## [2.6.0] - 2026-09-01
 
-> **Tüketici raporu #2 §1 ve raporu #1 §6 karşılığı.** Tümü eklemelidir;
-> hiçbir mevcut davranış değişmemiştir.
->
-> Rapor #2'de 9 aday `AI-RULES §4.1` sınavından geçirilmiş, 1'i geçmişti
-> (`math.irr`). Kısa talep listesi ihmalden değil elemeden geliyordu; aynı
-> disiplin çekirdek tarafında da uygulandı — bkz. "Alınmayanlar".
+> Tümü eklemelidir; hiçbir mevcut davranış değişmemiştir.
+> Talep kaynağı ve kararlar: [`GERI-BILDIRIM-KAYDI.md`](GERI-BILDIRIM-KAYDI.md).
 
 ### Eklenenler — math
 
@@ -49,25 +118,9 @@ sürümleme [Semantic Versioning](https://semver.org/lang/tr/) kurallarına uyar
   ⚠️ `money.parse` alt birim hanesini 2 kabul eder; `digits` ile üretilen
   dört haneli çıktı `parse` ile geri okunamaz (JPY/KWD ile aynı kapsam sınırı).
 
-### Alınmayanlar — ve gerekçeleri
-
-Rapor #2 §2 çekirdek ekibinin görüşünü sordu. Kararlar:
-
-- **`npv` dışa açılmadı.** IRR içeride hesaplıyor, ama rapor onu açıkça talep
-  ETMEDİ. AI-RULES §4.1 Kural 3 gereği gerçek bir ekranda ihtiyaç doğmadan ad
-  eklenmez. Gerçek ihtiyaç geldiğinde tek satırlık bir MINOR sürüm.
-- **KKDF/BSMV mekaniği alınmadı.** `gold.PURITY` emsali tutmuyor: o örnekler
-  çekirdekte **Türk oldukları için değil SABİT oldukları için** duruyor
-  (Kural 2). Darphane saflığı her uygulamada aynı sayıdır; KKDF/BSMV oranları
-  değildir — raporun kendisi de "parametre olmalı" diyor. Oran parametreye
-  çevrildiğinde geriye `math`'in zaten sunduğu çarpma kalıyor, alan kavramı
-  taşıyan bir ad ise kalıyor. Sabit olan çekirdeğe girer, Türk olan değil.
-- **`pmt` / `amortize` / `dayCount` alınmadı.** Tüketicinin kendi elemesine
-  katılıyoruz. Ek gerekçe: annüite planında son taksite artık kuruş bindirme
-  politikası bir TERCİHTİR, tek doğrusu yoktur. Tek tüketiciyle o politikayı
-  çekirdeğe çivilersek ikinci tüketicide kırıcı sürümle değiştirmek gerekir.
-- **Ürün/sınıflandırma katmanı** (kredi türleri, vade ayrımı, erken kapama)
-  §4.1'e takılıyor; tartışma yok.
+> Bu sürümde değerlendirilip **alınmayan** talepler ve gerekçeleri
+> [`GERI-BILDIRIM-KAYDI.md`](GERI-BILDIRIM-KAYDI.md) dosyasındadır
+> (`npv`, KKDF/BSMV, `pmt`/`amortize`/`dayCount`, ürün sınıflandırma).
 
 ### Test
 
@@ -90,9 +143,8 @@ Rapor #2 §2 çekirdek ekibinin görüşünü sordu. Kararlar:
 
 ## [2.5.0] - 2026-09-01
 
-> **Tüketici raporu karşılığı.** SNN Portföy Yönetimi'nin çekirdeği gerçek bir
-> ekranda (SNN Fon üye ekstresi) kullanırken bildirdiği 5 maddenin tamamı
-> karşılandı. **Tümü eklemelidir; hiçbir mevcut davranış değişmemiştir.**
+> **Tümü eklemelidir; hiçbir mevcut davranış değişmemiştir.**
+> Talep kaynağı ve kararlar: [`GERI-BILDIRIM-KAYDI.md`](GERI-BILDIRIM-KAYDI.md).
 
 ### Düzeltmeler — date (rapor §1, YÜKSEK öncelik)
 

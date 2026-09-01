@@ -1,3 +1,24 @@
+/**
+ * ABACUS `date` motoru — Türkçe tarih/saat BİÇİMLENDİRME ve gün SORGULAMA.
+ *
+ * Kapsamı: biçimlendirme (`format`), ayrıştırma (`parse`), ad üretimi
+ * (`dayName`, `monthName`), bağıl zaman (`relative`), gün farkı
+ * (`daysBetween`, `daysUntil`), karşılaştırma (`isBefore`, `isAfter`,
+ * `isSameDay`) ve hafta günü (`weekday`, `isWeekend`).
+ *
+ * ⚠️ **TARİH ÜRETMEK için `period` motoruna bakın.** Bu motor tarih
+ * SORGULAR; `period` tarih ÜRETİR:
+ *
+ *   period.addDays · period.addMonths (ay sonuna kırpar) ·
+ *   period.startOfMonth · period.endOfMonth ·
+ *   period.quarterOf · period.quarterRange · period.monthsBetween · period.isBetween
+ *
+ * Bu ayrım tüketici tarafında yeterince görünür değildi: `date` tarih
+ * işlerinin doğal ilk durağı olduğu için gün/ay aritmetiğinin komşu modülde
+ * olduğu fark edilmiyor ve elle yeniden yazılıyordu (tüketici raporu #3).
+ * Bağımlılık tek yönlüdür: `period` → `date`.
+ */
+
 import { abs, div, round, sub } from '../math';
 import { toTrLower } from '../internal/tr-case';
 
@@ -344,6 +365,49 @@ export function isAfter(isoA: string, isoB: string): boolean | null {
 export function isSameDay(isoA: string, isoB: string): boolean | null {
   const fark = daysBetween(isoA, isoB);
   return fark === null ? null : fark === 0;
+}
+
+/**
+ * Haftanın gününü SAYI olarak döner: **0 = Pazar … 6 = Cumartesi**.
+ * Geçersiz veya var olmayan tarihte `null`.
+ *
+ * `dayName`'in sayısal ikizidir. `dayName` bir GÖSTERİM üretir; bu ise bir
+ * KARAR girdisidir. İş kuralını görüntü metnine bağlamak (`dayName(iso) === 'Cts'`)
+ * kırılgandır: kısaltma bir gün değişirse kural SESSİZCE yanlış çalışır —
+ * tip hatası da vermez, test de kırmızı olmaz.
+ *
+ * Saat dilimi çevrimi uygulanır; saat taşıyan bir damgada gün kayabilir
+ * (`2026-09-01T21:30Z` İstanbul'da 2 Eylül Çarşamba'dır).
+ *
+ * **`null` döner, `0` değil** — 0 geçerli bir gündür (Pazar).
+ *
+ * @example math ile karıştırmayın: math.weekday YOKTUR, bu tarih motorunundur.
+ * @example date.weekday('2026-09-05')  // 6 (Cumartesi)
+ */
+export function weekday(iso: string | null | undefined): number | null {
+  const parts = parseIso(iso);
+  if (parts === null) return null;
+  return weekdayIndex(parts);
+}
+
+/**
+ * Tarihin hafta sonuna (Cumartesi veya Pazar) denk gelip gelmediğini söyler.
+ * Geçersiz veya var olmayan tarihte `null`.
+ *
+ * **`null` döner, `false` değil:** "hayır, hafta sonu değil" ile
+ * "karşılaştıramadım" birbirine karışmaz — `isBefore` / `isAfter` ile aynı desen.
+ *
+ * ⚠️ Bu **takvim** bilgisidir, **iş günü** bilgisi DEĞİLDİR. Resmî tatiller
+ * kapsam dışıdır ve bilinçli olarak öyledir: tatil takvimi ülkeye, yıla ve
+ * kuruma göre değişir; sabit olmadığı için çekirdeğe girmez
+ * (AI-RULES §4.1 Kural 2). İş günü kuralınızı bunun üstüne siz kurarsınız.
+ *
+ * @example date.isWeekend('2026-09-05')  // true (Cumartesi)
+ */
+export function isWeekend(iso: string | null | undefined): boolean | null {
+  const idx = weekday(iso);
+  if (idx === null) return null;
+  return idx === 0 || idx === 6;
 }
 
 /**

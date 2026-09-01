@@ -570,3 +570,52 @@ describe('BELGE İDDİALARI — v2.6.0 (tüketici raporu #2 karşılığı)', ()
     expect(money.formatMajor(1.2345, { digits: 5 })).toBe('—');
   });
 });
+
+describe('BELGE İDDİALARI — v2.7.0 (tüketici raporu #3 karşılığı)', () => {
+  it('MOTOR-DETAYLARI: math.ceil örnekleri', () => {
+    expect(math.ceil(2.1)).toBe(3);
+    expect(math.ceil(2.9)).toBe(3);
+    expect(math.ceil(-2.1)).toBe(-2);
+    expect(math.ceil(3)).toBe(3);
+    expect((math.ceil(math.div(1650000, 100000) as number) as number) * 100000).toBe(1700000);
+  });
+
+  it('MOTOR-DETAYLARI: math.log10 örnekleri ve karşılaştırma tablosu', () => {
+    expect(math.log10(1000)).toBe(3);
+    expect(math.log10(1700000)).toBe(6.230448921378274);
+    expect(math.log10(0)).toBeNull();
+
+    const taklit = (x: number) => math.div(math.log(x) as number, math.log(10) as number) as number;
+    expect(taklit(1000)).toBe(2.9999999999999996);
+    expect(math.floor(taklit(1000))).toBe(2);
+    expect(math.floor(math.log10(1000) as number)).toBe(3);
+    expect(taklit(1000000)).toBe(5.999999999999999);
+    expect(math.floor(taklit(1000000))).toBe(5);
+    expect(math.floor(math.log10(1000000) as number)).toBe(6);
+
+    // Eksen adımı formülü
+    expect(math.pow(10, math.floor(math.log10(1000000) as number) - 1)).toBe(100000);
+  });
+
+  it('MOTOR-DETAYLARI: date.weekday örnekleri', () => {
+    expect(date.weekday('2026-09-05')).toBe(6);
+    expect(date.weekday('2026-09-06')).toBe(0);
+    expect(date.weekday('2024-02-30')).toBeNull();
+    expect(date.weekday('2026-09-01T21:30:00Z')).toBe(3);
+    expect(date.weekday('2026-09-01')).toBe(2);
+  });
+
+  it('MOTOR-DETAYLARI: date.isWeekend örnekleri', () => {
+    expect(date.isWeekend('2026-09-05')).toBe(true);
+    expect(date.isWeekend('2026-09-07')).toBe(false);
+    expect(date.isWeekend('abc')).toBeNull();
+  });
+
+  it('GERI-BILDIRIM-KAYDI: date sorgular / period üretir ayrımı', () => {
+    // Kayıt dosyasındaki "period zaten karşılıyordu" iddiası
+    expect(typeof period.addDays).toBe('function');
+    expect(typeof period.quarterOf).toBe('function');
+    expect(typeof period.quarterRange).toBe('function');
+    expect(typeof period.addMonths).toBe('function');
+  });
+});

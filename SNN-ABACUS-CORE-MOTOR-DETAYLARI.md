@@ -159,6 +159,42 @@ MIRR gerekir ve o ayrı bir fonksiyondur.
 > doğmadan ad eklenmez. Gerçek ihtiyaç geldiğinde dışa açmak tek satırlık bir
 > MINOR sürümdür.
 
+### `ceil(x: number): number` — v2.7.0
+Tavan / yukarı yuvarlama. `floor`'un simetriği: **`ceil(x) === -floor(-x)`**.
+`ceil(2.1) → 3` · `ceil(2.9) → 3` · `ceil(-2.1) → -2` · `ceil(3) → 3`.
+
+Yuvarlamanın üç yönünden ikisi (`round`, `floor`) zaten çekirdekteydi; bu
+üçüncüsü. Onsuz tüketici ya ham `Math.ceil`e düşüyor ya da `-floor(-x)` hilesini
+yazıp okuyanı düşündürüyordu.
+
+Grafik ekseni kullanımı: `ceil(max / step) * step` — `ceil(1650000/100000)*100000 → 1700000`.
+
+### `log10(x: number): number | null` — v2.7.0
+**ONLUK** logaritma. **`x ≤ 0` veya geçersizse `null`** (`log` ile aynı kural).
+`log10(1000) → 3` · `log10(1700000) → 6.230448921378274` · `log10(0) → null`.
+
+⚠️ **`log(x) / log(10)` ile TAKLİT EDİLEMEZ — ve taklidi SESSİZCE YANLIŞTIR.**
+`math.log` sonucunu `toNumber()` ile float'a düşürür; hassasiyet orada kaybolur
+ve bölme onu geri getiremez. Tam onluk kuvvetlerde sonuç bir epsilon aşağıda
+kalır:
+
+| x | `div(log(x), log(10))` | `floor` | `log10(x)` | `floor` |
+|---|---|---|---|---|
+| 1.000 | `2.9999999999999996` | **2** ✘ | `3` | **3** ✔ |
+| 1.000.000 | `5.999999999999999` | **5** ✘ | `6` | **6** ✔ |
+
+Finansal arayüzde logaritmanın ana kullanımı **büyüklük mertebesi** bulmaktır ve
+o her zaman 10 tabanındadır. Bir basamaklık kayma, ondan türetilen grafik eksen
+adımını **on kat** yanlış yapar:
+
+```ts
+// taban = 10 ^ (floor(log10(max)) - 1)
+math.pow(10, math.floor(math.log10(1000000) as number) - 1)  // 100000  ✔
+// taklit ile aynı formül 10000 üretiyordu — on kat fazla çizgi
+```
+
+`decimal.js` 10 tabanını doğrudan hesapladığı için `log10`'da bu kayma yoktur.
+
 ### `math` — entegrasyon notları
 - Bu motor saf sayısal; kuruş/birim ayrımı yapmaz — çağıran birim tutarlılığından sorumlu.
 - Ham `Math.*` kullanan kod bu motora taşınabilir. **Half-up farkına dikkat:** JS `Math.round(-2.5) = -2`,
@@ -511,6 +547,13 @@ bağımsız, deterministik).
 
 **Bağımlılık:** `math` (abs/div/round/sub).
 
+> ⚠️ **`date` SORGULAR, `period` ÜRETİR.** Gün/ay aritmetiği (bir tarihe gün
+> ekleme, ay başı/sonu, çeyrek aralığı) bu motorda değil **`period`** motorunda:
+> `addDays` · `addMonths` · `startOfMonth` · `endOfMonth` · `quarterOf` ·
+> `quarterRange` · `monthsBetween` · `isBetween`.
+> Bu ayrım tüketici tarafında görünmüyordu ve `period`'daki fonksiyonlar elle
+> yeniden yazılıyordu.
+
 ### KABUL EDİLEN GİRDİ BİÇİMLERİ (v2.5.0'da genişletildi)
 
 Motorun ne yediği daha önce belgelenmemişti; tüketiciler biçimi deneyerek
@@ -604,6 +647,37 @@ Saat stilleri (v2.0.0):
 - `time` → `"00:30"` — saat kısmı yoksa `'—'`
 - `dateTime` → `"25.08.2026 00:30"` — saat kısmı yoksa `'—'`
 - `dayMonthWeekday` → `"13 Ağustos Per."`
+
+### `weekday(iso: string | null | undefined): number | null` — v2.7.0
+Haftanın günü **SAYI** olarak: **0 = Pazar · 1 = Pazartesi · … · 6 = Cumartesi**.
+Geçersiz veya var olmayan tarihte **`null`** — `0` DEĞİL, çünkü 0 geçerli bir
+gündür (Pazar).
+
+`dayName`'in sayısal ikizidir ve aralarındaki fark bilinçlidir:
+**`dayName` bir GÖSTERİM üretir, `weekday` bir KARAR girdisidir.**
+İş kuralını görüntü metnine bağlamak (`dayName(iso) === 'Cts'`) kırılgandır:
+kısaltma bir gün değişirse kural **sessizce** yanlış çalışır — ne tip hatası
+verir ne test kırmızısı.
+
+`weekday('2026-09-05') → 6` (Cumartesi) · `weekday('2026-09-06') → 0` (Pazar)
+· `weekday('2024-02-30') → null`.
+
+Saat dilimi çevrimi uygulanır: `weekday('2026-09-01T21:30:00Z') → 3` (İstanbul'da
+2 Eylül **Çarşamba**), ama `weekday('2026-09-01') → 2` (Salı — saatsiz değer
+kaydırılmaz).
+
+### `isWeekend(iso: string | null | undefined): boolean | null` — v2.7.0
+Cumartesi veya Pazar mı. Geçersiz tarihte **`null`** — `false` DEĞİL:
+"hayır, hafta sonu değil" ile "karşılaştıramadım" ayrılır (`isBefore`/`isAfter`
+ile aynı desen).
+
+`isWeekend('2026-09-05') → true` · `isWeekend('2026-09-07') → false`
+· `isWeekend('abc') → null`.
+
+⚠️ **Bu TAKVİM bilgisidir, İŞ GÜNÜ bilgisi DEĞİLDİR.** Resmî tatiller kapsam
+dışıdır ve bilinçli olarak öyledir: tatil takvimi ülkeye, yıla ve kuruma göre
+değişir; sabit olmadığı için çekirdeğe girmez (AI-RULES §4.1 Kural 2).
+İş günü kuralınızı bunun üstüne siz kurarsınız.
 
 ### `parse(text: string | null | undefined): string | null`  — GİRİŞ KAPISI
 `format`'ın **aynası**: Türkçe biçimli tarih metnini ISO metnine çevirir.

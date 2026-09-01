@@ -9,7 +9,7 @@ Bu rehber, **ABACUS Engine** (`@snn/abacus-core`) çekirdek motorunu herhangi bi
 Projelerinizin kök dizininde aşağıdaki komutu çalıştırarak `@snn/abacus-core` paketini doğrudan GitHub deposundan kurun:
 
 ```bash
-npm install github:sinanbocek/SNN-Abacus-Core#semver:^2.6.0
+npm install github:sinanbocek/SNN-Abacus-Core#semver:^2.7.0
 ```
 
 > 💡 **Bağımlılık Notu:** Paket, hassas matematiksel işlemler için gereken `decimal.js` bağımlılığını otomatik olarak indirip projenize bağlar. Ekstra bir `decimal.js` kurulumu gerekmez.
@@ -154,7 +154,7 @@ bu, güvenli güncellemelerin otomatik gelmesini, kırıcı olanların gelmemesi
 
 ```jsonc
 // ÖNERİLEN — minor ve yamalar otomatik, major asla
-"@snn/abacus-core": "github:sinanbocek/SNN-Abacus-Core#semver:^2.6.0"
+"@snn/abacus-core": "github:sinanbocek/SNN-Abacus-Core#semver:^2.7.0"
 
 // Yalnız yama otomatik (daha muhafazakâr)
 "@snn/abacus-core": "github:sinanbocek/SNN-Abacus-Core#semver:~2.1.0"
@@ -183,6 +183,23 @@ yeşilse birleştirilir. Otomatik ama körü körüne değil.
 Otomatik gelmez ve gelmemelidir. Geçiş için `MIGRATION-*.md` belgesi okunur,
 pin elle yükseltilir, projenin testleri çalıştırılır.
 v1.1.0 → v2.0.0 için: [MIGRATION-v2.md](MIGRATION-v2.md).
+
+---
+
+## 📨 4.5 Çekirdeğe talep göndermek
+
+Çekirdekte eksik bulduğunuz bir şey varsa, **önce
+[`GERI-BILDIRIM-KAYDI.md`](GERI-BILDIRIM-KAYDI.md) dosyasına bakın.** Gelmiş her
+talep ve verilen karar orada tutulur; **reddedilenler gerekçeleriyle birlikte.**
+Aradığınız şey daha önce değerlendirilip uygun görülmüş ya da görülmemiş olabilir.
+
+Reddedilmiş bir maddeyi yeniden açmak için gerekçeyi değiştiren **yeni bir olgu**
+gerekir (ikinci bir tüketici, ikinci bir ekran, değişmiş bir kısıt); her red
+maddesinin altında yeniden başvuru koşulu yazılıdır.
+
+Yeni bir talep gönderirken kayıt dosyasındaki dört maddeyi karşılayın: gerçek
+ekranda karşılaşılmış ihtiyaç · `AI-RULES §4.1` sınavı yazılı · ölçülmüş çıktı ·
+değerlendirilmiş alternatif.
 
 ---
 

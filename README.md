@@ -9,10 +9,10 @@
 Projelerinize GitHub üzerinden doğrudan npm paketi olarak ekleyin:
 
 ```bash
-npm install github:sinanbocek/SNN-Abacus-Core#semver:^2.6.0
+npm install github:sinanbocek/SNN-Abacus-Core#semver:^2.7.0
 ```
 
-> **Sürüm politikası:** `#semver:^2.6.0` aralığı ile bağlanın. Yama ve ek özellik sürümleri (2.1.1, 2.2.0) **otomatik gelir**; kırıcı major sürüm (3.0.0) **gelmez** ve elle geçilir. `package-lock.json` tam commit'i sabitlediği için build'ler tekrarlanabilir kalır. Ayrıntı: [INSTALL.md §4](INSTALL.md).
+> **Sürüm politikası:** `#semver:^2.7.0` aralığı ile bağlanın. Yama ve ek özellik sürümleri (2.1.1, 2.2.0) **otomatik gelir**; kırıcı major sürüm (3.0.0) **gelmez** ve elle geçilir. `package-lock.json` tam commit'i sabitlediği için build'ler tekrarlanabilir kalır. Ayrıntı: [INSTALL.md §4](INSTALL.md).
 
 ```typescript
 import { money, math, tradingMath, date, gold, silver, unit, period, collate } from '@snn/abacus-core';
@@ -48,6 +48,10 @@ collate.sortBy(['zam', 'çam', 'dal']);    // ["çam", "dal", "zam"]
 
 > Detaylı kurulum & kullanım rehberi: [INSTALL.md](INSTALL.md)
 >
+> **Çekirdeğe talep göndermeden önce [GERI-BILDIRIM-KAYDI.md](GERI-BILDIRIM-KAYDI.md) dosyasına bakın.**
+> Gelmiş her talep ve verilen karar orada tutulur — **reddedilenler gerekçeleriyle birlikte.**
+> Aradığınız şey daha önce değerlendirilip uygun görülmemiş olabilir.
+>
 > **v1.1.0 kullanıyorsanız:** yükseltmeden önce [MIGRATION-v2.md](MIGRATION-v2.md) okuyun — v2.0.0 kırıcı değişiklikler içerir.
 
 ---
@@ -56,10 +60,10 @@ collate.sortBy(['zam', 'çam', 'dal']);    // ["çam", "dal", "zam"]
 
 | Motor | Klasör | Bir Satır Özeti |
 |---|---|---|
-| **`math`** | `src/abacus/math/` | `decimal.js` tabanlı hassas kuruş matematiği (float hatasız dört işlem, half-up yuvarlama), toleranslı eşitlik (`equals`), değişim yüzdesi (`percentChange`) ve iç verim oranı (`irr` — nakit akışının tamamı üzerinden gerçek maliyet/getiri). |
+| **`math`** | `src/abacus/math/` | `decimal.js` tabanlı hassas kuruş matematiği (float hatasız dört işlem, half-up yuvarlama), yuvarlama (`round`/`floor`/`ceil`), logaritma (`log` doğal, `log10` onluk), toleranslı eşitlik (`equals`), değişim yüzdesi (`percentChange`) ve iç verim oranı (`irr` — nakit akışının tamamı üzerinden gerçek maliyet/getiri). |
 | **`money`** | `src/abacus/money/` | Para biçimlendirme (`format`, `formatMajor`, `formatMinorInput`, `decimal`, `ratio`), metinden alt birime ayrıştırma (`parse`, `toMinor`), tutar yazısı (`toWords`), compact kısaltma (`compact`, `compactMajor`), yüzde biçimi işaret moduyla (`percent` — `sign: 'auto' | 'always' | 'never'`). Hane sayısı `digits` ile geçersiz kılınabilir (yerleşik birimin simgesi korunur). **Alt birim / ana birim ayrımı:** `format` ve `compact` kuruş, `formatMajor` ve `compactMajor` lira okur; çekirdek bu karışıklığı yakalayan bir ESLint yapılandırması yayınlar. **Para birimi veridir:** TRY/USD/EUR/GBP yerleşik, tüketici kendi birimini de verebilir. |
 | **`currency`** | `src/abacus/currency/` | Parametrik kur çevrimi (`convert`, `cross`). Kur enjeksiyon prensibiyle çalışır; dış HTTP/DB bağımlılığı yoktur. |
-| **`date`** | `src/abacus/date/` | `Intl` bağımsız Türkçe ISO tarih/saat biçimlendirme (`format`: short/long/dayMonth/monthYear/period/time/dateTime/dayMonthWeekday), ay adı (`monthName`), bağıl zaman (`relative`), gün farkı (`daysBetween`) ve gün adı (`dayName`). Saat dilimi: **Europe/Istanbul**. Takvim doğrulaması yapar (30 Şubat reddedilir). Girdi olarak Postgres/PostgREST damgalarını doğrudan kabul eder (kesirli saniye, boşluklu ayırıcı, `+HH` eki); `monthYear`/`period` ayrıca `YYYY-MM` ay anahtarını okur. |
+| **`date`** | `src/abacus/date/` | `Intl` bağımsız Türkçe ISO tarih/saat biçimlendirme (`format`: short/long/dayMonth/monthYear/period/time/dateTime/dayMonthWeekday), ay adı (`monthName`), bağıl zaman (`relative`), gün farkı (`daysBetween`), gün adı (`dayName`) ve hafta günü (`weekday` sayısal, `isWeekend`). **Tarih ÜRETMEK için `period`'a bakın:** `date` sorgular, `period` üretir. Saat dilimi: **Europe/Istanbul**. Takvim doğrulaması yapar (30 Şubat reddedilir). Girdi olarak Postgres/PostgREST damgalarını doğrudan kabul eder (kesirli saniye, boşluklu ayırıcı, `+HH` eki); `monthYear`/`period` ayrıca `YYYY-MM` ay anahtarını okur. |
 | **`text`** | `src/abacus/text/` | Arama anahtarı (`searchKey`), Türkçe ek çekim fonetiği (`suffix`: 5 hâl + 6 iyelik + pronominal-n), harf dönüşümü (`upper`, `lower`, `title`), `join` ve metin normalizasyonları (`phone`, `email`, `website`, `name`, `company`). |
 | **`validate`** | `src/abacus/validate/` | Türkiye resmi kurum checksum algoritmaları (`vkn`, `tckn`, `iban` TR mod-97), `ikn` formatı ve `email` doğrulaması. |
 | **`mask`** | `src/abacus/mask/` | Gösterim amaçlı PII gizleme motoru (`money`, `vkn`, `iban`, `phone`). Saklanan veriyi asla mutasyona uğratmaz. |
@@ -74,7 +78,7 @@ collate.sortBy(['zam', 'çam', 'dal']);    // ["çam", "dal", "zam"]
 
 ## 🧪 Kalite & Test Kapsamı
 
-- **583 Birim Testi:** %100 yeşil test güvencesi (`vitest`).
+- **610 Birim Testi:** %100 yeşil test güvencesi (`vitest`).
 - **Ölçülen Kapsam:** statements %91,9 · branches %88,2 · functions %99,3 · lines %97,1 — CI'da eşiklerle korunur (`npm run test:coverage`).
 - **TypeScript Strict:** Sıfır `any`, tam tip emniyeti.
 - **Belge İddiaları Test Edilir:** README/INSTALL/SPEC/MOTOR-DETAYLARI içindeki her kod örneği `docs-claims.test.ts` ile doğrulanır; belge ile kod ayrışırsa CI kırılır.

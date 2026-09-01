@@ -45,6 +45,20 @@ export function floor(x: number): number {
   return new D(String(x)).floor().toNumber();
 }
 
+/**
+ * Tavan / yukarı yuvarlama. `floor`'un simetriğidir: `ceil(x) === -floor(-x)`.
+ *
+ * Yuvarlamanın üç yönünden ikisi (`round`, `floor`) çekirdekteydi; bu üçüncüsü.
+ * Onsuz tüketici ya ham `Math.ceil`e düşüyor ya da `-floor(-x)` hilesini yazıp
+ * okuyanı düşündürüyordu.
+ *
+ * @example math.ceil(2.1)   // 3
+ * @example math.ceil(-2.1)  // -2
+ */
+export function ceil(x: number): number {
+  return new D(String(x)).ceil().toNumber();
+}
+
 /** Kalan / modülasyon hesabı (payda 0 ise null) */
 export function mod(a: number, b: number): number | null {
   if (b === 0) return null;
@@ -78,6 +92,35 @@ export function log(x: number): number | null {
   if (x <= 0 || !Number.isFinite(x)) return null;
   try {
     return new D(String(x)).ln().toNumber();
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * ONLUK logaritma (log₁₀). `x <= 0` veya geçersizse `null` döner — `log` ile
+ * aynı kural.
+ *
+ * ⚠️ **`log(x) / log(10)` ile TAKLİT EDİLEMEZ.** `log` sonucunu `toNumber()`
+ * ile float'a düşürür; hassasiyet orada kaybolur ve bölme onu geri getiremez.
+ * Tam onluk kuvvetlerde sonuç bir epsilon aşağıda kalır:
+ *
+ *     div(log(1000), log(10))     -> 2.9999999999999996   → floor -> 2  ✘
+ *     div(log(1000000), log(10))  -> 5.999999999999999    → floor -> 5  ✘
+ *     log10(1000)                 -> 3                    → floor -> 3  ✔
+ *
+ * Bu, sessiz bir hatadır: büyüklük mertebesi bir basamak kayar ve ondan
+ * türetilen grafik eksen adımı on kat yanlış olur. `decimal.js` 10 tabanını
+ * doğrudan hesapladığı için burada o kayma yoktur.
+ *
+ * @example math.log10(1000)     // 3
+ * @example math.log10(1700000)  // 6.230448921378274
+ * @example math.log10(0)        // null
+ */
+export function log10(x: number): number | null {
+  if (x <= 0 || !Number.isFinite(x)) return null;
+  try {
+    return new D(String(x)).log().toNumber();
   } catch {
     return null;
   }
