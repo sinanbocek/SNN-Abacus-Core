@@ -63,11 +63,11 @@ silver.gramSilverPrice(31, 34.20);        // 3405 (kuruş)
 
 | Motor | Dışa açılan fonksiyonlar (tam liste) | Not |
 |---|---|---|
-| `math` | `add`, `sub`, `mul`, `div`\|null, `round` (half-up), `abs`, `floor`, `mod`\|null, `ratio`\|null, `percent`\|null, **`percentChange`\|null**, **`equals`**, `pow`\|null, `log`\|null, `max`\|null | decimal.js kapsülü |
-| `money` | `format`, `parse`\|null, `formatMajor`, `toMinor`\|null, `formatMinorInput`, `decimal`, `ratio`, `percent`, `parseNumber`\|null, `fmtDecimalGrouped`, `formatGroupedInput`, `toWords`, `compact`, `knownCurrencyCodes` | alt birim ↔ metin |
+| `math` | `add`, `sub`, `mul`, `div`\|null, `round` (half-up), `abs`, `floor`, `ceil`, `mod`\|null, `ratio`\|null, `percent`\|null, **`percentChange`\|null**, **`equals`**, `pow`\|null, `log`\|null (doğal), `log10`\|null, `max`\|null, `irr`\|null (dönemsel) | decimal.js kapsülü |
+| `money` | `format`, `parse`\|null, `formatMajor`, `toMinor`\|null, `formatMinorInput`, `decimal`, `ratio`, `percent`, `parseNumber`\|null, `fmtDecimalGrouped`, `formatGroupedInput`, `toWords`, `compact`, `compactMajor`, `knownCurrencyCodes` | alt birim ↔ metin |
 | `currency` | `convert(minor, rate)`\|null, `cross(minor, from, to)`\|null | kur parametreyle gelir |
-| `date` | `format`, `parse`\|null, `monthName`, `daysBetween`\|null, `daysUntil`\|null, `relative`, `dayName`, **`isBefore`\|null**, **`isAfter`\|null**, **`isSameDay`\|null** | Intl'siz, TR, Europe/Istanbul |
-| `text` | `toAsciiLower`, `toTrLower`, `lower`, `upper`, `title`, `join`, **`searchKey`**, `phone`, `whatsapp`, `email`, `website`, `websiteUrl`, `name`, `company`, `numberToWords`, `lastVowel`, `isBackVowel`, `isRoundedVowel`, `endsWithHardConsonant`, `endsWithVowel`, `suffix` | TR harf güvenli |
+| `date` | `format`, `parse`\|null, `monthName`, `daysBetween`\|null, `daysUntil`\|null, `relative`, `dayName`, `weekday`\|null, `isWeekend`\|null, **`isBefore`\|null**, **`isAfter`\|null**, **`isSameDay`\|null** | Intl'siz, TR, Europe/Istanbul; tarih SORGULAR |
+| `text` | `toAsciiLower`, `toTrLower`, `lower`, `upper`, `title`, `join`, **`searchKey`**, `phone`, `plate`, `whatsapp`, `email`, `website`, `websiteUrl`, `name`, `company`, `numberToWords`, `lastVowel`, `isBackVowel`, `isRoundedVowel`, `endsWithHardConsonant`, `endsWithVowel`, `suffix` | TR harf güvenli |
 | `validate` | `vkn`, `tckn`, `ikn`, `iban`, `email` | resmî checksum, hepsi `boolean` |
 | `mask` | `money`, `vkn`, `iban`, `phone` | PII gizleme |
 | `tradingMath` | `volumeFromQty`, `qtyFromVolume`, `leverage`\|null, `calculateThresholdDays`\|null, `validateTradeDirections`, `computeRiskReward`, `computePortfolioRatios` | ticari |
@@ -141,14 +141,14 @@ Motorlar tek bir hata dili kullanmaz; **hangi işin hangi sentineli döndürdü�
 | **Hesap** (sayı üretir) | `null` | `math.div`, `currency.convert`, `gold.gramGoldPrice`, `unit.convert` |
 | **Biçimlendirme** (metin üretir) | `'—'` (em dash) | `money.format`, `money.toWords`, `date.format`, `mask.*`, `unit.dataSize` |
 | **Doğrulama** | `false` | `validate.*` |
-| **Normalizasyon** | `{ valid: false, stored: '', display: '', raw }` | `text.phone`, `text.email`, `text.website` |
+| **Normalizasyon** | `{ valid: false, stored: '', display: '', raw }` | `text.phone`, `text.plate`, `text.email`, `text.website` |
 | **Metin dönüşümü** | `''` (boş dize) | `text.title`, `text.join`, `text.numberToWords` |
 
-**İlkel katman istisnası (`math`):** `add`, `sub`, `mul`, `round`, `abs`, `floor`
-sonlu olmayan girdide sonlu olmayan çıktı üretir (`add(NaN, 1) → NaN`). Bu
-IEEE-754 yayılımıdır ve **bilinçlidir**: bu altı fonksiyon `number` döner, tanımsızlık
-üretemez. Tanımsızlık üretebilenler (`div`, `mod`, `ratio`, `percent`, `pow`, `log`,
-`max`) `null` döner. Girdi doğrulaması **motor katmanının** sorumluluğudur; her genel
+**İlkel katman istisnası (`math`):** `add`, `sub`, `mul`, `round`, `abs`, `floor`,
+`ceil` sonlu olmayan girdide sonlu olmayan çıktı üretir (`add(NaN, 1) → NaN`). Bu
+IEEE-754 yayılımıdır ve **bilinçlidir**: bu yedi fonksiyon `number` döner, tanımsızlık
+üretemez. Tanımsızlık üretebilenler (`div`, `mod`, `ratio`, `percent`, `percentChange`,
+`pow`, `log`, `log10`, `max`, `irr`) `null` döner. Girdi doğrulaması **motor katmanının** sorumluluğudur; her genel
 motor kapısı `Number.isFinite` ile korunur. `NaN` hiçbir koşulda `0`'a çevrilmez.
 
 **Yasak:** hiçbir fonksiyon geçersiz girdide `0` döndüremez; `|| 0` ve `?? 0`

@@ -78,10 +78,11 @@ collate.sortBy(['zam', 'çam', 'dal']);    // ["çam", "dal", "zam"]
 
 ## 🧪 Kalite & Test Kapsamı
 
-- **644 Birim Testi:** %100 yeşil test güvencesi (`vitest`).
+- **659 Birim Testi:** %100 yeşil test güvencesi (`vitest`).
 - **Ölçülen Kapsam:** statements %92,2 · branches %88,6 · functions %99,3 · lines %97,2 — CI'da eşiklerle korunur (`npm run test:coverage`).
 - **TypeScript Strict:** Sıfır `any`, tam tip emniyeti.
 - **Belge İddiaları Test Edilir:** README/INSTALL/SPEC/MOTOR-DETAYLARI içindeki her kod örneği `docs-claims.test.ts` ile doğrulanır; belge ile kod ayrışırsa CI kırılır.
+- **Şartname Kilitli:** `ABACUS-SPEC.md` §2'deki fonksiyon tablosu `spec-surface.test.ts` ile gerçek API'ye bağlıdır; tabloya yazılmayan bir ad dışa açılırsa CI kırılır.
 - **Sıfır Dış Bağımlılık (Hassas Matematik Hariç):** Yalnızca `decimal.js` kullanır.
 
 ---

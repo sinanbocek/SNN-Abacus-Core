@@ -102,6 +102,12 @@ bilinçli bir adımdır — düşünmeden güncellenmez.
 > Not: Bu test yalnız ADLARI korur, davranışı değil. Davranış değişikliğini
 > yakalayan `docs-claims.test.ts` ve motor testleridir. İkisi birlikte çalışır.
 
+**Şartname de kilitlidir:** `src/abacus/spec-surface.test.ts`, `ABACUS-SPEC.md`
+§2'deki "dışa açılan fonksiyonlar (tam liste)" tablosunu gerçek barrel ile
+karşılaştırır. Yeni bir ad eklendiğinde `api-surface` ile birlikte o da kırılır;
+tabloyu güncellemeden sürüm çıkmaz. (Bu test v2.8.0'da, tablonun üç sürüm boyunca
+sessizce eskidiği fark edilince eklendi.)
+
 ### 4.1 Yerleştirme Kuralı — Çekirdeğe mi, uygulamaya mı?
 
 Bu kural bağlayıcıdır. Yeni bir fonksiyonun nereye ait olduğu **tartışılmaz, sınanır.**
@@ -141,10 +147,35 @@ uygulamaya aittir. Yalnızca **sayı, para, metin, tarih, birim** biliyorsa çek
 3. **Emin değilsen çekirdeğe ALMA.** Çekirdeğe eklemek kolay, çıkarmak kırıcı
    sürüm gerektirir (§4 dağıtım kuralı). Şüphe uygulamadan yana çözülür.
 
+4. **Sabitliğini gösteren yürürlükteki bir metin yoksa**, kural "fiilî uygulama"
+   olarak etiketlenir ve gevşek tarafta tutulur: gerçek bir değeri reddetmek,
+   var olmayan bir değeri kabul etmekten daha pahalıdır. Örnek: `text.plate` —
+   plaka harf/rakam grupları 2025'ten beri yönetmelikte listelenmiyor.
+
 **Hedef ölçütü:** Bir tüketici projeyi çekirdeğe taşırken hedef "yerel kodun
 %100'ünü çekirdeğe almak" DEĞİLDİR. Hedef: **genel kodun %100'ü çekirdeğe,
 alan kodunun %0'ı.** Yerel klasör kaybolmaz, küçülür ve doğru adı alır
 (`domain/abacus/` → `domain/<alan>/`).
+
+### 4.2 Tüketici talepleri — önce kayıt
+
+Bir tüketici talebini değerlendirmeden önce **`GERI-BILDIRIM-KAYDI.md` okunur.**
+Aynı talep daha önce reddedilmişse gerekçesi ve yeniden başvuru koşulu oradadır;
+koşul karşılanmadan yeniden tartışılmaz.
+
+- **Her karar kayda işlenir** — kabuller sürümüyle, redler gerekçesi ve yeniden
+  başvuru koşuluyla. `README.md` ve `CHANGELOG.md` bu anlatıyı taşımaz, kayda
+  atıf yapar.
+- **Talebin iddiaları uygulanmadan önce ölçülür.** Tüketici raporları çoğu zaman
+  doğrudur ama "çoğu zaman" yetmez; sayılar bağımsız hesapla, davranış çalışan
+  kodla doğrulanır.
+- **Mevzuata dayanan kurallarda aslı okunur.** İkincil kaynaklar, özetler ve arama
+  sonuçları mevzuatın yerine geçmez: `text.plate` araştırmasında ikincil
+  kaynakların hepsi 4/11/2025'te **yürürlükten kaldırılmış** bir maddeyi gösteriyordu
+  ve bu yalnızca Resmî Gazete metnini aslından okuyunca ortaya çıktı.
+- **Çekirdek sahibi bir §4.1 önerisini geçersiz kılarsa** karar uygulanır ve kayda
+  "sahip kararıyla istisna — emsal değildir" diye işlenir. Kural sessizce
+  esnetilmez; istisna görünür kılınır.
 
 ---
 

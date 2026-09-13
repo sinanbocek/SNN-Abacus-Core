@@ -18,8 +18,9 @@ import { plate } from './index';
  *    rakam grubu bilinçli olarak GEVŞEK tutulur (2–5 hane): Bakanlığın yeni
  *    bir kombinasyon açması gerçek plakaları reddettirmemelidir.
  *
- * 3) HARF KÜMESİ (23 harf): Ç Ğ İ Ö Ş Ü ile Q W X plakada kullanılmaz.
- *    Çekirdek sahibinin kararıdır (fiilî uygulama).
+ * 3) HARF KÜMESİ (23 harf): Ç Ğ Ö Ş Ü ile Q W X plakada kullanılmaz ve
+ *    reddedilir. Türkçe klavyenin I harfleri (i, ı, İ) ise plakadaki I'ya
+ *    çevrilir. Çekirdek sahibinin kararıdır (fiilî uygulama).
  *
  * 4) YENİ KAYIT (il kodu + "YK", arkasında rakam yok): Resmî bir plaka DEĞİLDİR.
  *    Sigorta sektöründe, tescili yapılmamış sıfır araçlara poliçe kesilirken
@@ -69,16 +70,29 @@ describe('text.plate — girdi temizleme ve biçimlendirme', () => {
 });
 
 describe('text.plate — Türkçe klavye tuzağı', () => {
-  it('küçük i ve ı ikisi de ASCII I olur, asla İ olmaz', () => {
+  it('i, ı ve İ üçü de ASCII I olur', () => {
     expect(plate('34abi12').display).toBe('34 ABI 12');
     expect(plate('34abı12').display).toBe('34 ABI 12');
     expect(plate('34 ıı 123').display).toBe('34 II 123');
   });
 
+  it('büyük İ de I olur — Caps Lock açıkken Türkçe klavyenin i tuşu', () => {
+    // Türkçe klavyede Caps Lock açıkken i tuşu İ yazar; kullanıcı I kastetmiştir.
+    expect(plate('34 ABİ 12')).toEqual({
+      stored: '34ABI12', display: '34 ABI 12', raw: '34 ABİ 12', valid: true, yeniKayit: false,
+    });
+    expect(plate('34 İİ 1234').display).toBe('34 II 1234');
+    // Üç yazım da aynı plakayı gösterir — aynı stored değeri.
+    expect(plate('34abi12').stored).toBe(plate('34 ABİ 12').stored);
+    expect(plate('34abı12').stored).toBe(plate('34 ABİ 12').stored);
+  });
+
   it('çıktıda hiçbir zaman Türkçe özel harf bulunmaz', () => {
-    const sonuc = plate('34abi12');
-    expect(sonuc.display).not.toContain('İ');
-    expect(sonuc.stored).not.toContain('İ');
+    for (const girdi of ['34abi12', '34 ABİ 12', '34abı12']) {
+      const sonuc = plate(girdi);
+      expect(sonuc.display).not.toContain('İ');
+      expect(sonuc.stored).not.toContain('İ');
+    }
   });
 });
 
@@ -135,8 +149,9 @@ describe('text.plate — reddedilenler', () => {
     expect(plate('034 AB 123').valid).toBe(false);
   });
 
-  it('Türkçe özel harfler: Ç Ğ İ Ö Ş Ü', () => {
-    for (const harf of ['Ç', 'Ğ', 'İ', 'Ö', 'Ş', 'Ü', 'ç', 'ğ', 'ö', 'ş', 'ü']) {
+  it('Türkçe özel harfler: Ç Ğ Ö Ş Ü — büyük ve küçük', () => {
+    // İ burada YOK: Türkçe klavyenin I harfi olarak I'ya çevrilir (yukarıya bakın).
+    for (const harf of ['Ç', 'Ğ', 'Ö', 'Ş', 'Ü', 'ç', 'ğ', 'ö', 'ş', 'ü']) {
       expect(plate(`34 AB${harf} 12`).valid).toBe(false);
     }
   });

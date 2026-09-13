@@ -24,10 +24,11 @@ sürümleme [Semantic Versioning](https://semver.org/lang/tr/) kurallarına uyar
   ```
 
   - İl kodu 01–81 (katı), tek haneli yazılabilir.
-  - 1–3 harf, yalnız 23 harften; **Ç Ğ İ Ö Ş Ü ve Q W X reddedilir.**
+  - 1–3 harf, yalnız 23 harften; **Ç Ğ Ö Ş Ü ve Q W X reddedilir.**
   - 2–5 rakam — **bilinçli olarak gevşek.**
   - Ayraç olarak yalnız boşluk, nokta, tire (kapalı liste). `TR` öneki yok.
-  - Türkçe klavyeden gelen `i` ve `ı` ikisi de ASCII `I` olur.
+  - Türkçe klavyenin I harfleri — `i`, `ı` ve (Caps Lock açıkken yazılan) `İ` —
+    ASCII `I` olur; üçü de aynı `stored` değerini verir.
 
   ⚠️ **Harf/rakam grupları yönetmelikte yazılı değildir.** Karayolları Trafik
   Yönetmeliği Madde 55, 4/11/2025 tarihli ve 33067 sayılı Resmî Gazete ile
@@ -44,10 +45,27 @@ sürümleme [Semantic Versioning](https://semver.org/lang/tr/) kurallarına uyar
   Yeni il kurulursa artırılır ve MINOR sürüm çıkar; geçerli plaka kümesi yalnız
   genişler.
 
+### Belgeler
+
+- **`ABACUS-SPEC.md` §2 fonksiyon tablosu düzeltildi — üç sürümdür eskimişti.**
+  "Tam liste" iddiasına rağmen `compactMajor` (2.5.0), `irr` (2.6.0), `ceil`,
+  `log10`, `weekday`, `isWeekend` (2.7.0) tabloda yoktu. Sentinel kuralları
+  bölümündeki `null` dönen ve IEEE yayılımı yapan fonksiyon listeleri de
+  güncellendi.
+- **Yeni kilit: `spec-surface.test.ts`.** Şartname tablosunu gerçek barrel ile
+  karşılaştırır; tabloya yazılmayan bir ad dışa açılırsa kırılır. Eskimenin kök
+  nedeni tablonun bir zorlayıcısının olmamasıydı (AI-RULES §1).
+- **`AI-RULES.md` §4.2 eklendi — tüketici talepleri.** Talep değerlendirmeden önce
+  geri bildirim kaydı okunur; her karar kayda işlenir; talep iddiaları uygulanmadan
+  ölçülür; mevzuata dayanan kurallarda aslı okunur; sahip istisnaları "emsal değildir"
+  diye kaydedilir. §4.1'e Kural 4 eklendi: sabitliğini gösteren yürürlükteki metin
+  yoksa kural "fiilî uygulama" olarak etiketlenir ve gevşek tutulur.
+
 ### Test
 
-- 610 → **644 birim testi**. Yeni dosya: `text/plate.test.ts`.
-- Mutasyon doğrulaması: `plate`'in 18 korumasının 18'i de bozulduğunda kırmızı
+- 610 → **659 birim testi**. Yeni dosyalar: `text/plate.test.ts`,
+  `spec-surface.test.ts`.
+- Mutasyon doğrulaması: `plate`'in 19 korumasının 19'u da bozulduğunda kırmızı
   veriyor. Doğrulama sırasında bir ölü dal bulundu ve kaldırıldı (küçük `i` için
   ayrı dal — ASCII yolu zaten `I` üretiyordu); boş girdi koruması için `null`
   girdisi testi eklenerek ölçülür hâle getirildi.

@@ -763,7 +763,7 @@ sayı→yazı ve Türkçe ek çekimi. En kapsamlı motor.
 > `internal/` dışa açık API **değildir**, barrel üzerinden export edilmez.
 
 **Normalizasyon dönüş tipi:** `NormalizeResult { stored, display, raw, valid }`.
-`phone` bundan türeyen `PhoneResult { ..., kind }` döner (aşağıya bakınız).
+`phone` bundan türeyen `PhoneResult { ..., kind }`, `plate` ise `PlateResult { ..., yeniKayit }` döner (aşağıya bakınız).
 `stored` = kanonik/DB formu, `display` = gösterim formu, `raw` = ham girdi, `valid` = geçerli mi.
 Geçersizde `stored`/`display` boş, `valid: false`, `raw` korunur.
 
@@ -818,7 +818,7 @@ Geçersiz (`phone('123')`): boş stored/display, `valid: false`.
 | `34-acb-23` | `34 ACB 23` | `34ACB23` | ✔ | `false` |
 | `34CD3455` | `34 CD 3455` | `34CD3455` | ✔ | `false` |
 | `6abc12` | `06 ABC 12` | `06ABC12` | ✔ | `false` |
-| `34abı12` | `34 ABI 12` | `34ABI12` | ✔ | `false` |
+| `34abı12` · `34 ABİ 12` | `34 ABI 12` | `34ABI12` | ✔ | `false` |
 | `34yk` | `34 YK` | `34YK` | ✔ | **`true`** |
 | `34 YK 123` | `34 YK 123` | `34YK123` | ✔ | `false` |
 | `82 AB 123` | — | — | ✘ | `false` |
@@ -828,11 +828,11 @@ Geçersiz (`phone('123')`): boş stored/display, `valid: false`.
 **Kurallar:**
 - **İl kodu 01–81**, katı. Tek haneli yazılabilir (`6` → `06`). 82, 00, üç haneli reddedilir.
 - **Harf grubu 1–3 harf**, yalnız 23 harften: `A B C D E F G H I J K L M N O P R S T U V Y Z`.
-  **Ç Ğ İ Ö Ş Ü ve Q W X reddedilir.**
+  **Ç Ğ Ö Ş Ü ve Q W X reddedilir.**
 - **Rakam grubu 2–5 hane — bilinçli olarak GEVŞEK** (aşağıya bakın).
 - **Ayraçlar:** yalnız boşluk, nokta, tire — kapalı liste; başka karakter girdiyi geçersiz kılar.
   `TR` öneki kabul edilmez.
-- **Küçük harf:** büyütülür. Türkçe klavyeden gelen `i` ve `ı` ikisi de **ASCII `I`** olur.
+- **Küçük harf:** büyütülür. Türkçe klavyenin I harfleri — `i`, `ı` ve `İ` — **ASCII `I`** olur.
 
 ⚠️ **HARF/RAKAM GRUPLARI YÖNETMELİKTE YAZILI DEĞİLDİR.** Karayolları Trafik
 Yönetmeliği Madde 55 (Harf ve Rakam Grupları) **4/11/2025 tarihli ve 33067 sayılı
@@ -847,7 +847,10 @@ biçimler de geçerli sayılır.
 
 ⚠️ **Türkçe büyük harf fonksiyonunu kullanmayın.** `text.upper('34abi12')` → `"34ABİ12"`
 üretir ve `İ` plakada yoktur. `plate` bu çevrimi kendi içinde ASCII olarak yapar.
-Doğrudan yazılmış büyük `İ` ise diğer Türkçe harfler gibi reddedilir.
+Büyük `İ` de `I`'ya çevrilir: Türkçe klavyede Caps Lock açıkken `i` tuşu `İ` yazar ve
+kullanıcı `I` kastetmiştir. `34abi12`, `34abı12` ve `34 ABİ 12` aynı `stored` değerini
+verir (`34ABI12`). Diğer Türkçe harfler (Ç Ğ Ö Ş Ü) **çevrilmez, reddedilir**: plakada
+karşılıkları yoktur ve `C`/`G`/`O`/`S`/`U`'ya indirmek başka bir plakayı gösterir.
 
 ⚠️ **YENİ KAYIT (YK) resmî bir plaka DEĞİLDİR.** Sigorta sektöründe, tescili henüz
 yapılmamış sıfır araçlara kasko/trafik poliçesi kesilirken yazılan, yazılı olmayan bir

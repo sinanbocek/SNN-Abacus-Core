@@ -268,7 +268,8 @@ export interface PlateResult extends NormalizeResult {
 }
 
 /**
- * Plakada kullanılan 23 harf. Ç Ğ İ Ö Ş Ü ve Q W X kullanılmaz.
+ * Plakada kullanılan 23 harf. Ç Ğ Ö Ş Ü ve Q W X kullanılmaz ve reddedilir;
+ * Türkçe klavyenin I harfleri (i, ı, İ) `plate` içinde I'ya çevrilir.
  * Bu küme yönetmelikte yazılı değildir; fiilî uygulamadır (bkz. `plate`).
  */
 const PLAKA_HARFLERI = 'ABCDEFGHIJKLMNOPRSTUVYZ';
@@ -298,10 +299,10 @@ const PLAKA_RAKAM_EN_COK = 5;
  *
  * **Kabul edilen:**
  * - İl kodu 01–81 (tek haneli yazılabilir). Katı.
- * - 1–3 harf, yalnız 23 plaka harfinden. Katı.
+ * - 1–3 harf, yalnız 23 plaka harfinden. Katı. Ç Ğ Ö Ş Ü ve Q W X reddedilir.
  * - 2–5 rakam. **Bilinçli olarak gevşek** — aşağıya bakın.
  * - Ayraç olarak yalnız boşluk, nokta, tire (kapalı liste).
- * - Küçük harf. `i` ve `ı` ikisi de ASCII `I` olur.
+ * - Küçük harf. Türkçe klavyenin I harfleri — `i`, `ı` ve `İ` — ASCII `I` olur.
  *
  * ⚠️ **HARF/RAKAM GRUPLARI YÖNETMELİKTE YAZILI DEĞİLDİR.** Karayolları Trafik
  * Yönetmeliği Madde 55, 4/11/2025 tarihli ve 33067 sayılı Resmî Gazete ile
@@ -313,8 +314,10 @@ const PLAKA_RAKAM_EN_COK = 5;
  * görülmeyen `34 A 12` gibi biçimlerin de geçmesidir.
  *
  * ⚠️ **Türkçe büyük harf kullanılmaz.** `text.upper('i')` → `İ` üretir ve İ
- * plakada yoktur; Türkçe klavyeden gelen `i` burada ASCII `I`'ya çevrilir.
- * Doğrudan yazılmış büyük `İ` ise diğer Türkçe harfler gibi reddedilir.
+ * plakada yoktur. Türkçe klavyeden gelen `i`, `ı` ve (Caps Lock açıkken
+ * yazılan) `İ` burada ASCII `I`'ya çevrilir; üçü de aynı `stored` değerini
+ * verir. Diğer Türkçe harfler (Ç Ğ Ö Ş Ü) çevrilmez, reddedilir — plakada
+ * karşılıkları yoktur ve C/G/O/S/U'ya indirmek başka bir plakayı gösterir.
  *
  * ⚠️ **YENİ KAYIT resmî bir plaka değildir.** Sigorta sektöründe tescili
  * yapılmamış sıfır araçlara poliçe kesilirken yazılan yazılı olmayan bir
@@ -336,9 +339,10 @@ export function plate(raw: string): PlateResult {
 
     if (ch >= '0' && ch <= '9') {
       sikistirilmis += ch;
-    } else if (ch === 'ı') {
-      // Türkçe klavye: noktasız ı da plakadaki I'dır. Noktalı küçük i özel
-      // dal gerektirmez — aşağıdaki ASCII yolundan zaten I olur, İ olmaz.
+    } else if (ch === 'ı' || ch === 'İ') {
+      // Türkçe klavyenin I harfleri: noktasız ı ve (Caps Lock açıkken i
+      // tuşunun yazdığı) büyük İ, plakadaki I'dır. Küçük noktalı i özel dal
+      // gerektirmez — aşağıdaki ASCII yolundan zaten I olur.
       sikistirilmis += 'I';
     } else if (ch >= 'a' && ch <= 'z') {
       // ASCII büyük harf. toUpperCase yasaktır (Türkçe yerelde i → İ olur).

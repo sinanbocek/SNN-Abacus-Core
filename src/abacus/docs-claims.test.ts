@@ -629,6 +629,8 @@ describe('BELGE İDDİALARI — v2.8.0 (text.plate)', () => {
     expect(d('34CD3455').display).toBe('34 CD 3455');
     expect(d('6abc12').stored).toBe('06ABC12');
     expect(d('34abı12').display).toBe('34 ABI 12');
+    expect(d('34 ABİ 12').stored).toBe('34ABI12');
+    expect(d('34abi12').stored).toBe(d('34 ABİ 12').stored);
     expect(d('34yk')).toEqual({ stored: '34YK', display: '34 YK', raw: '34yk', valid: true, yeniKayit: true });
     expect(d('34 YK 123').yeniKayit).toBe(false);
     for (const g of ['82 AB 123', '34 ABÇ 12', '34 AQ 123', 'TR 34 ABC 23', '34/ABC/23']) {
