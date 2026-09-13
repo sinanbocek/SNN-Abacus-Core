@@ -807,6 +807,62 @@ Türkçe liste bağlama ("A, B ve C"). Boş elemanlar elenir. Örnek: `join(['Al
 Örnek: `phone('05321234567').stored → "+905321234567"`, `.display → "+90 (532) 123 45 67"`, `.valid → true`.
 Geçersiz (`phone('123')`): boş stored/display, `valid: false`.
 
+**`plate(raw): PlateResult`** — Türkiye tescil plakası normalizasyonu (v2.8.0).
+`PlateResult` = `NormalizeResult` + **`yeniKayit: boolean`**.
+`stored` boşluksuz (`34ABC23` — veritabanı, eşsizlik, arama), `display` gruplu (`34 ABC 23` — kullanıcı).
+
+| Girdi | `display` | `stored` | `valid` | `yeniKayit` |
+|---|---|---|---|---|
+| `54apy281` | `54 APY 281` | `54APY281` | ✔ | `false` |
+| `34.ABD.344` | `34 ABD 344` | `34ABD344` | ✔ | `false` |
+| `34-acb-23` | `34 ACB 23` | `34ACB23` | ✔ | `false` |
+| `34CD3455` | `34 CD 3455` | `34CD3455` | ✔ | `false` |
+| `6abc12` | `06 ABC 12` | `06ABC12` | ✔ | `false` |
+| `34abı12` | `34 ABI 12` | `34ABI12` | ✔ | `false` |
+| `34yk` | `34 YK` | `34YK` | ✔ | **`true`** |
+| `34 YK 123` | `34 YK 123` | `34YK123` | ✔ | `false` |
+| `82 AB 123` | — | — | ✘ | `false` |
+| `34 ABÇ 12` · `34 AQ 123` | — | — | ✘ | `false` |
+| `TR 34 ABC 23` · `34/ABC/23` | — | — | ✘ | `false` |
+
+**Kurallar:**
+- **İl kodu 01–81**, katı. Tek haneli yazılabilir (`6` → `06`). 82, 00, üç haneli reddedilir.
+- **Harf grubu 1–3 harf**, yalnız 23 harften: `A B C D E F G H I J K L M N O P R S T U V Y Z`.
+  **Ç Ğ İ Ö Ş Ü ve Q W X reddedilir.**
+- **Rakam grubu 2–5 hane — bilinçli olarak GEVŞEK** (aşağıya bakın).
+- **Ayraçlar:** yalnız boşluk, nokta, tire — kapalı liste; başka karakter girdiyi geçersiz kılar.
+  `TR` öneki kabul edilmez.
+- **Küçük harf:** büyütülür. Türkçe klavyeden gelen `i` ve `ı` ikisi de **ASCII `I`** olur.
+
+⚠️ **HARF/RAKAM GRUPLARI YÖNETMELİKTE YAZILI DEĞİLDİR.** Karayolları Trafik
+Yönetmeliği Madde 55 (Harf ve Rakam Grupları) **4/11/2025 tarihli ve 33067 sayılı
+Resmî Gazete ile yürürlükten kaldırıldı.** Güncel dayanak — Araçların Satış, Devir ve
+Tescil Hizmetlerinin Yürütülmesi Hakkında Yönetmelik, Madde 34 — yalnızca şunu der:
+"Tescil plakalarında il kodu ile birlikte kullanılacak harf ve rakam grupları, Türkiye
+Noterler Birliğinin uygun görüşü ile İçişleri Bakanlığınca belirlenir."
+Gruplar listelenmez. Bu yüzden kurallar **fiilî uygulamadan** derlenmiştir ve rakam
+grubu gevşek tutulmuştur: Bakanlık yeni bir kombinasyon açarsa gerçek plakalar
+reddedilmemelidir. **Bedeli:** fiilen görülmeyen `34 A 12` veya `34 ABC 12345` gibi
+biçimler de geçerli sayılır.
+
+⚠️ **Türkçe büyük harf fonksiyonunu kullanmayın.** `text.upper('34abi12')` → `"34ABİ12"`
+üretir ve `İ` plakada yoktur. `plate` bu çevrimi kendi içinde ASCII olarak yapar.
+Doğrudan yazılmış büyük `İ` ise diğer Türkçe harfler gibi reddedilir.
+
+⚠️ **YENİ KAYIT (YK) resmî bir plaka DEĞİLDİR.** Sigorta sektöründe, tescili henüz
+yapılmamış sıfır araçlara kasko/trafik poliçesi kesilirken yazılan, yazılı olmayan bir
+teamüldür: il kodu + `YK`, **arkasında rakam yoktur** (`54 YK`, `67 YK`). Çekirdek
+sahibinin kararıyla her zaman kabul edilir ve `yeniKayit: true` ile işaretlenir.
+Plakası çıkmış araçla karışmasın diye kararı metinden değil **bu bayraktan** verin —
+`display.endsWith('YK')` gibi görüntü metnine bağlı kurallar yazmayın.
+`34 YK 123` sıradan bir plakadır (`yeniKayit: false`).
+Karar gerekçesi: [`GERI-BILDIRIM-KAYDI.md`](GERI-BILDIRIM-KAYDI.md).
+
+> **Plaka türü (resmî, diplomatik, yabancı, geçici) sınıflandırılmaz.** Özel seriler
+> (ör. diplomatik `CD`) standart biçimlerin içine düştüğü için geçerli sayılır, ama
+> tür döndürülmez: plaka metni türü tek başına belirleyemez (ayrım plakanın renginde ve
+> belgesindedir) ve dayanağı olan eski yönetmelik maddeleri kaldırılmıştır.
+
 **`whatsapp(raw): string`** — wa.me linki. Örnek: `whatsapp('05321234567') → "https://wa.me/905321234567"` · geçersizde `""`.
 
 **`email(raw): NormalizeResult`** — `toAsciiLower` + trim + `validate.email` doğrulaması (SSOT).

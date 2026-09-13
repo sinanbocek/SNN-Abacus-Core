@@ -9,7 +9,7 @@ Bu rehber, **ABACUS Engine** (`@snn/abacus-core`) çekirdek motorunu herhangi bi
 Projelerinizin kök dizininde aşağıdaki komutu çalıştırarak `@snn/abacus-core` paketini doğrudan GitHub deposundan kurun:
 
 ```bash
-npm install github:sinanbocek/SNN-Abacus-Core#semver:^2.7.0
+npm install github:sinanbocek/SNN-Abacus-Core#semver:^2.8.0
 ```
 
 > 💡 **Bağımlılık Notu:** Paket, hassas matematiksel işlemler için gereken `decimal.js` bağımlılığını otomatik olarak indirip projenize bağlar. Ekstra bir `decimal.js` kurulumu gerekmez.
@@ -129,6 +129,20 @@ const yillik = math.pow(1 + (aylik as number), 12);                   // ≈ 1.0
 Dönen oran **dönemseldir** — yıllığa çevirmek çağıranın işidir. İşaret değişimi
 olmayan akışta `null` döner; sessizce 0 dönmez.
 
+### Araç plakası — `text.plate` (v2.8.0)
+
+```typescript
+const p = text.plate('34-acb-23');
+console.log(p.display);    // 34 ACB 23   ← kullanıcıya
+console.log(p.stored);     // 34ACB23     ← veritabanına (aynı plaka iki kez kaydedilmez)
+console.log(text.plate('82 AB 123').valid);  // false — il kodu yok
+console.log(text.plate('34yk').yeniKayit);   // true  — tescili yapılmamış araç
+```
+
+⚠️ Plaka harf/rakam grupları yönetmelikte yazılı değildir (KTY Madde 55, 4/11/2025'te
+kaldırıldı); kurallar fiilî uygulamadan derlenmiştir ve rakam grubu gevşektir.
+"Plakası çıktı mı?" kararını metinden değil `yeniKayit` bayrağından verin.
+
 ### Yüzde işareti — renkle anlatılan arayüzler
 
 ```typescript
@@ -154,7 +168,7 @@ bu, güvenli güncellemelerin otomatik gelmesini, kırıcı olanların gelmemesi
 
 ```jsonc
 // ÖNERİLEN — minor ve yamalar otomatik, major asla
-"@snn/abacus-core": "github:sinanbocek/SNN-Abacus-Core#semver:^2.7.0"
+"@snn/abacus-core": "github:sinanbocek/SNN-Abacus-Core#semver:^2.8.0"
 
 // Yalnız yama otomatik (daha muhafazakâr)
 "@snn/abacus-core": "github:sinanbocek/SNN-Abacus-Core#semver:~2.1.0"

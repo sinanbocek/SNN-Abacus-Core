@@ -619,3 +619,35 @@ describe('BELGE İDDİALARI — v2.7.0 (tüketici raporu #3 karşılığı)', ()
     expect(typeof period.addMonths).toBe('function');
   });
 });
+
+describe('BELGE İDDİALARI — v2.8.0 (text.plate)', () => {
+  it('MOTOR-DETAYLARI: plate tablosu', () => {
+    const d = (raw: string) => text.plate(raw);
+    expect(d('54apy281')).toEqual({ stored: '54APY281', display: '54 APY 281', raw: '54apy281', valid: true, yeniKayit: false });
+    expect(d('34.ABD.344').display).toBe('34 ABD 344');
+    expect(d('34-acb-23').stored).toBe('34ACB23');
+    expect(d('34CD3455').display).toBe('34 CD 3455');
+    expect(d('6abc12').stored).toBe('06ABC12');
+    expect(d('34abı12').display).toBe('34 ABI 12');
+    expect(d('34yk')).toEqual({ stored: '34YK', display: '34 YK', raw: '34yk', valid: true, yeniKayit: true });
+    expect(d('34 YK 123').yeniKayit).toBe(false);
+    for (const g of ['82 AB 123', '34 ABÇ 12', '34 AQ 123', 'TR 34 ABC 23', '34/ABC/23']) {
+      expect(d(g).valid).toBe(false);
+      expect(d(g).yeniKayit).toBe(false);
+    }
+  });
+
+  it('MOTOR-DETAYLARI: gevşeklik bedeli ve text.upper uyarısı', () => {
+    expect(text.plate('34 A 12').valid).toBe(true);
+    expect(text.plate('34 ABC 12345').valid).toBe(true);
+    expect(text.upper('34abi12')).toBe('34ABİ12');
+  });
+
+  it('INSTALL: plate örneği', () => {
+    const p = text.plate('34-acb-23');
+    expect(p.display).toBe('34 ACB 23');
+    expect(p.stored).toBe('34ACB23');
+    expect(text.plate('82 AB 123').valid).toBe(false);
+    expect(text.plate('34yk').yeniKayit).toBe(true);
+  });
+});

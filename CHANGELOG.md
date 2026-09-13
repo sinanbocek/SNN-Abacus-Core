@@ -4,6 +4,59 @@ Bu projedeki tüm önemli değişiklikler bu dosyada belgelenir.
 Format [Keep a Changelog](https://keepachangelog.com/tr/) temellidir;
 sürümleme [Semantic Versioning](https://semver.org/lang/tr/) kurallarına uyar.
 
+## [2.8.0] - 2026-09-13
+
+> Tümü eklemelidir; hiçbir mevcut davranış değişmemiştir.
+> Talep kaynağı ve kararlar: [`GERI-BILDIRIM-KAYDI.md`](GERI-BILDIRIM-KAYDI.md) (talep #4).
+
+### Eklenenler — text
+
+- **`text.plate(raw): PlateResult`** — Türkiye tescil plakası normalizasyonu.
+  `NormalizeResult`'a `yeniKayit: boolean` ekler. `display` gruplu
+  (`34 ABC 23`), `stored` boşluksuz (`34ABC23`).
+
+  ```
+  plate('54apy281')    -> display '54 APY 281'
+  plate('34.ABD.344')  -> display '34 ABD 344'
+  plate('6abc12')      -> display '06 ABC 12'
+  plate('34yk')        -> display '34 YK', yeniKayit: true
+  plate('82 AB 123')   -> valid: false
+  ```
+
+  - İl kodu 01–81 (katı), tek haneli yazılabilir.
+  - 1–3 harf, yalnız 23 harften; **Ç Ğ İ Ö Ş Ü ve Q W X reddedilir.**
+  - 2–5 rakam — **bilinçli olarak gevşek.**
+  - Ayraç olarak yalnız boşluk, nokta, tire (kapalı liste). `TR` öneki yok.
+  - Türkçe klavyeden gelen `i` ve `ı` ikisi de ASCII `I` olur.
+
+  ⚠️ **Harf/rakam grupları yönetmelikte yazılı değildir.** Karayolları Trafik
+  Yönetmeliği Madde 55, 4/11/2025 tarihli ve 33067 sayılı Resmî Gazete ile
+  kaldırıldı; güncel dayanak grupları İçişleri Bakanlığına bırakıyor. Kurallar
+  fiilî uygulamadan derlendi ve rakam grubu, Bakanlığın yeni bir kombinasyon
+  açması gerçek plakaları reddettirmesin diye gevşek tutuldu. Bedeli: fiilen
+  görülmeyen `34 A 12` gibi biçimler de geçer.
+
+  ⚠️ **`YK` resmî bir plaka değildir** — sigorta sektörünün tescili yapılmamış
+  araçlar için kullandığı yazılı olmayan teamüldür. Çekirdek sahibinin kararıyla
+  her zaman kabul edilir ve `yeniKayit` ile işaretlenir.
+
+- **`internal/constants.IL_SAYISI = 81`** — il kodu üst sınırı, veri olarak.
+  Yeni il kurulursa artırılır ve MINOR sürüm çıkar; geçerli plaka kümesi yalnız
+  genişler.
+
+### Test
+
+- 610 → **644 birim testi**. Yeni dosya: `text/plate.test.ts`.
+- Mutasyon doğrulaması: `plate`'in 18 korumasının 18'i de bozulduğunda kırmızı
+  veriyor. Doğrulama sırasında bir ölü dal bulundu ve kaldırıldı (küçük `i` için
+  ayrı dal — ASCII yolu zaten `I` üretiyordu); boş girdi koruması için `null`
+  girdisi testi eklenerek ölçülür hâle getirildi.
+- `text.upper('34abi12') === '34ABİ12'` belge iddiası çivilendi: plakada Türkçe
+  büyük harf fonksiyonu kullanmanın neden yanlış olduğunun kanıtı.
+- API yüzeyi kilidi `text.plate` ile güncellendi (eklemeli → MINOR).
+
+---
+
 ## [2.7.0] - 2026-09-01
 
 > Tümü eklemelidir; hiçbir mevcut davranış değişmemiştir.

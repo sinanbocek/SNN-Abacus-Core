@@ -1,5 +1,6 @@
 import { div, floor, mod } from '../math';
 import { formatMoney } from '../internal/money-format';
+import { IL_SAYISI } from '../internal/constants';
 import { isEmailShaped } from '../internal/patterns';
 import { foldChar, toAsciiLower as leafAsciiLower, toTrLower as leafTrLower, toTrUpper } from '../internal/tr-case';
 
@@ -255,6 +256,131 @@ function phoneKindOf(core: string): PhoneKind | null {
   if (first === '2' || first === '3' || first === '4') return 'landline';
   if (first === '8' || first === '9') return 'special';
   return null;
+}
+
+/** `plate` sonucu. `NormalizeResult`'a yeni kayıt işaretini ekler. */
+export interface PlateResult extends NormalizeResult {
+  /**
+   * Girdi, tescili henüz yapılmamış bir aracı gösteren YENİ KAYIT biçimindeyse
+   * (`34 YK` — il kodu + YK, rakam yok) `true`. Geçersiz girdide daima `false`.
+   */
+  yeniKayit: boolean;
+}
+
+/**
+ * Plakada kullanılan 23 harf. Ç Ğ İ Ö Ş Ü ve Q W X kullanılmaz.
+ * Bu küme yönetmelikte yazılı değildir; fiilî uygulamadır (bkz. `plate`).
+ */
+const PLAKA_HARFLERI = 'ABCDEFGHIJKLMNOPRSTUVYZ';
+
+/** Girdide yok sayılan ayraçlar — KAPALI liste; başka karakter girdiyi geçersiz kılar. */
+const PLAKA_AYRACLARI = ' .-';
+
+/** Yeni kayıt teamülünün harf grubu. */
+const YENI_KAYIT_HARFLERI = 'YK';
+
+/** Rakam grubunun kabul edilen uzunluk aralığı (bilinçli olarak gevşek). */
+const PLAKA_RAKAM_EN_AZ = 2;
+const PLAKA_RAKAM_EN_COK = 5;
+
+/**
+ * Türkiye tescil plakası normalizasyonu (v2.8.0).
+ *
+ * Girdiyi temizler, doğrular ve iki biçimde döner: `display` kullanıcıya
+ * (`34 ABC 23`), `stored` saklamaya (`34ABC23`) — aynı plakanın farklı
+ * yazımlarla iki kez kaydedilmemesi için.
+ *
+ *   plate('34.ABD.344')  // { display: '34 ABD 344', stored: '34ABD344', valid: true, ... }
+ *   plate('34-acb-23')   // display '34 ACB 23'
+ *   plate('6abc12')      // display '06 ABC 12' — tek haneli il koduna sıfır eklenir
+ *   plate('34yk')        // display '34 YK', yeniKayit: true
+ *   plate('82 AB 123')   // valid: false — il kodu yok
+ *
+ * **Kabul edilen:**
+ * - İl kodu 01–81 (tek haneli yazılabilir). Katı.
+ * - 1–3 harf, yalnız 23 plaka harfinden. Katı.
+ * - 2–5 rakam. **Bilinçli olarak gevşek** — aşağıya bakın.
+ * - Ayraç olarak yalnız boşluk, nokta, tire (kapalı liste).
+ * - Küçük harf. `i` ve `ı` ikisi de ASCII `I` olur.
+ *
+ * ⚠️ **HARF/RAKAM GRUPLARI YÖNETMELİKTE YAZILI DEĞİLDİR.** Karayolları Trafik
+ * Yönetmeliği Madde 55, 4/11/2025 tarihli ve 33067 sayılı Resmî Gazete ile
+ * kaldırıldı. Güncel dayanak (Araçların Satış, Devir ve Tescil Hizmetlerinin
+ * Yürütülmesi Hakkında Yönetmelik, Madde 34) grupların İçişleri Bakanlığınca
+ * belirleneceğini söyler, grupları listelemez. Bu yüzden kurallar fiilî
+ * uygulamadan derlenmiştir ve rakam grubu gevşektir: Bakanlık yeni bir
+ * kombinasyon açarsa gerçek plakalar reddedilmemelidir. Bedeli, fiilen
+ * görülmeyen `34 A 12` gibi biçimlerin de geçmesidir.
+ *
+ * ⚠️ **Türkçe büyük harf kullanılmaz.** `text.upper('i')` → `İ` üretir ve İ
+ * plakada yoktur; Türkçe klavyeden gelen `i` burada ASCII `I`'ya çevrilir.
+ * Doğrudan yazılmış büyük `İ` ise diğer Türkçe harfler gibi reddedilir.
+ *
+ * ⚠️ **YENİ KAYIT resmî bir plaka değildir.** Sigorta sektöründe tescili
+ * yapılmamış sıfır araçlara poliçe kesilirken yazılan yazılı olmayan bir
+ * teamüldür (`34 YK`, arkasında rakam yok). Çekirdek sahibinin kararıyla her
+ * zaman kabul edilir ve `yeniKayit: true` ile işaretlenir; tüketici "plakası
+ * çıktı mı?" sorusunu metni ayrıştırmadan bu bayraktan yanıtlar.
+ * `34 YK 123` ise sıradan bir plakadır (`yeniKayit: false`).
+ */
+export function plate(raw: string): PlateResult {
+  const gecersiz: PlateResult = {
+    stored: '', display: '', raw: raw ?? '', valid: false, yeniKayit: false,
+  };
+  if (!raw) return gecersiz;
+
+  let sikistirilmis = '';
+  for (let i = 0; i < raw.length; i++) {
+    const ch = raw[i] as string;
+    if (PLAKA_AYRACLARI.includes(ch)) continue;
+
+    if (ch >= '0' && ch <= '9') {
+      sikistirilmis += ch;
+    } else if (ch === 'ı') {
+      // Türkçe klavye: noktasız ı da plakadaki I'dır. Noktalı küçük i özel
+      // dal gerektirmez — aşağıdaki ASCII yolundan zaten I olur, İ olmaz.
+      sikistirilmis += 'I';
+    } else if (ch >= 'a' && ch <= 'z') {
+      // ASCII büyük harf. toUpperCase yasaktır (Türkçe yerelde i → İ olur).
+      sikistirilmis += String.fromCharCode(ch.charCodeAt(0) - 32);
+    } else if (ch >= 'A' && ch <= 'Z') {
+      sikistirilmis += ch;
+    } else {
+      return gecersiz;
+    }
+  }
+
+  const parca = sikistirilmis.match(/^(\d{1,2})([A-Z]{1,3})(\d*)$/);
+  if (!parca) return gecersiz;
+
+  const ilKodu = Number(parca[1]);
+  const harfler = parca[2] as string;
+  const rakamlar = parca[3] as string;
+
+  if (ilKodu < 1 || ilKodu > IL_SAYISI) return gecersiz;
+
+  for (const harf of harfler) {
+    if (!PLAKA_HARFLERI.includes(harf)) return gecersiz;
+  }
+
+  const il = ilKodu < 10 ? `0${ilKodu}` : `${ilKodu}`;
+
+  if (rakamlar.length === 0) {
+    if (harfler !== YENI_KAYIT_HARFLERI) return gecersiz;
+    return { stored: `${il}${harfler}`, display: `${il} ${harfler}`, raw, valid: true, yeniKayit: true };
+  }
+
+  if (rakamlar.length < PLAKA_RAKAM_EN_AZ || rakamlar.length > PLAKA_RAKAM_EN_COK) {
+    return gecersiz;
+  }
+
+  return {
+    stored: `${il}${harfler}${rakamlar}`,
+    display: `${il} ${harfler} ${rakamlar}`,
+    raw,
+    valid: true,
+    yeniKayit: false,
+  };
 }
 
 /** WhatsApp direct link yardımcısı (ABACUS-SPEC §3.5-e) */
