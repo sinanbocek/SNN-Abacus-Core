@@ -46,6 +46,8 @@ period.quarterRange(2026, 3);             // { start: "2026-07-01", end: "2026-0
 collate.sortBy(['zam', 'çam', 'dal']);    // ["çam", "dal", "zam"]
 ```
 
+> **Kullanım kılavuzu:** [KILAVUZ.md](KILAVUZ.md) — her motor ve fonksiyon, çalışan örnekler, "hangisini kullanmalıyım?" karşılaştırmaları ve sık yapılan hatalar.
+>
 > Detaylı kurulum & kullanım rehberi: [INSTALL.md](INSTALL.md)
 >
 > **Çekirdeğe talep göndermeden önce [GERI-BILDIRIM-KAYDI.md](GERI-BILDIRIM-KAYDI.md) dosyasına bakın.**
@@ -58,31 +60,36 @@ collate.sortBy(['zam', 'çam', 'dal']);    // ["çam", "dal", "zam"]
 
 ## 📦 Motor Özeti (13 Çekirdek Motor)
 
-| Motor | Klasör | Bir Satır Özeti |
+Her fonksiyonun ne işe yaradığı, çalışan örnekleri ve **"hangisini kullanmalıyım?"**
+karşılaştırmaları için: **[KILAVUZ.md](KILAVUZ.md)** — kılavuzdaki her örnek testte
+gerçekten çalıştırılır.
+
+| Motor | Fonksiyonlar | Ne işe yarar |
 |---|---|---|
-| **`math`** | `src/abacus/math/` | `decimal.js` tabanlı hassas kuruş matematiği (float hatasız dört işlem, half-up yuvarlama), yuvarlama (`round`/`floor`/`ceil`), logaritma (`log` doğal, `log10` onluk), toleranslı eşitlik (`equals`), değişim yüzdesi (`percentChange`) ve iç verim oranı (`irr` — nakit akışının tamamı üzerinden gerçek maliyet/getiri). |
-| **`money`** | `src/abacus/money/` | Para biçimlendirme (`format`, `formatMajor`, `formatMinorInput`, `decimal`, `ratio`), metinden alt birime ayrıştırma (`parse`, `toMinor`), tutar yazısı (`toWords`), compact kısaltma (`compact`, `compactMajor`), yüzde biçimi işaret moduyla (`percent` — `sign: 'auto' | 'always' | 'never'`). Hane sayısı `digits` ile geçersiz kılınabilir (yerleşik birimin simgesi korunur). **Alt birim / ana birim ayrımı:** `format` ve `compact` kuruş, `formatMajor` ve `compactMajor` lira okur; çekirdek bu karışıklığı yakalayan bir ESLint yapılandırması yayınlar. **Para birimi veridir:** TRY/USD/EUR/GBP yerleşik, tüketici kendi birimini de verebilir. |
-| **`currency`** | `src/abacus/currency/` | Parametrik kur çevrimi (`convert`, `cross`). Kur enjeksiyon prensibiyle çalışır; dış HTTP/DB bağımlılığı yoktur. |
-| **`date`** | `src/abacus/date/` | `Intl` bağımsız Türkçe ISO tarih/saat biçimlendirme (`format`: short/long/dayMonth/monthYear/period/time/dateTime/dayMonthWeekday), ay adı (`monthName`), bağıl zaman (`relative`), gün farkı (`daysBetween`), gün adı (`dayName`) ve hafta günü (`weekday` sayısal, `isWeekend`). **Tarih ÜRETMEK için `period`'a bakın:** `date` sorgular, `period` üretir. Saat dilimi: **Europe/Istanbul**. Takvim doğrulaması yapar (30 Şubat reddedilir). Girdi olarak Postgres/PostgREST damgalarını doğrudan kabul eder (kesirli saniye, boşluklu ayırıcı, `+HH` eki); `monthYear`/`period` ayrıca `YYYY-MM` ay anahtarını okur. |
-| **`text`** | `src/abacus/text/` | Arama anahtarı (`searchKey`), Türkçe ek çekim fonetiği (`suffix`: 5 hâl + 6 iyelik + pronominal-n), harf dönüşümü (`upper`, `lower`, `title`), `join` ve metin normalizasyonları (`phone`, `email`, `website`, `name`, `company`) ve **Türkiye tescil plakası** (`plate` — `54apy281` → `54 APY 281`, il kodu 01–81, sigorta sektörünün `34 YK` yeni kayıt teamülü `yeniKayit` bayrağıyla). |
-| **`validate`** | `src/abacus/validate/` | Türkiye resmi kurum checksum algoritmaları (`vkn`, `tckn`, `iban` TR mod-97), `ikn` formatı ve `email` doğrulaması. |
-| **`mask`** | `src/abacus/mask/` | Gösterim amaçlı PII gizleme motoru (`money`, `vkn`, `iban`, `phone`). Saklanan veriyi asla mutasyona uğratmaz. |
-| **`tradingMath`** | `src/abacus/trading-math/` | BIST & Ticari işlem matematiği, eşik gün hesabı, fırsat analizi ve pozisyon büyüklüğü hesaplamaları. |
-| **`gold`** | `src/abacus/gold/` | Ons/USD ve USD/TRY üzerinden B-otorite saflıklarıyla gram altın (24K/22K/21K/18K) ve ziynet (çeyrek/yarım/tam). |
-| **`silver`** | `src/abacus/silver/` | Ons/USD ve USD/TRY üzerinden milyem saflıklarıyla (999/925/800/1000) gram gümüş. |
-| **`unit`** | `src/abacus/unit/` | Birim çevrimi (`convert`, `categoryOf`) ve okunur veri boyutu (`dataSize`): uzunluk, ağırlık (troy ons dahil), alan (dönüm/dekar/hektar) ve veri (B→TB). |
-| **`period`** | `src/abacus/period/` | Dönem aritmetiği: `addDays`, `addMonths` (ay sonuna kırpar), `startOfMonth`, `endOfMonth`, `quarterOf`, `quarterRange`, `monthsBetween`, `isBetween`. Tarih **üretir**. |
-| **`collate`** | `src/abacus/collate/` | Türkçe alfabetik sıralama (`key`, `compare`, `sortBy`). `Intl.Collator` kullanmaz; ç/ğ/ı/ö/ş/ü doğru konumda. decimal.js taşımaz. |
+| **`math`** | `add` `sub` `mul` `div` `mod` · `round` `floor` `ceil` `abs` · `ratio` `percent` `percentChange` · `pow` `log` `log10` `max` · `equals` · `irr` | Float hatası olmayan hassas hesap (`decimal.js`). `0.1 + 0.2` tam `0.3` olur; yuvarlama half-up. Hesaplanamayan işlem sessizce 0 değil `null` döner. |
+| **`money`** | `format` `formatMajor` `formatMinorInput` · `compact` `compactMajor` · `decimal` `fmtDecimalGrouped` `ratio` `percent` · `parse` `parseNumber` `toMinor` `formatGroupedInput` · `toWords` · `knownCurrencyCodes` | Parayı Türkçe biçimde yazma ve geri okuma. ⚠️ `format`/`compact` **kuruş**, `formatMajor`/`compactMajor` **lira** okur. TRY/USD/EUR/GBP yerleşik; kendi biriminizi de verebilirsiniz. |
+| **`currency`** | `convert` `cross` | Kur çevrimi. Kur parametre olarak verilir; motor internete çıkmaz. |
+| **`date`** | `format` `parse` · `dayName` `monthName` `weekday` `isWeekend` · `daysBetween` `daysUntil` `relative` · `isBefore` `isAfter` `isSameDay` | Türkçe tarih/saat biçimleme ve tarih **sorgulama**. Girdi ISO metni; saat dilimi Europe/Istanbul; 30 Şubat gibi var olmayan günleri reddeder. Tarih **üretmek** için `period`. |
+| **`period`** | `addDays` `addMonths` · `startOfMonth` `endOfMonth` · `quarterOf` `quarterRange` · `monthsBetween` `isBetween` | Tarih **üretme**: gün/ay ekleme (ay sonuna kırpar), ay başı/sonu, çeyrekler. |
+| **`text`** | `lower` `toTrLower` `toAsciiLower` `upper` `title` · `searchKey` `join` · `phone` `whatsapp` `email` `website` `websiteUrl` `name` `company` `plate` · `numberToWords` `suffix` · `lastVowel` `isBackVowel` `isRoundedVowel` `endsWithVowel` `endsWithHardConsonant` | Türkçe harf güvenli metin işleri (`i`→`İ`), arama anahtarı, telefon/e-posta/web/ad/unvan/**plaka** normalizasyonu, sayıyı yazıya çevirme ve Türkçe ek çekimi (`2026'da`). |
+| **`validate`** | `tckn` `vkn` `iban` `ikn` `email` | Resmî checksum doğrulamaları (TC kimlik, vergi no, TR IBAN) ve biçim denetimi. Hepsi `true`/`false`. |
+| **`mask`** | `money` `vkn` `iban` `phone` | Ekranda kişisel veriyi gizleme (`123****890`). Saklanan veriye dokunmaz. |
+| **`collate`** | `compare` `sortBy` `key` | Türkçe alfabetik sıralama: `ç`, `ğ`, `ı`, `ö`, `ş`, `ü` doğru yerde. |
+| **`unit`** | `convert` `categoryOf` `dataSize` `ONS_TO_GRAM` | Birim çevrimi (uzunluk, ağırlık, alan — dönüm/dekar dâhil) ve okunur dosya boyutu (`5 MB`). |
+| **`gold`** | `gramGoldPrice` `ziynetPrice` `PURITY` `ZIYNET_GRAM` `ONS_TO_GRAM` | Ons fiyatı ve dolar kurundan gram altın (24/22/21/18 ayar) ve çeyrek/yarım/tam altın fiyatı, kuruş olarak. |
+| **`silver`** | `gramSilverPrice` `SILVER_PURITY` `ONS_TO_GRAM` | Ons fiyatı ve dolar kurundan gram gümüş fiyatı (999/925/800), kuruş olarak. |
+| **`tradingMath`** | `volumeFromQty` `qtyFromVolume` `leverage` · `validateTradeDirections` `computeRiskReward` `computePortfolioRatios` · `calculateThresholdDays` | BIST/VİOP işlem hesapları: pozisyon hacmi, kaldıraç, stop/hedef geçerliliği, risk-getiri oranı, portföy yoğunlaşması. |
 
 ---
 
 ## 🧪 Kalite & Test Kapsamı
 
-- **659 Birim Testi:** %100 yeşil test güvencesi (`vitest`).
-- **Ölçülen Kapsam:** statements %92,2 · branches %88,6 · functions %99,3 · lines %97,2 — CI'da eşiklerle korunur (`npm run test:coverage`).
+- **872 Test:** %100 yeşil (`vitest`) — bunların 198'i `KILAVUZ.md` örneklerinin çalıştırılmasıdır.
+- **Ölçülen Kapsam:** statements %93,0 · branches %89,2 · functions %100 · lines %98,0 — CI'da eşiklerle korunur (`npm run test:coverage`).
 - **TypeScript Strict:** Sıfır `any`, tam tip emniyeti.
 - **Belge İddiaları Test Edilir:** README/INSTALL/SPEC/MOTOR-DETAYLARI içindeki her kod örneği `docs-claims.test.ts` ile doğrulanır; belge ile kod ayrışırsa CI kırılır.
-- **Şartname Kilitli:** `ABACUS-SPEC.md` §2'deki fonksiyon tablosu `spec-surface.test.ts` ile gerçek API'ye bağlıdır; tabloya yazılmayan bir ad dışa açılırsa CI kırılır.
+- **Şartname ve README Kilitli:** `ABACUS-SPEC.md` §2'deki fonksiyon tablosu ile bu README'deki motor sayısı ve fonksiyon listeleri `spec-surface.test.ts` ile gerçek API'ye bağlıdır; yazılmayan bir ad dışa açılırsa CI kırılır.
+- **Kılavuz Çalıştırılır:** `KILAVUZ.md`'deki her örnek `kilavuz.test.ts` tarafından çalıştırılıp sonucu karşılaştırılır; dışa açılan her fonksiyonun kılavuzda geçmesi de zorunludur.
 - **Sıfır Dış Bağımlılık (Hassas Matematik Hariç):** Yalnızca `decimal.js` kullanır.
 
 ---

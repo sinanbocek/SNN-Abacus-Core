@@ -25,6 +25,9 @@ npm install github:sinanbocek/SNN-Abacus-Core#semver:^2.8.0
 
 ## 💻 3. Kullanım Örneği
 
+> Her motorun ve fonksiyonun çalışan örnekleri ile "hangisini kullanmalıyım?"
+> karşılaştırmaları için: **[KILAVUZ.md](KILAVUZ.md)**. Aşağısı hızlı bir tadımlıktır.
+
 Tüm motorlar tek bir barrel export (`@snn/abacus-core`) üzerinden projelerinize aktarılır:
 
 ```typescript

@@ -5,6 +5,7 @@ import * as abacus from './index';
 // seçildi — proje @types/node taşımıyor ve yalnız bu test için bağımlılık eklemek
 // gereksiz. vite, vitest'in kendi bağımlılığıdır.
 import SPEC from '../../ABACUS-SPEC.md?raw';
+import README from '../../README.md?raw';
 
 /**
  * ŞARTNAME ↔ API EŞLEŞME KİLİDİ
@@ -53,6 +54,50 @@ describe('ABACUS-SPEC §2 — dışa açılan fonksiyon tablosu gerçek API ile 
     it(`\`${motor}\` satırı barrel'ın açtığı adların TAM listesidir`, () => {
       const gercek = Object.keys((abacus as Record<string, object>)[motor] as object).sort();
       expect(specNames(motor)).toEqual(gercek);
+    });
+  }
+});
+
+/**
+ * README MOTOR ÖZETİ KİLİDİ
+ *
+ * README bir kullanıcının ilk okuduğu yerdir; "hangi motorlar ve hangi
+ * fonksiyonlar var" sorusunun cevabı orada doğru olmalıdır. Başlıktaki motor
+ * sayısı, tablodaki motorlar ve her motorun "Fonksiyonlar" sütunu gerçek
+ * barrel ile karşılaştırılır.
+ */
+describe('README.md — motor özeti gerçek API ile eşleşir', () => {
+  const motorlar = Object.keys(abacus).sort();
+
+  /** `| **`motor`** | fonksiyonlar | açıklama |` satırlarını ayrıştırır. */
+  function readmeSatirlari(): Map<string, string[]> {
+    const tablo = new Map<string, string[]>();
+    for (const satir of README.split(/\r?\n/)) {
+      const m = satir.match(/^\| \*\*`([A-Za-z]+)`\*\* \|([^|]*)\|/);
+      if (!m || m[1] === undefined || m[2] === undefined) continue;
+      const adlar = new Set<string>();
+      for (const a of m[2].matchAll(/`([A-Za-z_][A-Za-z0-9_]*)`/g)) {
+        if (a[1] !== undefined) adlar.add(a[1]);
+      }
+      tablo.set(m[1], [...adlar].sort());
+    }
+    return tablo;
+  }
+
+  it('başlıktaki motor sayısı barrel ile aynı', () => {
+    const m = README.match(/Motor Özeti \((\d+) Çekirdek Motor\)/);
+    expect(m).not.toBeNull();
+    expect(Number((m as RegExpMatchArray)[1])).toBe(motorlar.length);
+  });
+
+  it('tablodaki motorlar barrel ile aynı', () => {
+    expect([...readmeSatirlari().keys()].sort()).toEqual(motorlar);
+  });
+
+  for (const motor of motorlar) {
+    it(`\`${motor}\` satırının Fonksiyonlar sütunu tam listedir`, () => {
+      const gercek = Object.keys((abacus as Record<string, object>)[motor] as object).sort();
+      expect(readmeSatirlari().get(motor)).toEqual(gercek);
     });
   }
 });

@@ -102,11 +102,16 @@ bilinçli bir adımdır — düşünmeden güncellenmez.
 > Not: Bu test yalnız ADLARI korur, davranışı değil. Davranış değişikliğini
 > yakalayan `docs-claims.test.ts` ve motor testleridir. İkisi birlikte çalışır.
 
-**Şartname de kilitlidir:** `src/abacus/spec-surface.test.ts`, `ABACUS-SPEC.md`
-§2'deki "dışa açılan fonksiyonlar (tam liste)" tablosunu gerçek barrel ile
-karşılaştırır. Yeni bir ad eklendiğinde `api-surface` ile birlikte o da kırılır;
-tabloyu güncellemeden sürüm çıkmaz. (Bu test v2.8.0'da, tablonun üç sürüm boyunca
-sessizce eskidiği fark edilince eklendi.)
+**Şartname, README ve kılavuz da kilitlidir.** Yeni bir ad eklendiğinde `api-surface`
+ile birlikte üç kilit daha kırılır ve üç belge güncellenmeden sürüm çıkmaz:
+
+- `spec-surface.test.ts` — `ABACUS-SPEC.md` §2 fonksiyon tablosu ve `README.md`
+  motor özeti (motor sayısı, motorlar, her motorun fonksiyon listesi) gerçek
+  barrel ile karşılaştırılır. (v2.8.0'da, şartname tablosunun üç sürüm boyunca
+  sessizce eskidiği fark edilince eklendi.)
+- `kilavuz.test.ts` — `KILAVUZ.md`'deki her ```js örneği çalıştırılır ve dışa
+  açılan her adın kılavuzda geçmesi zorunludur. Yeni fonksiyon için kılavuza en az
+  bir çalışan örnek ve gerekiyorsa "hangisini kullanmalıyım?" satırı eklenir.
 
 ### 4.1 Yerleştirme Kuralı — Çekirdeğe mi, uygulamaya mı?
 

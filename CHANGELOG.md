@@ -4,6 +4,39 @@ Bu projedeki tüm önemli değişiklikler bu dosyada belgelenir.
 Format [Keep a Changelog](https://keepachangelog.com/tr/) temellidir;
 sürümleme [Semantic Versioning](https://semver.org/lang/tr/) kurallarına uyar.
 
+## [2.8.1] - 2026-09-13
+
+> Yalnız belgeler ve testler. Kod ve genel API değişmedi.
+
+### Belgeler
+
+- **Yeni: [`KILAVUZ.md`](KILAVUZ.md) — kullanım kılavuzu.** 13 motorun ve dışa açılan
+  her fonksiyonun çalışan örnekleri; aynı iş için birden fazla seçenek olduğunda
+  **"hangisini kullanmalıyım?"** karşılaştırmaları (parayı yazmak, yüzde, metinden
+  sayıya, yuvarlama, logaritma, `date`/`period`, harf dönüşümü/arama/sıralama,
+  doğrulama/normalizasyon/maskeleme) ve sık yapılan hatalar tablosu.
+- **README motor tablosu yeniden kuruldu.** Her motor satırında artık o motorun
+  **tam fonksiyon listesi** ve sade bir "ne işe yarar" açıklaması var.
+- `SNN-ABACUS-CORE-MOTOR-DETAYLARI.md` başlığındaki eskimiş sürüm notu
+  ("v2.0.0, yayımlanmamış") düzeltildi; belgeler arası "hangisini okumalıyım"
+  yönlendirmesi eklendi.
+- `AI-RULES.md` §4.0: yeni bir fonksiyonun README ve kılavuza da yazılması zorunlu.
+
+### Test
+
+- 659 → **872 test** (198'i kılavuz örneği, 15'i README kilidi). Kılavuz örnekleri daha
+  önce hiçbir testin çalıştırmadığı yolları çalıştırdığı için kapsam da yükseldi:
+  functions %99,3 → **%100**, lines %97,2 → %98,0.
+- **`kilavuz.test.ts`** — kılavuzdaki her ```js örneğini gerçekten çalıştırır ve
+  sonucu karşılaştırır (198 örnek); dışa açılan her adın kılavuzda geçmesini ve
+  kod bloklarında denetlenmeyen satır bulunmamasını zorunlu kılar. Beş yönde
+  meta-doğrulandı: yanlış sonuç, `null` yerine `0`, denetlenmeyen satır,
+  kılavuzdan silinmiş fonksiyon ve yanlış nesne alanı ayrı ayrı kırmızı verdi.
+- **`spec-surface.test.ts` genişletildi** — README başlığındaki motor sayısı, tablodaki
+  motorlar ve her motorun fonksiyon listesi gerçek API ile karşılaştırılır.
+
+---
+
 ## [2.8.0] - 2026-09-13
 
 > Tümü eklemelidir; hiçbir mevcut davranış değişmemiştir.

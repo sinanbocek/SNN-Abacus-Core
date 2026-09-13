@@ -2,12 +2,13 @@
 
 > Bu belge SNN-Abacus-Core'un (`@snn/abacus-core`) **derin API referansıdır**: her motorun
 > gerçek imzaları, davranışı, kenar durumları ve tüketici projeler için entegrasyon notları.
-> Kaynak koddan (v2.0.0, henüz etiketlenmemiş) doğrulanmıştır.
+> Buradaki kod örnekleri `src/abacus/docs-claims.test.ts` ile çivilidir.
 >
-> **Amaç:** Kütüphanenin resmi API referansı olmak; README/SPEC özetlerini beslemek ve tüm
-> tüketici projelerin entegrasyonunda tek başvuru kaynağı olmak.
+> **Hangi belgeyi okumalıyım?** Bir fonksiyonu **kullanmak** ve seçenekler arasında
+> **karar vermek** için önce [KILAVUZ.md](KILAVUZ.md). Kenar durumları, sürüm geçmişi ve
+> tasarım gerekçeleri için bu belge. Bağlayıcı kurallar için [ABACUS-SPEC.md](ABACUS-SPEC.md).
 >
-> **Sürüm:** v2.0.0 (yayımlanmamış) · **Kod dili:** İngilizce · **Bağımlılık:** yalnız `decimal.js` (yalnız `math` içinde)
+> **Sürüm:** v2.8 serisi · **Kod dili:** İngilizce · **Bağımlılık:** yalnız `decimal.js` (yalnız `math` içinde)
 
 ---
 
