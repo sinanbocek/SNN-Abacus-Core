@@ -63,7 +63,7 @@ silver.gramSilverPrice(31, 34.20);        // 3405 (kuruş)
 
 | Motor | Dışa açılan fonksiyonlar (tam liste) | Not |
 |---|---|---|
-| `math` | `add`, `sub`, `mul`, `div`\|null, `round` (half-up), `abs`, `floor`, `ceil`, `mod`\|null, `ratio`\|null, `percent`\|null, **`percentChange`\|null**, **`equals`**, `pow`\|null, `log`\|null (doğal), `log10`\|null, `max`\|null, `irr`\|null (dönemsel) | decimal.js kapsülü |
+| `math` | `add`, `sub`, `mul`, `div`\|null, `round` (half-up), `abs`, `floor`, `ceil`, `mod`\|null, `ratio`\|null, `percent`\|null, **`percentChange`\|null**, **`equals`**, `pow`\|null, `log`\|null (doğal), `log10`\|null, `max`\|null, `irr`\|null (dönemsel), **`allocate`**\|null (dizi; Σ = total) | decimal.js kapsülü; `allocate` BigInt |
 | `money` | `format`, `parse`\|null, `formatMajor`, `toMinor`\|null, `formatMinorInput`, `decimal`, `ratio`, `percent`, `parseNumber`\|null, `fmtDecimalGrouped`, `formatGroupedInput`, `toWords`, `compact`, `compactMajor`, `knownCurrencyCodes` | alt birim ↔ metin |
 | `currency` | `convert(minor, rate)`\|null, `cross(minor, from, to)`\|null | kur parametreyle gelir |
 | `date` | `format`, `parse`\|null, `monthName`, `daysBetween`\|null, `daysUntil`\|null, `relative`, `dayName`, `weekday`\|null, `isWeekend`\|null, **`isBefore`\|null**, **`isAfter`\|null**, **`isSameDay`\|null** | Intl'siz, TR, Europe/Istanbul; tarih SORGULAR |
@@ -148,7 +148,7 @@ Motorlar tek bir hata dili kullanmaz; **hangi işin hangi sentineli döndürdü�
 `ceil` sonlu olmayan girdide sonlu olmayan çıktı üretir (`add(NaN, 1) → NaN`). Bu
 IEEE-754 yayılımıdır ve **bilinçlidir**: bu yedi fonksiyon `number` döner, tanımsızlık
 üretemez. Tanımsızlık üretebilenler (`div`, `mod`, `ratio`, `percent`, `percentChange`,
-`pow`, `log`, `log10`, `max`, `irr`) `null` döner. Girdi doğrulaması **motor katmanının** sorumluluğudur; her genel
+`pow`, `log`, `log10`, `max`, `irr`, `allocate`) `null` döner. `allocate` dizi döndüren tek `math` fonksiyonudur; geçersiz girdide boş dizi değil `null` döner. Girdi doğrulaması **motor katmanının** sorumluluğudur; her genel
 motor kapısı `Number.isFinite` ile korunur. `NaN` hiçbir koşulda `0`'a çevrilmez.
 
 **Hane sayısı parametresi (v3.0.0):** `math.round(x, d)` ilkel katmandadır ve `d`'yi

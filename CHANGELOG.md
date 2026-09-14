@@ -4,6 +4,52 @@ Bu projedeki tüm önemli değişiklikler bu dosyada belgelenir.
 Format [Keep a Changelog](https://keepachangelog.com/tr/) temellidir;
 sürümleme [Semantic Versioning](https://semver.org/lang/tr/) kurallarına uyar.
 
+## [3.1.0] - 2026-09-14
+
+> Eklemeli. Mevcut hiçbir ad veya davranış değişmedi.
+> Kararlar: [`GERI-BILDIRIM-KAYDI.md`](GERI-BILDIRIM-KAYDI.md) (madde 28–31, talep #5).
+
+### Eklenenler
+
+- **`math.allocate(total, weights, { residual })`** — havuz dağıtımı. Tam sayı bir
+  tutarı ağırlıklara orantılı böler; **sonuçların toplamı tutara her zaman tam eşittir.**
+
+  ```
+  allocate(100000, [6080, 8160, 12080, …], LR)   → [107, 144, 212, …]   Σ = 100000
+  her payı ayrı yuvarlamak                        → [107, 144, 213, …]   Σ = 100001 ✘
+  ```
+
+  Her payı ayrı yuvarlamak toplamı sessizce saptırıyordu: tüketicinin (SNN-Ihale-Maliyet)
+  gerçek 9 kalemlik verisinde havuzların %55,0'ında, 20–55 kalemlik sepetlerde %77,2'sinde.
+  Yöntem en büyük kalan; eşit kalanda küçük indis. `residual` **zorunludur**, şimdilik tek
+  değeri `'largest-remainder'` — yeni politika eklemek MINOR kalır.
+  - Ağırlıklar ondalıklı olabilir (m³, kg); ondalık yazımlarıyla okunur. `total` güvenli
+    tam sayıdır, negatif olabilir (işaret-simetrik).
+  - **Hesap tam aritmetiktir (`BigInt`).** 20 basamaklı `Decimal` bölmesi ~10^15
+    büyüklüğündeki havuzlarda artığı yanlış kaleme veriyordu; ölçüldü ve üç vaka
+    fixture'a girdi (`sapma-prec20-a/b/c`).
+  - Garantiler: toplam, uzunluk, tam sayı, sıfır ağırlığa sıfır pay, belirlenimcilik,
+    `w[i] > w[j] → r[i] >= r[j]`. Belgelenmiş sınır: havuz büyüyünce bir kalemin payı
+    azalabilir (Alabama paradoksu).
+  - Yeni tipler: `ResidualPolicy`, `AllocateOptions`.
+
+### Testler
+
+- 929 → **979 birim testi**. Yeni: `math/allocate.test.ts` (23 tüketici fixture'ı ·
+  üslü ağırlık · `null` kapıları · 1.000 rastgele sepette 8 değişmez),
+  `math/__fixtures__/allocate.json`.
+- **Assert değerleri dış otoriteden:** fixture Python `fractions` ile tüketici tarafında
+  üretildi, çekirdek tarafında ayrı bir uygulamayla 23/23 yeniden doğrulandı.
+- **Mutasyon doğrulaması (AI-RULES §2.3):** 11 mutasyonun 10'u kırmızı verdi — artık
+  döngüsü, indis sırası, 20 basamaklı `Decimal` bölmesi (yalnız `sapma-prec20-*` yakaladı),
+  sıfır ağırlığa artık, işaret simetrisi, `-0`, politika / güvenli tam sayı / ağırlık /
+  sıfır toplam kapıları. Hayatta kalan `weights.length === 0` koruması ölü kod olarak
+  **kaldırıldı** (boş dizi `Σ = 0` kapısından geçer).
+- API yüzeyi kilidi, `ABACUS-SPEC` §2 tablosu, README motor özeti ve `KILAVUZ` `math.allocate`
+  ile güncellendi.
+
+---
+
 ## [3.0.1] - 2026-09-14
 
 > Yalnız belge. Kod ve genel API değişmedi.

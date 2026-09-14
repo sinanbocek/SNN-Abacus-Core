@@ -160,6 +160,64 @@ MIRR gerekir ve o ayrı bir fonksiyondur.
 > doğmadan ad eklenmez. Gerçek ihtiyaç geldiğinde dışa açmak tek satırlık bir
 > MINOR sürümdür.
 
+### `allocate(total, weights, opts): number[] | null` — v3.1.0
+
+**Havuz dağıtımı.** Tam sayı bir tutarı ağırlıklara orantılı böler; **sonuçların
+toplamı tutara her zaman tam eşittir.**
+
+```ts
+type ResidualPolicy = 'largest-remainder';
+interface AllocateOptions { residual: ResidualPolicy }   // zorunlu, varsayılan YOK
+allocate(total: number, weights: readonly number[], opts: AllocateOptions): number[] | null
+```
+
+- `total`: **güvenli tam sayı** (alt birim). Negatif olabilir; sonuç işaret-simetriktir.
+- `weights`: sonlu ve `>= 0`. **Tam sayı olmak zorunda değildir.** Ondalık yazımıyla
+  okunur: `0.1` ikili yaklaşığıyla değil `0,1` olarak, `1e-7` ise `0,0000001` olarak.
+
+**Neden var:** Her payı ayrı yuvarlamak toplamı havuzdan saptırır. Tüketicinin gerçek
+9 kalemlik verisinde 1.000–50.000 EUR arası havuzların **%55,0**'ında, 20–55 kalemlik
+sepetlerde **%77,2**'sinde. Sapma 1–2 cent ama sessizdir: birim fiyatların toplamı
+teklif toplamını tutmaz.
+
+**Yöntem:** en büyük kalan (Hamilton). Tam paylar tabana yuvarlanır; eksik birimler en
+büyük kesirli kalandan başlayarak birer birer dağıtılır; eşit kalanda küçük indis önce.
+Hesap **tam aritmetiktir** (`BigInt`): ağırlıklar ortak `10^k` ile tam sayıya
+ölçeklenir, `q = T·W div S`, `kalan = T·W mod S`. 20 basamaklı `Decimal` bölmesi
+~10^15 büyüklüğündeki havuzlarda artığı yanlış kaleme veriyordu (ölçüldü).
+
+**Garantiler:** `Σ sonuç === total` · uzunluk korunur · her pay tam sayı · sıfır
+ağırlık sıfır pay · belirlenimci · **`w[i] > w[j] → r[i] >= r[j]`**.
+
+**Monotonluk ispatı:** `w[i] > w[j]` ise `exact[i] > exact[j]`, dolayısıyla
+`q[i] >= q[j]`. `q[i] > q[j]` ise fark en az 1'dir, artık en fazla 1 ekler. `q[i] == q[j]`
+ise `kalan[i] > kalan[j]` — tam aritmetikte bu eşitsizlik beraberliğe çökemez — ve `i`
+sırada önce gelir.
+
+⚠️ **Havuz büyüyünce bir kalemin payı azalabilir** (Alabama paradoksu). Yöntemin
+bilinen özelliğidir, hata değildir. Monotonluk garantisi **tek dağıtım içindir**;
+farklı havuz tutarları arasında yoktur.
+
+**`null` döner:** `total` güvenli tam sayı değilse · ağırlık sonlu değil ya da
+negatifse · politika tanınmıyorsa · ağırlık toplamı 0 ise (boş dizi dahil — tek kapı;
+ayrı boş dizi koruması mutasyon testiyle ölü bulundu).
+
+```
+allocate(100000, [6080, 8160, 12080, …, 3820800], LR) → [107, 144, 212, …, 67231]
+allocate(10, [1, 1, 1], LR)            → [4, 3, 3]
+allocate(-10, [1, 1, 1], LR)           → [-4, -3, -3]
+allocate(1000, [1e-7, 2e-7], LR)       → [333, 667]
+allocate(40, [160, 4, 136, 17], LR)    → [20, 1, 17, 2]
+allocate(41, [160, 4, 136, 17], LR)    → [21, 0, 18, 2]
+allocate(1000, [], LR)                 → null
+allocate(100.5, [1, 2], LR)            → null
+(LR = { residual: 'largest-remainder' })
+```
+
+> **Neden tek politika?** Artığın ilk/son/en büyük kaleme bindirilmesi de meşru
+> tercihlerdir, ama gerçek bir ekran istemedi (AI-RULES §4.1 Kural 3). Seçenek zorunlu
+> olduğu için yeni politika eklemek MINOR'dur — kırıcı değil.
+
 ### `ceil(x: number): number` — v2.7.0
 Tavan / yukarı yuvarlama. `floor`'un simetriği: **`ceil(x) === -floor(-x)`**.
 `ceil(2.1) → 3` · `ceil(2.9) → 3` · `ceil(-2.1) → -2` · `ceil(3) → 3`.

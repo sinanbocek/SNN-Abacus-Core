@@ -135,6 +135,9 @@ math.ceil(2.1)      // → 3
 Math.round(-2.5)    // → -2
 ```
 
+Bir toplamı parçalara bölüp **parçaları** yuvarlıyorsanız `round` değil `math.allocate`
+kullanın — ayrı yuvarlanan parçaların toplamı tutmaz (bkz. §3 Havuz dağıtımı).
+
 ### Logaritma
 
 `math.log` doğal logaritmadır. Basamak sayısı veya büyüklük mertebesi için **`math.log10`**
@@ -276,6 +279,39 @@ math.irr([1000, 500])                          // → null
 ```
 
 Dönen oran dizinin dönem birimindedir; aylık akıştan yıllığa: `math.pow(1 + r, 12) - 1`.
+
+**Havuz dağıtımı**
+
+Bir tutarı (navlun, kira, indirim) ağırlıklara göre kalemlere bölmek için
+**`math.allocate`** kullanın. Tutar alt birimde (kuruş/cent) tam sayıdır; sonuçların
+toplamı tutara **her zaman tam eşittir**.
+
+```js
+math.allocate(100000, [6080, 8160, 12080, 62360, 80120, 1560160, 133200, 120, 3820800], { residual: 'largest-remainder' })   // → [107, 144, 212, 1097, 1410, 27453, 2344, 2, 67231]
+math.allocate(10, [1, 1, 1], { residual: 'largest-remainder' })               // → [4, 3, 3]
+math.allocate(2000000, [3.7, 12.45, 0.08, 140.2], { residual: 'largest-remainder' })   // → [47305, 159177, 1023, 1792495]
+math.allocate(-10, [1, 1, 1], { residual: 'largest-remainder' })              // → [-4, -3, -3]
+math.allocate(1000, [0, 0], { residual: 'largest-remainder' })                // → null
+```
+
+Her payı ayrı yuvarlamak aynı veride havuzu **1 cent aşar** — hata sessizdir:
+
+```js
+[6080, 8160, 12080, 62360, 80120, 1560160, 133200, 120, 3820800].map((w) => math.round(100000 * w / 5683080)).reduce((a, b) => a + b)   // → 100001
+```
+
+| Soru | Cevap |
+|---|---|
+| Ağırlık ondalıklı olabilir mi? | **Evet** (m³, kg). Yalnız tutar tam sayı olmalı. |
+| Artık birim kime gider? | En büyük kesirli kalana; eşitlikte önceki kaleme. `residual` zorunludur, şimdilik tek değeri `'largest-remainder'`. |
+| Büyük ağırlık daha az pay alabilir mi? | **Hayır**, tek dağıtım içinde garantidir. |
+
+⚠️ **Havuz büyüyünce bir kalemin payı azalabilir** (Alabama paradoksu). Hata değildir:
+
+```js
+math.allocate(40, [160, 4, 136, 17], { residual: 'largest-remainder' })   // → [20, 1, 17, 2]
+math.allocate(41, [160, 4, 136, 17], { residual: 'largest-remainder' })   // → [21, 0, 18, 2]
+```
 
 ---
 
