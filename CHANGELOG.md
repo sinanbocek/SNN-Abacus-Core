@@ -4,6 +4,26 @@ Bu projedeki tüm önemli değişiklikler bu dosyada belgelenir.
 Format [Keep a Changelog](https://keepachangelog.com/tr/) temellidir;
 sürümleme [Semantic Versioning](https://semver.org/lang/tr/) kurallarına uyar.
 
+## [3.0.1] - 2026-09-14
+
+> Yalnız belge. Kod ve genel API değişmedi.
+
+### Düzeltilenler — belgeler
+
+- **`MIGRATION-v3.md` tarama komutu yanlış alarm veriyordu.** Önerilen
+  `grep "%-[0-9]\|%+[0-9]"` deseni, Tailwind sınıflarındaki `calc(100%+8px)` gibi
+  ifadeleri de eski yüzde yazımı sanıyordu; bir tüketici projede 8 yanlış sonuç üretti.
+  Yeni desen yalnız tırnak içindeki yüzde metnini arar:
+
+  ```bash
+  grep -rnE "['\"\`]%[-+][0-9]" src/ test/
+  ```
+
+  Komut belgede yazıldığı hâliyle kabukta çalıştırılarak doğrulandı: çekirdekte gerçek
+  eski yazımları buluyor, Tailwind kullanan tüketici projede yanlış alarm vermiyor.
+
+---
+
 ## [3.0.0] - 2026-09-14
 
 > ⚠️ **KIRICI SÜRÜM.** Hiçbir ad kaldırılmadı veya yeniden adlandırılmadı; kod derlenmeye
