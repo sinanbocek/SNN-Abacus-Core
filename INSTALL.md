@@ -9,7 +9,7 @@ Bu rehber, **ABACUS Engine** (`@snn/abacus-core`) çekirdek motorunu herhangi bi
 Projelerinizin kök dizininde aşağıdaki komutu çalıştırarak `@snn/abacus-core` paketini doğrudan GitHub deposundan kurun:
 
 ```bash
-npm install github:sinanbocek/SNN-Abacus-Core#semver:^2.8.0
+npm install github:sinanbocek/SNN-Abacus-Core#semver:^2.9.0
 ```
 
 > 💡 **Bağımlılık Notu:** Paket, hassas matematiksel işlemler için gereken `decimal.js` bağımlılığını otomatik olarak indirip projenize bağlar. Ekstra bir `decimal.js` kurulumu gerekmez.
@@ -152,6 +152,9 @@ kaldırıldı); kurallar fiilî uygulamadan derlenmiştir ve rakam grubu gevşek
 console.log(money.percent(-3.2, 1));                      // %-3,2
 console.log(money.percent(-3.2, 1, { sign: 'never' }));   // %3,2   ← yön renkle anlatılır
 console.log(money.percent(3.2, 1, { sign: 'always' }));   // %+3,2
+
+// v2.9.0 — tablolarda okunur negatif ve hizalı ondalık:
+console.log(money.percent(-4.3, 2, { signPosition: 'leading', fixed: true }));  // -%4,30
 ```
 
 ---
@@ -171,7 +174,7 @@ bu, güvenli güncellemelerin otomatik gelmesini, kırıcı olanların gelmemesi
 
 ```jsonc
 // ÖNERİLEN — minor ve yamalar otomatik, major asla
-"@snn/abacus-core": "github:sinanbocek/SNN-Abacus-Core#semver:^2.8.0"
+"@snn/abacus-core": "github:sinanbocek/SNN-Abacus-Core#semver:^2.9.0"
 
 // Yalnız yama otomatik (daha muhafazakâr)
 "@snn/abacus-core": "github:sinanbocek/SNN-Abacus-Core#semver:~2.1.0"

@@ -653,3 +653,25 @@ describe('BELGE İDDİALARI — v2.8.0 (text.plate)', () => {
     expect(text.plate('34yk').yeniKayit).toBe(true);
   });
 });
+
+describe('BELGE İDDİALARI — v2.9.0 (money.percent işaret konumu ve sabit ondalık)', () => {
+  it('MOTOR-DETAYLARI: signPosition tablosu ve fixed örnekleri', () => {
+    expect(money.percent(-4.3, 1)).toBe('%-4,3');
+    expect(money.percent(-4.3, 1, { signPosition: 'leading' })).toBe('-%4,3');
+    expect(money.percent(4.3, 1, { sign: 'always' })).toBe('%+4,3');
+    expect(money.percent(4.3, 1, { sign: 'always', signPosition: 'leading' })).toBe('+%4,3');
+    expect(money.percent(4.3, 2, { fixed: true })).toBe('%4,30');
+    expect(money.percent(5, 2, { fixed: true })).toBe('%5,00');
+    expect(money.percent(-4.3, 2, { signPosition: 'leading', fixed: true })).toBe('-%4,30');
+  });
+
+  it('MOTOR-DETAYLARI: bilinçli CLDR farkları', () => {
+    expect(money.percent(-0.04, 1, { signPosition: 'leading' })).toBe('%0');
+    // CLDR tr-TR 1.234,5 yazar (depo dışında ölçüldü); çekirdek binlik ayraç koymaz.
+    expect(money.percent(1234.5, 1)).toBe('%1234,5');
+  });
+
+  it('INSTALL: v2.9.0 örneği', () => {
+    expect(money.percent(-4.3, 2, { signPosition: 'leading', fixed: true })).toBe('-%4,30');
+  });
+});

@@ -4,6 +4,57 @@ Bu projedeki tüm önemli değişiklikler bu dosyada belgelenir.
 Format [Keep a Changelog](https://keepachangelog.com/tr/) temellidir;
 sürümleme [Semantic Versioning](https://semver.org/lang/tr/) kurallarına uyar.
 
+## [2.9.0] - 2026-09-14
+
+> Tümü eklemelidir; hiçbir mevcut davranış değişmemiştir.
+> Talep kaynağı ve kararlar: [`GERI-BILDIRIM-KAYDI.md`](GERI-BILDIRIM-KAYDI.md) (madde 23–25).
+
+### Eklenenler — money
+
+- **`PercentOptions.signPosition: 'inner' | 'leading'`** — işaretin yüzde simgesine
+  göre konumu. `'leading'` Unicode CLDR `tr-TR` biçimidir:
+  `percent(-4.3, 1, { signPosition: 'leading' }) → "-%4,3"`.
+
+  Varsayılan `'inner'` (`%-4,3`) TDK kuralının harfiyen uygulanmasıdır: yüzde işareti
+  sayıdan önce yazılır (`%25`) ama TDK negatif için hüküm koymaz, eksi iki sembolün
+  arasında kalır ve tabloda yön ilk karakterden okunamaz. Tarayıcılar ve
+  `Intl.NumberFormat` Türkçe için `-%4,3` üretir (CLDR 48.0 ile ölçüldü).
+  `sign: 'always'` ile artı da öne gelir (`+%4,3`).
+
+- **`PercentOptions.fixed: boolean`** — ondalık kısmı her zaman `digits` haneye
+  tamamlar: `percent(4.3, 2, { fixed: true }) → "%4,30"`. Tablolarda virgüllerin alt
+  alta hizalanması içindir; önceden sondaki sıfır atılıyordu.
+
+  İkisi birlikte: `percent(-4.3, 2, { signPosition: 'leading', fixed: true }) → "-%4,30"`.
+
+- **`PercentSignPosition`** tipi dışa açıldı.
+
+⚠️ **Varsayılan değişmedi.** `-%4,3` doğru yazım olsa da varsayılanı değiştirmek
+tüketicinin gördüğü çıktıyı değiştirir (AI-RULES §4.0); **3.0.0'a ertelendi.**
+
+**Bilinçli CLDR farkları:** sıfıra işaret konmaz (`%0`; CLDR varsayılanı `-%0`
+yazabilir) ve binlik ayraç uygulanmaz (`%1234,5`; CLDR `%1.234,5`).
+
+### Belgeler
+
+- Motor belgesi, kılavuz (`KILAVUZ.md` — yeni örnekler ve "sık yapılan hatalar"
+  satırı) ve INSTALL güncellendi.
+- Geri bildirim kaydına üç madde: seçenek kabulü, varsayılan değişikliğinin
+  ertelenmesi, yüzde işaretinin sağa yazılması talebinin reddi (TDK).
+
+### Test
+
+- Yeni dosya: `money/percent-cldr.test.ts`. Beklenen değerler Unicode CLDR 48.0'dan
+  (depo dışında `Intl.NumberFormat('tr-TR')` ile) ölçüldü.
+- Mutasyon doğrulaması: yeni mantığın 12 korumasının 11'i kırmızı verdi. Kalan
+  `Number.isInteger(digits)` koruması **ölü koddu** — tam sayı olmayan hane
+  sayısında `math.round` önce fırlatıyor — ve kaldırıldı.
+- ⚠️ Bu ölçüm önceden var olan bir hatayı gösterdi: `money.percent(4.3, 1.5)` ve
+  `money.decimal(4.3, 1.5)` `'—'` döndürmek yerine **hata fırlatıyor**
+  (ABACUS-SPEC §2.1 ihlali). Bu sürümde düzeltilmedi; ayrı iş olarak açıldı.
+
+---
+
 ## [2.8.1] - 2026-09-13
 
 > Yalnız belgeler ve testler. Kod ve genel API değişmedi.

@@ -192,17 +192,43 @@ export interface PercentOptions {
    * Varsayılan `'auto'` — v2.4.0 davranışının aynısı.
    */
   sign?: PercentSign;
+  /**
+   * İşaretin (`-` / `+`) yüzde simgesine göre konumu (v2.9.0).
+   *
+   * - `'inner'` (varsayılan): `%-4,3` — TDK kuralının harfiyen uygulanması
+   *   (önce `%`, sonra işaretli sayı). v2.8 ve öncesinin davranışı.
+   * - `'leading'`: `-%4,3` — Unicode CLDR `tr-TR` biçimi; tarayıcıların ve
+   *   `Intl.NumberFormat`'ın Türkçe için ürettiği yazım (CLDR 48.0 ile ölçüldü).
+   *   Eksi en başta olduğu için tabloda yön ilk karakterden okunur.
+   *   `sign: 'always'` ile artı da öne gelir (`+%4,3`).
+   *
+   * Varsayılan bilinçli olarak `'inner'` kalır: değiştirmek tüketicinin gördüğü
+   * çıktıyı değiştirir ve MAJOR sürüm gerektirir (AI-RULES §4.0).
+   */
+  signPosition?: PercentSignPosition;
+  /**
+   * `true` ise ondalık kısım her zaman `digits` haneye tamamlanır (v2.9.0):
+   * `percent(4.3, 2, { fixed: true })` → `%4,30`. Tablolarda virgüllerin alt
+   * alta hizalanması içindir. Varsayılan `false`: sondaki sıfırlar atılır (`%4,3`).
+   */
+  fixed?: boolean;
 }
+
+/** `percent` işaret konumu. Bkz. `PercentOptions.signPosition`. */
+export type PercentSignPosition = 'inner' | 'leading';
 
 /**
  * ABACUS yüzde biçimlendirme motoru (%12,3).
  * Null / undefined / NaN için '—' (tire) döndürür.
  *
+ * Yüzde işareti TDK Yazım Kılavuzu gereği sayıdan ÖNCE ve boşluksuz yazılır.
+ *
  * @example
- * money.percent(3.2, 1)                     // "%3,2"
- * money.percent(-3.2, 1)                    // "%-3,2"
- * money.percent(-3.2, 1, { sign: 'never' }) // "%3,2"
- * money.percent(3.2, 1, { sign: 'always' }) // "%+3,2"
+ * money.percent(3.2, 1)                                          // "%3,2"
+ * money.percent(-3.2, 1)                                         // "%-3,2"
+ * money.percent(-3.2, 1, { sign: 'never' })                      // "%3,2"
+ * money.percent(3.2, 1, { sign: 'always' })                      // "%+3,2"
+ * money.percent(-4.3, 2, { signPosition: 'leading', fixed: true }) // "-%4,30"
  */
 export function percent(
   value: number | null | undefined,
@@ -218,13 +244,25 @@ export function percent(
   const mode: PercentSign =
     opts?.sign ?? (opts?.showPositiveSign === true ? 'always' : 'auto');
 
-  // 'never' modunda eksiyi metinden düşürürüz — işaret çağıran tarafta
-  // (renkle) anlatılıyor. Yuvarlama SONRASI mutlak değer alınır ki
-  // "-0,04" birinci basamakta "%0" olsun, "%-0" değil.
-  const shown = mode === 'never' ? abs(rounded) : rounded;
-  const shownStr = String(shown).replace('.', ',');
-  const sign = mode === 'always' && rounded > 0 ? '+' : '';
-  return `%${sign}${shownStr}`;
+  // İşaret yuvarlama SONRASI belirlenir ki "-0,04" birinci basamakta "%0"
+  // olsun, "%-0" değil: sıfıra hiçbir modda işaret konmaz. 'never' modunda
+  // eksi metinden düşer — yön çağıran tarafta (renkle) anlatılıyor.
+  let isaret = '';
+  if (rounded < 0 && mode !== 'never') isaret = '-';
+  else if (rounded > 0 && mode === 'always') isaret = '+';
+
+  let sayi = String(abs(rounded));
+  // `digits` tam sayı değilse buraya ulaşılmaz: yukarıdaki `round` önce fırlatır.
+  // Bu yüzden ayrı bir Number.isInteger koruması yoktur (mutasyon testi: ölü kod).
+  if (opts?.fixed === true && digits > 0) {
+    const nokta = sayi.indexOf('.');
+    const mevcut = nokta === -1 ? 0 : sayi.length - nokta - 1;
+    if (nokta === -1) sayi += '.';
+    for (let i = mevcut; i < digits; i++) sayi += '0';
+  }
+  sayi = sayi.replace('.', ',');
+
+  return opts?.signPosition === 'leading' ? `${isaret}%${sayi}` : `%${isaret}${sayi}`;
 }
 
 /**

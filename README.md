@@ -9,10 +9,10 @@
 Projelerinize GitHub üzerinden doğrudan npm paketi olarak ekleyin:
 
 ```bash
-npm install github:sinanbocek/SNN-Abacus-Core#semver:^2.8.0
+npm install github:sinanbocek/SNN-Abacus-Core#semver:^2.9.0
 ```
 
-> **Sürüm politikası:** `#semver:^2.8.0` aralığı ile bağlanın. Yama ve ek özellik sürümleri (2.1.1, 2.2.0) **otomatik gelir**; kırıcı major sürüm (3.0.0) **gelmez** ve elle geçilir. `package-lock.json` tam commit'i sabitlediği için build'ler tekrarlanabilir kalır. Ayrıntı: [INSTALL.md §4](INSTALL.md).
+> **Sürüm politikası:** `#semver:^2.9.0` aralığı ile bağlanın. Yama ve ek özellik sürümleri (2.1.1, 2.2.0) **otomatik gelir**; kırıcı major sürüm (3.0.0) **gelmez** ve elle geçilir. `package-lock.json` tam commit'i sabitlediği için build'ler tekrarlanabilir kalır. Ayrıntı: [INSTALL.md §4](INSTALL.md).
 
 ```typescript
 import { money, math, tradingMath, date, gold, silver, unit, period, collate } from '@snn/abacus-core';
@@ -84,8 +84,8 @@ gerçekten çalıştırılır.
 
 ## 🧪 Kalite & Test Kapsamı
 
-- **872 Test:** %100 yeşil (`vitest`) — bunların 198'i `KILAVUZ.md` örneklerinin çalıştırılmasıdır.
-- **Ölçülen Kapsam:** statements %93,0 · branches %89,2 · functions %100 · lines %98,0 — CI'da eşiklerle korunur (`npm run test:coverage`).
+- **897 Test:** %100 yeşil (`vitest`) — bunların 202'si `KILAVUZ.md` örneklerinin çalıştırılmasıdır.
+- **Ölçülen Kapsam:** statements %93,0 · branches %89,3 · functions %100 · lines %98,0 — CI'da eşiklerle korunur (`npm run test:coverage`).
 - **TypeScript Strict:** Sıfır `any`, tam tip emniyeti.
 - **Belge İddiaları Test Edilir:** README/INSTALL/SPEC/MOTOR-DETAYLARI içindeki her kod örneği `docs-claims.test.ts` ile doğrulanır; belge ile kod ayrışırsa CI kırılır.
 - **Şartname ve README Kilitli:** `ABACUS-SPEC.md` §2'deki fonksiyon tablosu ile bu README'deki motor sayısı ve fonksiyon listeleri `spec-surface.test.ts` ile gerçek API'ye bağlıdır; yazılmayan bir ad dışa açılırsa CI kırılır.

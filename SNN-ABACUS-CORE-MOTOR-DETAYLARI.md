@@ -260,6 +260,34 @@ unutulunca eksi işareti kırmızı renkle üst üste binip çift olumsuzlama gi
 okunuyordu. İşaretsizleştirme **yuvarlamadan sonra** yapılır, bu yüzden
 `percent(-0.04, 1, { sign: 'never' })` → `"%0"` (asla `"%-0"`).
 
+**İşaret konumu — `opts.signPosition` (v2.9.0):** `'inner'` (varsayılan) · `'leading'`.
+
+| | `'inner'` (varsayılan) | `'leading'` |
+|---|---|---|
+| `percent(-4.3, 1, …)` | `"%-4,3"` | `"-%4,3"` |
+| `percent(4.3, 1, { sign: 'always', … })` | `"%+4,3"` | `"+%4,3"` |
+
+Yüzde işareti **TDK Yazım Kılavuzu** gereği sayıdan önce ve boşluksuz yazılır (`%25`);
+TDK negatif yüzde için hüküm koymaz. `'inner'` bu kuralın harfiyen uygulanmasıdır ve
+eksi iki sembolün arasına sıkışır. `'leading'` **Unicode CLDR `tr-TR`** biçimidir
+(tarayıcılar ve `Intl.NumberFormat` bunu üretir; CLDR 48.0 ile ölçüldü): eksi en başta
+olduğu için tabloda yön ilk karakterden okunur.
+
+**Sabit ondalık — `opts.fixed` (v2.9.0):** `true` ise ondalık kısım her zaman `digits`
+haneye tamamlanır: `percent(4.3, 2, { fixed: true }) → "%4,30"` ·
+`percent(5, 2, { fixed: true }) → "%5,00"`. Tablolarda virgüllerin hizası içindir.
+
+İkisi birlikte tam CLDR Türkçe biçimini verir:
+`percent(-4.3, 2, { signPosition: 'leading', fixed: true }) → "-%4,30"`.
+
+⚠️ **Varsayılanlar bilinçli olarak değişmedi.** Varsayılanı `'leading'` yapmak
+tüketicinin gördüğü çıktıyı değiştirir ve MAJOR sürüm gerektirir (AI-RULES §4.0); bir
+sonraki MAJOR sürüme ertelendi. Karar: [`GERI-BILDIRIM-KAYDI.md`](GERI-BILDIRIM-KAYDI.md).
+
+**Bilinçli CLDR farkı:** CLDR'nin varsayılan işaret gösterimi `-0,04`'ü bir hanede
+`"-%0"` yazar; çekirdek sıfıra hiçbir modda işaret koymaz ve `"%0"` yazar (CLDR
+`exceptZero` ile aynı). Binlik ayraç da uygulanmaz: CLDR `%1.234,5`, çekirdek `%1234,5`.
+
 `showPositiveSign?: boolean` **@deprecated (v2.5.0)** — `sign: 'always'`
 karşılığıdır, geriye dönük uyum için korunur. **`sign` verilirse yok sayılır.**
 

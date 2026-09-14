@@ -322,6 +322,20 @@ money.percent(3.2, 1, { sign: 'always' })     // → '%+3,2'
 Yönü **renkle** anlatan arayüzlerde `sign: 'never'` kullanın; eksi işareti kırmızı
 renkle üst üste binmez.
 
+**Negatif yüzdeyi okunur yazmak ve tabloda hizalamak**
+
+```js
+money.percent(-4.3, 2)                                          // → '%-4,3'
+money.percent(-4.3, 2, { signPosition: 'leading' })             // → '-%4,3'
+money.percent(4.3, 2, { fixed: true })                          // → '%4,30'
+money.percent(-4.3, 2, { signPosition: 'leading', fixed: true }) // → '-%4,30'
+```
+
+`%` Türkçede sayının **solunda** durur (TDK: `%25`); `4,3%` İngilizce yazımdır.
+Varsayılan `%-4,3` eksiyi iki sembolün arasına sıkıştırır. Tablolarda
+`signPosition: 'leading'` (tarayıcıların Türkçe biçimi) ve sütun hizası için
+`fixed: true` kullanın. Varsayılan geriye uyumluluk için değişmedi.
+
 **Metinden okumak**
 
 ```js
@@ -680,4 +694,5 @@ tradingMath.calculateThresholdDays(0, 35)       // → null
 | `text.upper` ile plaka büyütmek | `'34ABİ12'` — geçersiz | `text.plate` |
 | `text.searchKey` ile sıralamak | `ç` ile `c` karışır | `collate.sortBy` |
 | `x ?? 0` ile `null` gizlemek | "hesaplanamadı" 0 görünür | `null`'ı açıkça ele alın |
+| Negatif yüzdeyi `4,3%` gibi sağa yazmak | İngilizce yazım; Türkçede `%` soldadır | `money.percent(v, 2, { signPosition: 'leading' })` → `-%4,3` |
 | Ham `0.1 + 0.2` | `0.30000000000000004` | `math.add(0.1, 0.2)` |

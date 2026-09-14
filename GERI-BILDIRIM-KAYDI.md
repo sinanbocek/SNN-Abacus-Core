@@ -62,6 +62,9 @@ elenenler neden elendi) değerlendirme maliyetini ciddi biçimde düşürüyor.
 | 18 | `34CD3455` reddedilsin | Talep #4 | ❌ **Red** | — |
 | 19 | Q, W, X harfleri reddedilsin | Talep #4 | ✅ Kabul (sahip kararı) | 2.8.0 |
 | 22 | Büyük `İ` de `I`'ya çevrilsin (Caps Lock) | Tasarım sırasında | ✅ Kabul (sahip kararı) | 2.8.0 |
+| 23 | Negatif yüzde okunur yazılsın (`-%4,3`) ve sabit ondalık (`%4,30`) | Sahip | ✅ Kabul — **seçenek olarak** | 2.9.0 |
+| 24 | `money.percent` varsayılanı `-%4,3` olsun | Sahip | ⏳ **Ertelendi — sonraki MAJOR** | — |
+| 25 | Yüzde işareti sağa yazılsın (`-4,30%`) | Sahip | ❌ **Red** | — |
 | 20 | Plaka türü sınıflandırması (resmî/diplomatik/yabancı/geçici) | Tasarım sırasında | ❌ **Red** | — |
 | 21 | Başta `TR` önekine tolerans | Tasarım sırasında | ❌ **Red** (sahip kararı) | — |
 
@@ -204,6 +207,29 @@ küçük harf, tek haneli il kodu.
 
 **Yeniden başvuru koşulu:** Sahada `TR` önekli girdilerin gerçekten geldiğini gösteren
 ölçüm (ör. plaka tanıma sistemi çıktısı).
+
+### 24 · `money.percent` varsayılanı `-%4,3` olsun — ERTELENDİ
+
+**Karar: ertelendi — sonraki MAJOR sürümde yapılacak.**
+
+Doğru yazım `-%4,3` (Unicode CLDR `tr-TR`). Ama varsayılanı değiştirmek tüketicinin
+gördüğü çıktıyı değiştirir: `^2.x` ile bağlı herkese otomatik iner ve örneğin çıktıda
+`%-` arayan bir test sessizce bozulur. AI-RULES §4.0 gereği bu MAJOR'dur. v2.9.0'da
+`signPosition: 'leading'` seçeneği eklendi; **3.0.0'da varsayılan `'leading'` olacak**
+ve göç belgesine yazılacak.
+
+### 25 · Yüzde işareti sağa yazılsın (`-4,30%`)
+
+**Karar: red — Türkçe yazım kuralına aykırı.**
+
+TDK Yazım Kılavuzu yüzde ve binde işaretini sayıdan önce, boşluksuz ister (`%25`,
+`‰50`). `4,30%` İngilizce (`en-US`) yazımdır. Talebin asıl gerekçesi olan okunabilirlik
+sorunu işaretin **solda** olmasından değil, eksinin iki sembol **arasında** kalmasından
+kaynaklanıyordu; bu, `signPosition: 'leading'` ile çözüldü (madde 23).
+
+**Yeniden başvuru koşulu:** TDK kuralının değişmesi veya çekirdeğin Türkçe dışında bir
+okuyucu dilini desteklemeye başlaması (bkz. `internal/currency-registry` — ayraçlar ve
+simge konumu okuyucunun diline bağlıdır ve şu an kapsam dışıdır).
 
 ---
 
