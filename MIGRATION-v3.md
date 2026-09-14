@@ -7,16 +7,17 @@
 
 ---
 
-## Özet: hiçbir `import` kırılmaz, iki yerde görünen çıktı değişir
+## Özet: hiçbir `import` kırılmaz, üç yerde davranış değişir
 
 **Hiçbir ad kaldırılmadı veya yeniden adlandırılmadı**; kodunuz derlenmeye devam eder.
-Değişen, iki fonksiyonun **ekranda gösterdiği metindir** ve ikisi de **sessizdir** —
-TypeScript yakalamaz.
+Değişen, bazı fonksiyonların **ekranda gösterdiği metin** ve geçersiz hane sayısındaki
+davranışıdır. Hiçbiri TypeScript tarafından yakalanmaz.
 
 | Ne | Kimleri etkiler | v2.x | v3.0.0 |
 |---|---|---|---|
 | `money.percent` — işaret konumu | **Negatif** yüzde veya `sign: 'always'` kullanan herkes | `%-4,3` · `%+4,3` | `-%4,3` · `+%4,3` |
 | `text.suffix` — negatif ve ondalıklı sayı | Negatif veya ondalıklı değere ek getiren herkes | `%-2'e` · `%2.5'e` | `-%2'ye` · `%2,5'e` |
+| Geçersiz hane sayısı (`decimal`, `percent`, `fmtDecimalGrouped`, `dataSize`) | `digits`'i hesaplayıp veren veya `try/catch` ile saran herkes | **hata fırlatır** | `'—'` döner |
 
 Pozitif ve işaretsiz yüzdeler (`%4,3`), `sign: 'never'` çıktıları ve tam, pozitif
 sayılara getirilen ekler **değişmedi**.
@@ -87,10 +88,39 @@ kodlamış bir test büyük ihtimalle hatayı kilitlemiş demektir.
 
 ---
 
+## 3. Geçersiz hane sayısı artık çökmez
+
+**Neden:** Hane sayısı alan biçimleme fonksiyonları geçersiz `digits` değerinde
+decimal.js hatası **fırlatıyordu**. `ABACUS-SPEC §2.1`'e göre biçimleme işi çökmez,
+`'—'` döner. Çok büyük hane sayısı da anlamsız çıktı üretiyordu
+(`fmtDecimalGrouped(4.3, 100)` virgülden sonra 100 hane).
+
+Kural: `digits` **0 ile 20 arasında bir tam sayı** olmalıdır.
+
+```ts
+money.decimal(2.5, 1.5)                    // v2.x fırlatır  → v3.0.0 "—"
+money.percent(4.3, -1)                     // v2.x fırlatır  → v3.0.0 "—"
+money.fmtDecimalGrouped(4.3, 21)           // v2.x "4,300000000000000000000" → v3.0.0 "—"
+unit.dataSize(5242880, { digits: 1.5 })    // v2.x fırlatır  → v3.0.0 "—"
+```
+
+`money.formatMinorInput` değişmedi; zaten 0–4 dışını `'—'` döndürüyordu.
+
+### Yapmanız gerekenler
+
+- Bu çağrıları **`try/catch` ile sarmış** kodunuz artık hata yakalamaz; `'—'` değerini
+  kontrol edin.
+- `digits`'i **hesaplıyorsanız** (ör. `n / 2`), sonucun tam sayı olduğundan emin olun.
+- 20'den fazla hane isteyen bir çağrınız varsa `'—'` alırsınız; JavaScript sayısı
+  ~17 anlamlı basamak taşır, fazlası uydurma sıfırdı.
+
+---
+
 ## Kontrol listesi
 
 - [ ] Pin `#semver:^3.0.0` olarak güncellendi
 - [ ] `%-` / `%+` arayan testler ve kod tarandı
 - [ ] Yüzde yönünü metinden okuyan kod sayıya bakacak şekilde değiştirildi
 - [ ] Negatif/ondalıklı `suffix` beklentileri güncellendi
+- [ ] Hane sayısı alan çağrılardaki `try/catch` ve hesaplanan `digits` gözden geçirildi
 - [ ] Projenin kendi testleri yeşil

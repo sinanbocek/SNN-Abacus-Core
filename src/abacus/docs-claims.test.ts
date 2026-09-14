@@ -713,3 +713,18 @@ describe('BELGE İDDİALARI — MIGRATION-v3.md', () => {
     expect(text.suffix(2, 'percent', 'dat')).toBe("%2'ye");
   });
 });
+
+describe('BELGE İDDİALARI — v3.0.0 geçersiz hane sayısı', () => {
+  it('MIGRATION-v3 §3 ve MOTOR-DETAYLARI örnekleri', () => {
+    expect(money.decimal(2.5, 1.5)).toBe('—');
+    expect(money.percent(4.3, -1)).toBe('—');
+    expect(money.fmtDecimalGrouped(4.3, 21)).toBe('—');
+    expect(money.fmtDecimalGrouped(4.3, -1)).toBe('—');
+    expect(unit.dataSize(5242880, { digits: 1.5 })).toBe('—');
+    expect(money.formatMinorInput(123456, 5)).toBe('—');
+  });
+
+  it('ABACUS-SPEC §2.2: math.round ilkel katmanda doğrulama yapmaz', () => {
+    expect(() => math.round(4.3, 1.5)).toThrow();
+  });
+});

@@ -243,6 +243,9 @@ alanıdır (`opts.kurus`, "kuruş basamağı göster" boolean'ı). İkisi ayrıd
 ### `percent(value: number | null | undefined, digits = 1, opts?): string`
 Yüzde biçimi. Ondalık ayraç virgül. Örnek: `percent(12.345, 1) → "%12,3"` · `percent(2.5678, 2) → "%2,57"`
 · `percent(null) → "—"`.
+**Hane sayısı (v3.0.0):** `digits` 0–20 arası bir tam sayı olmalıdır; aksi hâlde
+(`1.5`, `-1`, `NaN`, `Infinity`, `21`) **`'—'`** döner. v2.x bu değerlerde hata
+fırlatıyordu. `percent(4.3, -1) → "—"`.
 
 **İşaret modu — `opts.sign` (v2.5.0):** `PercentSign = 'auto' | 'always' | 'never'`.
 
@@ -363,10 +366,14 @@ sınırının aynısıdır.
 ### `formatMinorInput(minor, digits = 0): string`
 Giriş kutusunda gösterilecek **sade** metin (simge/kod yok). `parse` ile gidiş-dönüş
 uyumludur. `formatMinorInput(123456, 2)` → `"1.234,56"` · geçersizde `'—'`.
+`digits` 0–4 arası tam sayıdır (alt birim hanesi); dışında `'—'`.
 
 ### `decimal(value, digits = 1): string`
 Düz ondalık gösterim, ondalık ayracı virgül; gereksiz sıfır eklenmez.
 `decimal(2.5)` → `"2,5"` · `decimal(3)` → `"3"` · geçersizde `'—'`.
+**Hane sayısı (v3.0.0):** `digits` 0–20 arası bir tam sayı olmalıdır; aksi hâlde
+(`1.5`, `-1`, `NaN`, `Infinity`, `21`) **`'—'`** döner. v2.x bu değerlerde hata
+fırlatıyordu. `decimal(2.5, 1.5)` → `"—"`.
 
 ### `ratio(value): string`
 `decimal`'in çifti: iki ondalık + `"x"`. `ratio(8.712)` → `"8,71x"` · geçersizde `'—'`.
@@ -400,6 +407,9 @@ Ondalıklı sayıyı binlik-ayraçlı (nokta) + ondalık (virgül) gösterir; so
 Örnek: `fmtDecimalGrouped(47.89, 4) → "47,8900"` · `fmtDecimalGrouped(34.5, 4) → "34,5000"`
 · `fmtDecimalGrouped(70000.5, 2) → "70.000,50"` · `fmtDecimalGrouped(0) → "0"` (gerçek sıfır)
 · `fmtDecimalGrouped(null) → "—"` · `fmtDecimalGrouped(NaN) → "—"`.
+**Hane sayısı (v3.0.0):** `digits` 0–20 arası bir tam sayı olmalıdır; aksi hâlde
+(`1.5`, `-1`, `NaN`, `Infinity`, `21`) **`'—'`** döner. v2.x bu değerlerde hata
+fırlatıyordu. `fmtDecimalGrouped(4.3, -1) → "—"`.
 
 ### `formatGroupedInput(raw: string): string`
 Serbest ondalık giriş kutuları için canlı biçimlendirme (kullanıcı yazarken). Örnek: ham girişten
@@ -1126,6 +1136,8 @@ virgüldür, gereksiz `,0` kuyruğu atılır. `opts.digits` varsayılan 1.
 **Negatif / geçersiz / null girdide `'—'`** (biçimlendirme sözleşmesi).
 Örnek: `dataSize(5242880) → "5 MB"` · `dataSize(1536) → "1,5 KB"`
 · `dataSize(512) → "512 B"` · `dataSize(0) → "0 B"` · `dataSize(-1) → "—"`.
+**`opts.digits` (v3.0.0):** 0–20 arası tam sayı olmalıdır; aksi hâlde `'—'` (v2.x hata
+fırlatıyordu). `dataSize(5242880, { digits: 1.5 }) → "—"`.
 
 ### `ONS_TO_GRAM`
 `31.1034768`. `gold.ONS_TO_GRAM` ve `silver.ONS_TO_GRAM` ile **aynı** tek kaynaktan

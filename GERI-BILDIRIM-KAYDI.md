@@ -66,6 +66,7 @@ elenenler neden elendi) değerlendirme maliyetini ciddi biçimde düşürüyor.
 | 24 | `money.percent` varsayılanı `-%4,3` olsun | Sahip | ✅ Kabul — **kırıcı** | 3.0.0 |
 | 25 | Yüzde işareti sağa yazılsın (`-4,30%`) | Sahip | ❌ **Red** | — |
 | 26 | `text.suffix` negatif/ondalıklı sayıda doğru ek ve virgül | 3.0.0 hazırlığı (ölçüm) | ✅ Kabul — **kırıcı düzeltme** | 3.0.0 |
+| 27 | Geçersiz hane sayısında çökme yerine `'—'` | v2.9.0 mutasyon testi (ölçüm) | ✅ Kabul — **kırıcı düzeltme** | 3.0.0 |
 | 20 | Plaka türü sınıflandırması (resmî/diplomatik/yabancı/geçici) | Tasarım sırasında | ❌ **Red** | — |
 | 21 | Başta `TR` önekine tolerans | Tasarım sırasında | ❌ **Red** (sahip kararı) | — |
 
@@ -244,6 +245,20 @@ ile ondalıklı sayılarda **yanlış ek** üretiyordu (`%-2'e`, `%2.5'e`). Sebe
 `money.percent` değişseydi iki motor aynı sayıyı farklı yazacaktı; `suffix`'i sonra
 düzeltmek ise yine kırıcı olup 4.0.0 gerektirecekti. Kırıcı değişiklikler tek MAJOR'da
 toplandı.
+
+### 27 · Geçersiz hane sayısında çökme — 3.0.0'A DAHİL EDİLDİ
+
+**Karar: kabul — sahip kararıyla 3.0.0'a dahil edildi.**
+
+v2.9.0'da `money.percent` üzerinde mutasyon testi yapılırken ölçüldü: `money.decimal`,
+`money.percent`, `money.fmtDecimalGrouped` ve `unit.dataSize` geçersiz `digits`
+değerinde (`1.5`, `-1`, `NaN`, `Infinity`) `'—'` yerine **hata fırlatıyordu**
+(ABACUS-SPEC §2.1 ihlali). Çözüm: ortak `internal/hane` doğrulaması, 0–20 arası tam sayı.
+Hata fırlatan bir çağrının `'—'` döndürmeye başlaması `try/catch` ile saran tüketiciyi
+etkilediği için kırıcı sayıldı ve 3.0.0 ile birlikte verildi.
+
+`math.round(x, d)` bilinçli olarak değiştirilmedi: ilkel katmandadır ve doğrulamayı
+motor kapılarına bırakır (ABACUS-SPEC §2.2).
 
 ---
 

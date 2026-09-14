@@ -312,6 +312,7 @@ money.compactMajor(1500000, { style: 'B/Mn/Mr' })     // → '₺1,5Mn'
 
 ```js
 money.decimal(2.5)               // → '2,5'
+money.decimal(2.5, 1.5)          // → '—'
 money.fmtDecimalGrouped(70000)   // → '70.000'
 money.ratio(8.712)               // → '8,71x'
 money.percent(-3.2, 1)                        // → '-%3,2'
@@ -616,6 +617,7 @@ unit.convert(1, 'km', 'm')           // → 1000
 unit.convert(1, 'km', 'kg')          // → null
 unit.categoryOf('dekar')             // → 'area'
 unit.dataSize(5242880)               // → '5 MB'
+unit.dataSize(5242880, { digits: -1 })   // → '—'
 unit.ONS_TO_GRAM                     // → 31.1034768
 ```
 
@@ -699,5 +701,6 @@ tradingMath.calculateThresholdDays(0, 35)       // → null
 | `text.upper` ile plaka büyütmek | `'34ABİ12'` — geçersiz | `text.plate` |
 | `text.searchKey` ile sıralamak | `ç` ile `c` karışır | `collate.sortBy` |
 | `x ?? 0` ile `null` gizlemek | "hesaplanamadı" 0 görünür | `null`'ı açıkça ele alın |
+| Hane sayısını hesaplayıp doğrudan vermek (`decimal(v, n / 2)`) | tam sayı değilse `'—'` | hane sayısı 0–20 arası tam sayı olmalı |
 | Negatif yüzdeyi `4,3%` gibi sağa yazmak | İngilizce yazım; Türkçede `%` soldadır | `money.percent(-4.3, 1)` → `-%4,3` |
 | Ham `0.1 + 0.2` | `0.30000000000000004` | `math.add(0.1, 0.2)` |

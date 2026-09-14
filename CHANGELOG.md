@@ -7,9 +7,10 @@ sürümleme [Semantic Versioning](https://semver.org/lang/tr/) kurallarına uyar
 ## [3.0.0] - 2026-09-14
 
 > ⚠️ **KIRICI SÜRÜM.** Hiçbir ad kaldırılmadı veya yeniden adlandırılmadı; kod derlenmeye
-> devam eder. Değişen, iki fonksiyonun **görünen çıktısıdır** ve değişiklik **sessizdir**.
+> devam eder. Değişen, bazı fonksiyonların **görünen çıktısı** ve geçersiz hane sayısındaki
+> davranışıdır; değişiklikler **sessizdir**.
 > Göç: [`MIGRATION-v3.md`](MIGRATION-v3.md).
-> Kararlar: [`GERI-BILDIRIM-KAYDI.md`](GERI-BILDIRIM-KAYDI.md) (madde 24, 26).
+> Kararlar: [`GERI-BILDIRIM-KAYDI.md`](GERI-BILDIRIM-KAYDI.md) (madde 24, 26, 27).
 
 ### Değişenler — KIRICI
 
@@ -42,17 +43,37 @@ sürümleme [Semantic Versioning](https://semver.org/lang/tr/) kurallarına uyar
   değerine bakmıyordu. Eski (hatalı) davranışı geri getiren bir seçenek yoktur.
   Tam ve pozitif sayıların çıktısı değişmedi.
 
+- **Geçersiz hane sayısı artık çökmez — `'—'` döner.** `money.decimal`, `money.percent`,
+  `money.fmtDecimalGrouped` ve `unit.dataSize`.
+
+  ```
+  money.decimal(2.5, 1.5)                  v2.x fırlatır  → "—"
+  money.percent(4.3, -1)                   v2.x fırlatır  → "—"
+  unit.dataSize(5242880, { digits: NaN })  v2.x fırlatır  → "—"
+  money.fmtDecimalGrouped(4.3, 21)         v2.x 21 hane   → "—"
+  ```
+
+  Bu fonksiyonlar `digits`'i doğrulamadan `math.round`'a veriyordu; decimal.js geçersiz
+  değerde hata fırlatıyordu (ABACUS-SPEC §2.1 ihlali). Kural: `digits` **0–20 arası tam
+  sayı**. Ortak doğrulama `internal/hane` yaprak modülünde. `money.formatMinorInput`
+  değişmedi (zaten 0–4 dışını `'—'` döndürüyordu); `math.round` ilkel katmanda olduğu
+  için bilinçli olarak değiştirilmedi. `try/catch` ile saran tüketiciyi etkilediği için
+  kırıcı sayıldı.
+
 ### Belgeler
 
-- **Yeni: [`MIGRATION-v3.md`](MIGRATION-v3.md)** — iki değişikliğin gerekçesi, tarama
+- **Yeni: [`MIGRATION-v3.md`](MIGRATION-v3.md)** — üç değişikliğin gerekçesi, tarama
   komutu, kontrol listesi. Örnekleri `docs-claims.test.ts` ile çivilidir.
+- `ABACUS-SPEC.md` §2.2'ye hane sayısı parametresinin hangi katmanda doğrulandığı
+  eklendi.
 - Motor belgesi, kılavuz, INSTALL ve README yeni varsayılana göre güncellendi; sürüm
   aralıkları `^3.0.0`.
 
 ### Test
 
-- Yeni dosya: `text/suffix-sayi.test.ts`. Beklenen ekler TDK kurallarından (kesme
-  işareti ve sayıların yazılışı) türetildi.
+- Yeni dosyalar: `text/suffix-sayi.test.ts` (beklenen ekler TDK kurallarından
+  türetildi) ve `money/hane.test.ts` (dört fonksiyon × yedi geçersiz hane değeri,
+  sınırlar dâhil). Hane doğrulamasının 8 korumasının 8'i de mutasyonla ölçüldü.
 - Eski varsayılana dayanan 14 test beklentisi bilinçli olarak güncellendi; beklenmedik
   bir kırılma olmadı. Liste göç belgesinin içeriğini oluşturdu.
 - Mutasyon doğrulaması: yeni kodun 8 korumasının 7'si kırmızı verdi; kalan varsayılan

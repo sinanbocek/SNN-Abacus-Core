@@ -1,4 +1,5 @@
 import { div, mul, round } from '../math';
+import { gecerliHane } from '../internal/hane';
 import { ONS_TO_GRAM } from '../internal/constants';
 
 /**
@@ -109,6 +110,8 @@ export function dataSize(bytes: number | null | undefined, opts?: DataSizeOption
   }
 
   const digits = opts?.digits ?? 1;
+  // v3.0.0: geçersiz hane sayısında decimal.js fırlatıyordu; artık '—'.
+  if (!gecerliHane(digits)) return '—';
 
   let unit: DataUnit = 'B';
   for (let i = DATA_LADDER.length - 1; i >= 0; i--) {

@@ -151,6 +151,13 @@ IEEE-754 yayılımıdır ve **bilinçlidir**: bu yedi fonksiyon `number` döner,
 `pow`, `log`, `log10`, `max`, `irr`) `null` döner. Girdi doğrulaması **motor katmanının** sorumluluğudur; her genel
 motor kapısı `Number.isFinite` ile korunur. `NaN` hiçbir koşulda `0`'a çevrilmez.
 
+**Hane sayısı parametresi (v3.0.0):** `math.round(x, d)` ilkel katmandadır ve `d`'yi
+doğrulamaz — geçersiz `d`'de decimal.js hatası fırlatır. Hane sayısı alan her
+**biçimleme** kapısı (`money.decimal`, `money.percent`, `money.fmtDecimalGrouped`,
+`unit.dataSize`) bu yüzden `digits`'i `round`'a vermeden önce doğrular: 0–20 arası tam
+sayı değilse `'—'` döner. `money.formatMinorInput` alt birim hanesi olduğu için daha dar
+sınırı (0–4) kullanır. v2.x'te bu kapılar çöküyordu.
+
 **Yasak:** hiçbir fonksiyon geçersiz girdide `0` döndüremez; `|| 0` ve `?? 0`
 sessiz varsayılanları ESLint `no-restricted-syntax` ile `error` seviyesinde engellenir.
 `0` yalnızca **gerçek sıfır** anlamına gelir.

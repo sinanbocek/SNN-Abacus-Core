@@ -2,6 +2,7 @@ import { abs, div, floor, mod, mul, round } from '../math';
 import { numberToWords } from '../text';
 import { formatMoney, groupThousands } from '../internal/money-format';
 import { parseMoney } from '../internal/money-parse';
+import { gecerliHane } from '../internal/hane';
 import type { CurrencyDef, CurrencyRef } from '../internal/currency-registry';
 import {
   knownCurrencyCodes,
@@ -129,6 +130,7 @@ export function formatMinorInput(minor: number | null | undefined, digits = 0): 
  */
 export function decimal(value: number | null | undefined, digits = 1): string {
   if (value === null || value === undefined || !Number.isFinite(value)) return '—';
+  if (!gecerliHane(digits)) return '—';
   return String(round(value, digits)).replace('.', ',');
 }
 
@@ -236,6 +238,8 @@ export function percent(
   if (value === null || value === undefined || !Number.isFinite(value)) {
     return '—';
   }
+  // v3.0.0: geçersiz hane sayısında decimal.js fırlatıyordu; artık '—'.
+  if (!gecerliHane(digits)) return '—';
   const rounded = round(value, digits);
 
   // `sign` verilmişse o kazanır; verilmemişse eski `showPositiveSign` okunur.
@@ -250,8 +254,7 @@ export function percent(
   else if (rounded > 0 && mode === 'always') isaret = '+';
 
   let sayi = String(abs(rounded));
-  // `digits` tam sayı değilse buraya ulaşılmaz: yukarıdaki `round` önce fırlatır.
-  // Bu yüzden ayrı bir Number.isInteger koruması yoktur (mutasyon testi: ölü kod).
+  // `digits` burada 0..20 arası tam sayıdır (yukarıdaki gecerliHane).
   if (opts?.fixed === true && digits > 0) {
     const nokta = sayi.indexOf('.');
     const mevcut = nokta === -1 ? 0 : sayi.length - nokta - 1;
@@ -284,6 +287,7 @@ export function fmtDecimalGrouped(value: number | null | undefined, digits = 0):
   // ABACUS-SPEC §2.1: biçimlendirme işleri geçersiz girdide '—' döner.
   // '0' döndürmek "değer yok" ile "değer sıfır"ı birbirine karıştırırdı.
   if (value === null || value === undefined || !Number.isFinite(value)) return '—';
+  if (!gecerliHane(digits)) return '—';
   const rounded = round(value, digits);
   const parts = String(rounded).split('.');
   const intPart = parts[0] ? groupThousands(Number(parts[0])) : '0';

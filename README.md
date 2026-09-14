@@ -54,7 +54,7 @@ collate.sortBy(['zam', 'çam', 'dal']);    // ["çam", "dal", "zam"]
 > Gelmiş her talep ve verilen karar orada tutulur — **reddedilenler gerekçeleriyle birlikte.**
 > Aradığınız şey daha önce değerlendirilip uygun görülmemiş olabilir.
 >
-> **v2.x kullanıyorsanız:** yükseltmeden önce [MIGRATION-v3.md](MIGRATION-v3.md) okuyun — v3.0.0 negatif yüzdelerin ve `text.suffix` çıktısının yazımını değiştirir.
+> **v2.x kullanıyorsanız:** yükseltmeden önce [MIGRATION-v3.md](MIGRATION-v3.md) okuyun — v3.0.0 negatif yüzdelerin ve `text.suffix` çıktısının yazımını değiştirir, geçersiz hane sayısında hata fırlatmak yerine `'—'` döndürür.
 > **v1.1.0 kullanıyorsanız:** önce [MIGRATION-v2.md](MIGRATION-v2.md).
 
 ---
@@ -85,8 +85,8 @@ gerçekten çalıştırılır.
 
 ## 🧪 Kalite & Test Kapsamı
 
-- **914 Test:** %100 yeşil (`vitest`) — bunların 204'ü `KILAVUZ.md` örneklerinin çalıştırılmasıdır.
-- **Ölçülen Kapsam:** statements %93,0 · branches %89,3 · functions %100 · lines %98,0 — CI'da eşiklerle korunur (`npm run test:coverage`).
+- **929 Test:** %100 yeşil (`vitest`) — bunların 206'sı `KILAVUZ.md` örneklerinin çalıştırılmasıdır.
+- **Ölçülen Kapsam:** statements %93,1 · branches %89,4 · functions %100 · lines %98,1 — CI'da eşiklerle korunur (`npm run test:coverage`).
 - **TypeScript Strict:** Sıfır `any`, tam tip emniyeti.
 - **Belge İddiaları Test Edilir:** README/INSTALL/SPEC/MOTOR-DETAYLARI içindeki her kod örneği `docs-claims.test.ts` ile doğrulanır; belge ile kod ayrışırsa CI kırılır.
 - **Şartname ve README Kilitli:** `ABACUS-SPEC.md` §2'deki fonksiyon tablosu ile bu README'deki motor sayısı ve fonksiyon listeleri `spec-surface.test.ts` ile gerçek API'ye bağlıdır; yazılmayan bir ad dışa açılırsa CI kırılır.
