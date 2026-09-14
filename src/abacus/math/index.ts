@@ -179,6 +179,114 @@ export function percentChange(current: number, previous: number): number | null 
 }
 
 /**
+ * `allocate` artık birim politikası. Şimdilik tek değer vardır.
+ *
+ * Seçenek bilinçli olarak ZORUNLUDUR ve varsayılanı yoktur: artığın hangi kaleme
+ * bineceği bir tercihtir (GERI-BILDIRIM-KAYDI madde 9). Yeni bir politika
+ * gerçek bir ihtiyaçla geldiğinde yalnız bu birleşime değer eklenir — MINOR.
+ */
+export type ResidualPolicy = 'largest-remainder';
+
+/** `allocate` seçenekleri. */
+export interface AllocateOptions {
+  residual: ResidualPolicy;
+}
+
+/**
+ * Sonlu, negatif olmayan bir sayıyı ONDALIK yazımıyla `mantissa × 10^-olcek`
+ * olarak ayrıştırır. `String(n)` JS'in en kısa gidiş-dönüş yazımıdır: `0.1`
+ * ikili yaklaşığıyla değil `"0.1"` olarak, `1e-7` ise `"1e-7"` olarak gelir.
+ */
+function ondalikParcala(n: number): { mantissa: bigint; olcek: number } {
+  const m = /^(\d+)(?:\.(\d+))?(?:e([+-]\d+))?$/.exec(String(n));
+  // Çağıran yalnız sonlu ve >= 0 değer verir; bu biçimin dışı oluşmaz.
+  if (m === null) throw new Error(`ondalikParcala: beklenmeyen yazım ${String(n)}`);
+  const kesir = m[2] ?? '';
+  const us = m[3] === undefined ? 0 : Number(m[3]);
+  const olcek = kesir.length - us;
+  const mantissa = BigInt((m[1] as string) + kesir);
+  return olcek >= 0
+    ? { mantissa, olcek }
+    : { mantissa: mantissa * 10n ** BigInt(-olcek), olcek: 0 };
+}
+
+/**
+ * Bir tam sayı havuzu ağırlıklara orantılı dağıtır; **sonuçların toplamı
+ * havuza her zaman TAM eşittir.**
+ *
+ * Her payı ayrı yuvarlamak (`round(total * w / Σw)`) bu garantiyi vermez —
+ * toplam 1–2 birim sapar ve hata sessizdir. Burada tam paylar tabana
+ * yuvarlanır, eksik kalan birimler en büyük kesirli kalandan başlayarak birer
+ * birer dağıtılır (en büyük kalan / Hamilton yöntemi). Eşit kalanda küçük
+ * indis önceliklidir.
+ *
+ * **Hesap tam aritmetiktir (`BigInt`), yuvarlama yoktur.** Ağırlıklar ondalık
+ * yazımlarıyla ortak bir `10^k` ile tam sayıya ölçeklenir; `q = T·W div S`,
+ * `kalan = T·W mod S`. 20 basamaklı `Decimal` bölmesi büyük havuzlarda
+ * (~10^15) artığı yanlış kaleme verebiliyordu — ölçüldü, bkz. fixture
+ * `sapma-prec20-*`. Tam aritmetikte bu hassasiyet sınırı yoktur.
+ *
+ * - `total`: güvenli tam sayı (alt birim: kuruş/cent). Negatif olabilir; sonuç
+ *   işaret-simetriktir: `allocate(-x, w) = allocate(x, w).map(v => -v)`.
+ * - `weights`: sonlu ve `>= 0`. **Tam sayı olmak zorunda DEĞİLDİR** (m³, kg).
+ *
+ * Garantiler: `Σ sonuç === total` · uzunluk korunur · sıfır ağırlık sıfır pay
+ * alır · `w[i] > w[j] → r[i] >= r[j]` (tek dağıtım içinde).
+ *
+ * ⚠️ **Havuz büyüdüğünde bir kalemin payı azalabilir** (Alabama paradoksu):
+ * `allocate(40, [160, 4, 136, 17])` → `[20, 1, 17, 2]`, `allocate(41, …)` →
+ * `[21, 0, 18, 2]`. Yöntemin bilinen özelliğidir, hata değildir. Monotonluk
+ * garantisi tek dağıtım içindir; farklı havuz tutarları arasında yoktur.
+ *
+ * `null` döner: `total` güvenli tam sayı değilse · `weights` boşsa · bir ağırlık
+ * sonlu değil ya da negatifse · tüm ağırlıklar sıfırsa · politika tanınmıyorsa.
+ *
+ * @example math.allocate(100000, [6080, 8160, 12080], { residual: 'largest-remainder' })
+ * @example math.allocate(10, [1, 1, 1], { residual: 'largest-remainder' })  // [4, 3, 3]
+ */
+export function allocate(
+  total: number,
+  weights: readonly number[],
+  opts: AllocateOptions,
+): number[] | null {
+  if (opts?.residual !== 'largest-remainder') return null;
+  if (!Number.isSafeInteger(total)) return null;
+  if (!weights.every((w) => Number.isFinite(w) && w >= 0)) return null;
+
+  const parcalar = weights.map(ondalikParcala);
+  const k = parcalar.reduce((enBuyuk, p) => (p.olcek > enBuyuk ? p.olcek : enBuyuk), 0);
+  const W = parcalar.map((p) => p.mantissa * 10n ** BigInt(k - p.olcek));
+  const S = W.reduce((a, b) => a + b, 0n);
+  /*
+   * TEK KAPI: boş dizi ve tümü sıfır ağırlık. Ayrı bir `weights.length === 0`
+   * koruması BİLİNÇLİ olarak yoktur: boş dizide `S` zaten `0n`'dır. Mutasyon
+   * testi o korumanın hiçbir testi kırmadığını gösterdi (AI-RULES §2.4).
+   */
+  if (S === 0n) return null;
+
+  const T = BigInt(total < 0 ? -total : total);
+  const paylar = W.map((w) => (T * w) / S);
+  const kalanlar = W.map((w) => (T * w) % S);
+  const artik = Number(T - paylar.reduce((a, b) => a + b, 0n));
+
+  /*
+   * Artık < kalem sayısıdır (her kalan < S). Sıfır ağırlıklı kalemin kalanı 0'dır
+   * ve pozitif kalanı olan kalemlerin sayısı artıktan az olamaz; dolayısıyla
+   * sıfır ağırlık yapısal olarak artık almaz — ayrı bir koruma gerekmez.
+   */
+  const sira = kalanlar
+    .map((kalan, i) => ({ kalan, i }))
+    .sort((a, b) => (a.kalan === b.kalan ? a.i - b.i : a.kalan > b.kalan ? -1 : 1));
+  for (let j = 0; j < artik; j++) {
+    const hedef = (sira[j] as { i: number }).i;
+    paylar[hedef] = (paylar[hedef] as bigint) + 1n;
+  }
+
+  // `0 - v`: negatif havuzda sıfır pay `-0` olarak dönmesin.
+  return paylar.map((p) => (total < 0 ? 0 - Number(p) : Number(p)));
+}
+
+/**
  * Bugünkü net değer (NPV) — `irr`'in iç hesabı.
  *
  * DIŞA AÇILMAZ. Tüketici raporu #2 §1 bunu açıkça talep ETMEDİ ve

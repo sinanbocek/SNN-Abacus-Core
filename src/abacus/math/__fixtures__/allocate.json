@@ -1,0 +1,734 @@
+{
+  "kaynak": "python fractions (Fraction) — tam aritmetik, yuvarlama yok",
+  "uretildi": "2026-09-14",
+  "tuketici": "SNN-Ihale-Maliyet",
+  "kural": "q[i]=T*W[i] div S, kalan[i]=T*W[i] mod S, esit kalanda kucuk indis",
+  "not": "weights ondalik yazimlariyla yorumlanir; weightsStr yetkili gostirimdir",
+  "vakalar": [
+    {
+      "ad": "gercek-1000eur",
+      "total": 100000,
+      "weights": [
+        6080,
+        8160,
+        12080,
+        62360,
+        80120,
+        1560160,
+        133200,
+        120,
+        3820800
+      ],
+      "weightsStr": [
+        "6080",
+        "8160",
+        "12080",
+        "62360",
+        "80120",
+        "1560160",
+        "133200",
+        "120",
+        "3820800"
+      ],
+      "residual": "largest-remainder",
+      "beklenen": [
+        107,
+        144,
+        212,
+        1097,
+        1410,
+        27453,
+        2344,
+        2,
+        67231
+      ],
+      "not": "birincil örnek; basit yuvarlama toplamı 100001 eder (GLAYÖR 213 vs 212)"
+    },
+    {
+      "ad": "gercek-20000eur",
+      "total": 2000000,
+      "weights": [
+        6080,
+        8160,
+        12080,
+        62360,
+        80120,
+        1560160,
+        133200,
+        120,
+        3820800
+      ],
+      "weightsStr": [
+        "6080",
+        "8160",
+        "12080",
+        "62360",
+        "80120",
+        "1560160",
+        "133200",
+        "120",
+        "3820800"
+      ],
+      "residual": "largest-remainder",
+      "beklenen": [
+        2140,
+        2872,
+        4251,
+        21946,
+        28196,
+        549054,
+        46876,
+        42,
+        1344623
+      ],
+      "not": "basit yuvarlama burada uzlaşır; sorunu göstermez, regresyon için tutuldu"
+    },
+    {
+      "ad": "gercek-gumruk-deger",
+      "total": 500000,
+      "weights": [
+        91200,
+        65280,
+        144960,
+        1122480,
+        1442160,
+        6240640,
+        1864800,
+        960,
+        26745600
+      ],
+      "weightsStr": [
+        "91200",
+        "65280",
+        "144960",
+        "1122480",
+        "1442160",
+        "6240640",
+        "1864800",
+        "960",
+        "26745600"
+      ],
+      "residual": "largest-remainder",
+      "beklenen": [
+        1209,
+        865,
+        1922,
+        14880,
+        19118,
+        82727,
+        24720,
+        13,
+        354546
+      ],
+      "not": "dağıtım sürücüsü: değer"
+    },
+    {
+      "ad": "ondalikli-hacim-m3",
+      "total": 2000000,
+      "weights": [
+        3.7,
+        12.45,
+        0.08,
+        140.2
+      ],
+      "weightsStr": [
+        "3.7",
+        "12.45",
+        "0.08",
+        "140.2"
+      ],
+      "residual": "largest-remainder",
+      "beklenen": [
+        47305,
+        159177,
+        1023,
+        1792495
+      ],
+      "not": "ana kullanım: navlun havuzunun m³ sürücüsüyle dağıtımı"
+    },
+    {
+      "ad": "ondalikli-01-02-03",
+      "total": 100001,
+      "weights": [
+        0.1,
+        0.2,
+        0.3
+      ],
+      "weightsStr": [
+        "0.1",
+        "0.2",
+        "0.3"
+      ],
+      "residual": "largest-remainder",
+      "beklenen": [
+        16667,
+        33334,
+        50000
+      ],
+      "not": "0.1/0.2/0.3 ondalık yazımlarıyla yorumlanır, ikili yaklaşıklarıyla değil"
+    },
+    {
+      "ad": "sifir-agirlikli-kalem",
+      "total": 100,
+      "weights": [
+        0,
+        1,
+        0,
+        2,
+        0
+      ],
+      "weightsStr": [
+        "0",
+        "1",
+        "0",
+        "2",
+        "0"
+      ],
+      "residual": "largest-remainder",
+      "beklenen": [
+        0,
+        33,
+        0,
+        67,
+        0
+      ],
+      "not": "değişmez 4: weights[i]==0 -> result[i]==0"
+    },
+    {
+      "ad": "tek-kalem",
+      "total": 123456,
+      "weights": [
+        7
+      ],
+      "weightsStr": [
+        "7"
+      ],
+      "residual": "largest-remainder",
+      "beklenen": [
+        123456
+      ],
+      "not": "değişmez 6"
+    },
+    {
+      "ad": "esit-agirlik-artik-indise",
+      "total": 10,
+      "weights": [
+        1,
+        1,
+        1
+      ],
+      "weightsStr": [
+        "1",
+        "1",
+        "1"
+      ],
+      "residual": "largest-remainder",
+      "beklenen": [
+        4,
+        3,
+        3
+      ],
+      "not": "eşit kalanda küçük indis öncelikli"
+    },
+    {
+      "ad": "negatif-total",
+      "total": -100000,
+      "weights": [
+        6080,
+        8160,
+        12080,
+        62360,
+        80120,
+        1560160,
+        133200,
+        120,
+        3820800
+      ],
+      "weightsStr": [
+        "6080",
+        "8160",
+        "12080",
+        "62360",
+        "80120",
+        "1560160",
+        "133200",
+        "120",
+        "3820800"
+      ],
+      "residual": "largest-remainder",
+      "beklenen": [
+        -107,
+        -144,
+        -212,
+        -1097,
+        -1410,
+        -27453,
+        -2344,
+        -2,
+        -67231
+      ],
+      "not": "değişmez 8: işaret simetrisi"
+    },
+    {
+      "ad": "alabama-40",
+      "total": 40,
+      "weights": [
+        160,
+        4,
+        136,
+        17
+      ],
+      "weightsStr": [
+        "160",
+        "4",
+        "136",
+        "17"
+      ],
+      "residual": "largest-remainder",
+      "beklenen": [
+        20,
+        1,
+        17,
+        2
+      ],
+      "not": "havuz 40"
+    },
+    {
+      "ad": "alabama-41",
+      "total": 41,
+      "weights": [
+        160,
+        4,
+        136,
+        17
+      ],
+      "weightsStr": [
+        "160",
+        "4",
+        "136",
+        "17"
+      ],
+      "residual": "largest-remainder",
+      "beklenen": [
+        21,
+        0,
+        18,
+        2
+      ],
+      "not": "havuz 41; ikinci kalemin payı 1 -> 0 düşer (belgelenen sınır)"
+    },
+    {
+      "ad": "buyuk-total-1e14",
+      "total": 100000000000000,
+      "weights": [
+        6080,
+        8160,
+        12080,
+        62360,
+        80120,
+        1560160,
+        133200,
+        120,
+        3820800
+      ],
+      "weightsStr": [
+        "6080",
+        "8160",
+        "12080",
+        "62360",
+        "80120",
+        "1560160",
+        "133200",
+        "120",
+        "3820800"
+      ],
+      "residual": "largest-remainder",
+      "beklenen": [
+        106984240940,
+        143584112840,
+        212560794499,
+        1097292313323,
+        1409798911858,
+        27452719300098,
+        2343799489009,
+        2111531071,
+        67231149306362
+      ],
+      "not": "büyük total aralığı"
+    },
+    {
+      "ad": "maxsafe-ondalikli",
+      "total": 9007199254740991,
+      "weights": [
+        3.7,
+        12.45,
+        0.08,
+        140.2
+      ],
+      "weightsStr": [
+        "3.7",
+        "12.45",
+        "0.08",
+        "140.2"
+      ],
+      "residual": "largest-remainder",
+      "beklenen": [
+        213045050454143,
+        716867804906510,
+        4606379469279,
+        8072680019911059
+      ],
+      "not": "total = 2^53-1; büyük total aralığı — 20 basamaklı bölme burada doğru sonuç verir"
+    },
+    {
+      "ad": "maxsafe-yakin-agirlik",
+      "total": 9007199254740991,
+      "weights": [
+        1000000000000000,
+        1000000000000001
+      ],
+      "weightsStr": [
+        "1000000000000000",
+        "1000000000000001"
+      ],
+      "residual": "largest-remainder",
+      "beklenen": [
+        4503599627370493,
+        4503599627370498
+      ],
+      "not": "büyük total ve yakın ağırlıklar — 20 basamaklı bölme burada doğru sonuç verir"
+    },
+    {
+      "ad": "sapma-prec20-a",
+      "total": 6347749276782134,
+      "weights": [
+        202.28,
+        230.2,
+        890.92,
+        873.53,
+        101.89,
+        168.502
+      ],
+      "weightsStr": [
+        "202.28",
+        "230.2",
+        "890.92",
+        "873.53",
+        "101.89",
+        "168.502"
+      ],
+      "residual": "largest-remainder",
+      "beklenen": [
+        520411492179574,
+        592242067924352,
+        2292095148371691,
+        2247355402232663,
+        262135292358002,
+        433509873715852
+      ],
+      "not": "prec=20 Decimal 3. kaleme +1 verir, tam aritmetik 4. kaleme verir"
+    },
+    {
+      "ad": "sapma-prec20-b",
+      "total": 2541303396336883,
+      "weights": [
+        483.111,
+        952.196,
+        392.99,
+        763.6,
+        695.22,
+        741.19
+      ],
+      "weightsStr": [
+        "483.111",
+        "952.196",
+        "392.99",
+        "763.6",
+        "695.22",
+        "741.19"
+      ],
+      "residual": "largest-remainder",
+      "beklenen": [
+        304776082137659,
+        600703702269562,
+        247922221848144,
+        481725765549360,
+        438587462971747,
+        467588161560411
+      ],
+      "not": "prec=20 Decimal 2. kaleme +1 verir, tam aritmetik 4. kaleme verir"
+    },
+    {
+      "ad": "sapma-prec20-c",
+      "total": 4547558523310150,
+      "weights": [
+        551.45,
+        809.54,
+        215.2,
+        814.701
+      ],
+      "weightsStr": [
+        "551.45",
+        "809.54",
+        "215.2",
+        "814.701"
+      ],
+      "residual": "largest-remainder",
+      "beklenen": [
+        1048877237682262,
+        1539773468117325,
+        409317946412590,
+        1549589871097973
+      ],
+      "not": "prec=20 Decimal 1. kaleme +1 verir, tam aritmetik 4. kaleme verir"
+    },
+    {
+      "ad": "55-kalem-ondalikli",
+      "total": 4500000,
+      "weights": [
+        575.49,
+        22.52,
+        247.53,
+        200.9,
+        662.83,
+        609.03,
+        802.96,
+        78.25,
+        379.74,
+        26.83,
+        196.78,
+        454.82,
+        23.89,
+        178.96,
+        584.9,
+        490.45,
+        198.4,
+        530.34,
+        728.49,
+        5.86,
+        725.24,
+        628.33,
+        306.23,
+        139.94,
+        861.49,
+        302.94,
+        83.48,
+        87.05,
+        762.75,
+        543.36,
+        726.42,
+        656.76,
+        482.61,
+        875.8,
+        340.69,
+        496.84,
+        746.47,
+        556.67,
+        775.54,
+        519.62,
+        634.12,
+        41.25,
+        205.12,
+        260.46,
+        71.82,
+        209.52,
+        90.91,
+        250.18,
+        572.12,
+        328.36,
+        333.17,
+        188.56,
+        240.29,
+        842.99,
+        583.24
+      ],
+      "weightsStr": [
+        "575.49",
+        "22.52",
+        "247.53",
+        "200.9",
+        "662.83",
+        "609.03",
+        "802.96",
+        "78.25",
+        "379.74",
+        "26.83",
+        "196.78",
+        "454.82",
+        "23.89",
+        "178.96",
+        "584.9",
+        "490.45",
+        "198.4",
+        "530.34",
+        "728.49",
+        "5.86",
+        "725.24",
+        "628.33",
+        "306.23",
+        "139.94",
+        "861.49",
+        "302.94",
+        "83.48",
+        "87.05",
+        "762.75",
+        "543.36",
+        "726.42",
+        "656.76",
+        "482.61",
+        "875.8",
+        "340.69",
+        "496.84",
+        "746.47",
+        "556.67",
+        "775.54",
+        "519.62",
+        "634.12",
+        "41.25",
+        "205.12",
+        "260.46",
+        "71.82",
+        "209.52",
+        "90.91",
+        "250.18",
+        "572.12",
+        "328.36",
+        "333.17",
+        "188.56",
+        "240.29",
+        "842.99",
+        "583.24"
+      ],
+      "residual": "largest-remainder",
+      "beklenen": [
+        115255,
+        4510,
+        49574,
+        40235,
+        132747,
+        121972,
+        160811,
+        15671,
+        76052,
+        5373,
+        39410,
+        91088,
+        4785,
+        35841,
+        117140,
+        98224,
+        39734,
+        106213,
+        145897,
+        1174,
+        145246,
+        125838,
+        61330,
+        28026,
+        172533,
+        60671,
+        16719,
+        17434,
+        152758,
+        108820,
+        145483,
+        131531,
+        96654,
+        175399,
+        68231,
+        99504,
+        149498,
+        111486,
+        155320,
+        104066,
+        126997,
+        8261,
+        41080,
+        52163,
+        14384,
+        41961,
+        18207,
+        50104,
+        114580,
+        65762,
+        66725,
+        37764,
+        48124,
+        168828,
+        116807
+      ],
+      "not": "hedef kalem aralığının üst sınırı"
+    },
+    {
+      "ad": "null-bos-dizi",
+      "total": 1000,
+      "weights": [],
+      "weightsStr": [],
+      "residual": "largest-remainder",
+      "beklenen": null
+    },
+    {
+      "ad": "null-tum-agirliklar-sifir",
+      "total": 1000,
+      "weights": [
+        0,
+        0,
+        0
+      ],
+      "weightsStr": [
+        "0",
+        "0",
+        "0"
+      ],
+      "residual": "largest-remainder",
+      "beklenen": null
+    },
+    {
+      "ad": "null-negatif-agirlik",
+      "total": 1000,
+      "weights": [
+        5,
+        -1,
+        3
+      ],
+      "weightsStr": [
+        "5",
+        "-1",
+        "3"
+      ],
+      "residual": "largest-remainder",
+      "beklenen": null
+    },
+    {
+      "ad": "null-total-guvenli-tamsayi-degil",
+      "total": 9007199254740992,
+      "weights": [
+        1,
+        2
+      ],
+      "weightsStr": [
+        "1",
+        "2"
+      ],
+      "residual": "largest-remainder",
+      "beklenen": null,
+      "not": "total > Number.MAX_SAFE_INTEGER"
+    },
+    {
+      "ad": "null-total-ondalikli",
+      "total": 100.5,
+      "weights": [
+        1,
+        2
+      ],
+      "weightsStr": [
+        "1",
+        "2"
+      ],
+      "residual": "largest-remainder",
+      "beklenen": null,
+      "not": "total tam sayı değil"
+    }
+  ],
+  "cekirdekNotu": "İki not (maxsafe-ondalikli, maxsafe-yakin-agirlik) çekirdek tarafından düzeltildi; beklenen değerler değişmedi. Sapma kanıtı yalnız sapma-prec20-a/b/c."
+}

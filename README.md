@@ -67,7 +67,7 @@ gerçekten çalıştırılır.
 
 | Motor | Fonksiyonlar | Ne işe yarar |
 |---|---|---|
-| **`math`** | `add` `sub` `mul` `div` `mod` · `round` `floor` `ceil` `abs` · `ratio` `percent` `percentChange` · `pow` `log` `log10` `max` · `equals` · `irr` | Float hatası olmayan hassas hesap (`decimal.js`). `0.1 + 0.2` tam `0.3` olur; yuvarlama half-up. Hesaplanamayan işlem sessizce 0 değil `null` döner. |
+| **`math`** | `add` `sub` `mul` `div` `mod` · `round` `floor` `ceil` `abs` · `ratio` `percent` `percentChange` · `pow` `log` `log10` `max` · `equals` · `irr` · `allocate` | Float hatası olmayan hassas hesap (`decimal.js`). `allocate` bir tutarı ağırlıklara toplamı tam tutacak biçimde böler. `0.1 + 0.2` tam `0.3` olur; yuvarlama half-up. Hesaplanamayan işlem sessizce 0 değil `null` döner. |
 | **`money`** | `format` `formatMajor` `formatMinorInput` · `compact` `compactMajor` · `decimal` `fmtDecimalGrouped` `ratio` `percent` · `parse` `parseNumber` `toMinor` `formatGroupedInput` · `toWords` · `knownCurrencyCodes` | Parayı Türkçe biçimde yazma ve geri okuma. ⚠️ `format`/`compact` **kuruş**, `formatMajor`/`compactMajor` **lira** okur. TRY/USD/EUR/GBP yerleşik; kendi biriminizi de verebilirsiniz. |
 | **`currency`** | `convert` `cross` | Kur çevrimi. Kur parametre olarak verilir; motor internete çıkmaz. |
 | **`date`** | `format` `parse` · `dayName` `monthName` `weekday` `isWeekend` · `daysBetween` `daysUntil` `relative` · `isBefore` `isAfter` `isSameDay` | Türkçe tarih/saat biçimleme ve tarih **sorgulama**. Girdi ISO metni; saat dilimi Europe/Istanbul; 30 Şubat gibi var olmayan günleri reddeder. Tarih **üretmek** için `period`. |

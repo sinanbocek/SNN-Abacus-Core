@@ -69,6 +69,10 @@ elenenler neden elendi) değerlendirme maliyetini ciddi biçimde düşürüyor.
 | 27 | Geçersiz hane sayısında çökme yerine `'—'` | v2.9.0 mutasyon testi (ölçüm) | ✅ Kabul — **kırıcı düzeltme** | 3.0.0 |
 | 20 | Plaka türü sınıflandırması (resmî/diplomatik/yabancı/geçici) | Tasarım sırasında | ❌ **Red** | — |
 | 21 | Başta `TR` önekine tolerans | Tasarım sırasında | ❌ **Red** (sahip kararı) | — |
+| 28 | `math.allocate` (havuz dağıtımı, tam aritmetik) | Talep #5 A + Ek #1 | ✅ Kabul | 3.1.0 |
+| 29 | `math.npv` dışa açılsın (madde 8 yeniden başvurusu) | Talep #5 B | ❌ **Red** (ertelendi) | — |
+| 30 | `unit` motoruna `volume` kategorisi | Talep #5 C | ❌ **Red** (ertelendi) | — |
+| 31 | `allocate` eşitlikte büyük ağırlık öncelikli | Ek #1 §3 | ❌ **Red** — yerine tam aritmetik | — |
 
 ---
 
@@ -122,6 +126,54 @@ politika istediğinde onu **kırıcı sürümle** değiştirmek zorunda kalırı
 aynı ihtiyaç doğarsa. O zaman yuvarlama politikasını **birlikte kararlaştırıp**
 tek seferde alalım.
 
+### 28 · `math.allocate` — KABUL (kayıt için)
+
+**Karar: şartlı kabul, şartlar karşılandı — 3.1.0.**
+
+Kural 1 dayanağı zayıftı: tüketici projenin kodu henüz yok. Kabulü taşıyan şeyler şunlar
+oldu: gerçek bir müşterinin gerçek Excel dosyası, ölçülmüş sapma (%55,0 / %77,2) ve
+fonksiyonun alandan tamamen bağımsız olması (kargo, kira, aidat, hesap bölme). Madde 9'un
+"artık kuruş bir tercihtir" itirazı, politikanın **zorunlu parametre** yapılmasıyla
+karşılandı; şimdilik tek politika var, ikincisi MINOR olarak eklenir.
+
+Dört şart konuldu ve karşılandı: sorunu gösteren örnek · yanlış monotonluk iddiasının
+(§2.7) geri çekilmesi · bağımsız fixture ve tarama kodu · değişmez ve mutasyon testleri.
+
+### 29 · `math.npv` dışa açılsın — yeniden başvuru
+
+**Karar: red — madde 8'in koşulu henüz karşılanmadı.**
+
+Finansman ekranı tasarlanmış ama kodlanmamış; ölçülmüş çıktı yok. Talep bunu kendisi
+yazdı. Kod hazır olduğu için reddin maliyeti düşük.
+
+**Yeniden başvuru koşulu:** Finansman ekranı prototipi çalışır hâlde olsun ve çok tarihli
+bir akışta basit faiz ile iskonto edilmiş değer arasındaki fark ölçülmüş olsun. Önerilen
+imza (`npv(rate, cashflows)`, `cashflows[0]` iskonto edilmez) ve `irr` ile çapraz test
+şimdiden kabul edilmiş sayılır — tek satırlık MINOR.
+
+### 30 · `unit` motoruna `volume`
+
+**Karar: red — sınavı geçiyor, ihtiyaç ölçülmedi.**
+
+Hacim birimleri SI ve sabittir; §4.1 sorunu yok. Ama talep ihtiyacı "çok alanlı olma
+hedefinden" türetti, sahadan ölçmedi.
+
+**Yeniden başvuru koşulu:** Hacim sürücüsüyle dağıtım yapan gerçek bir sepette birden çok
+hacim biriminin geldiğinin gösterilmesi. Önerilen tablo (`ml` tabanı; `cm3`, `l`, `dm3`,
+`m3`, `mm3`) ve İngiliz/ABD birimlerinin kapsam dışı tutulması kabul edilmiş sayılır.
+
+### 31 · `allocate` eşitlikte büyük ağırlık öncelikli
+
+**Karar: red — teşhis doğru, çare yetersiz; yerine tam aritmetik.**
+
+Tüketici, düşük hassasiyette iki yakın ağırlığın kalanlarının beraberliğe çöktüğünü ve
+monotonluğun kırıldığını gösterdi (12 basamakta ölçüldü). Ama sorun beraberlikten
+büyüktü: 20 basamaklı bölme ~10^15 havuzlarda artığı **beraberlik olmadan** yanlış kaleme
+veriyordu. Ağırlık anahtarı bunu düzeltmez. Tam aritmetikte ise beraberlik yalnız eşit
+ağırlıkta oluşur, anahtar hiç devreye girmez ve hiçbir mutasyon onu sınayamaz — sınanamayan
+kod eklenmedi.
+
+**Yeniden başvuru koşulu:** Yok; tam aritmetik sözleşmeye girdi.
 ### 10 · KKDF/BSMV vergi mekaniği
 
 **Karar: red — sabit değil, `gold.PURITY` emsali tutmuyor.**
@@ -281,6 +333,14 @@ belge talebini doğurdu.
 > **Ders:** Talep yazmadan önce yalnız adı benzeyen modüle değil, **komşu
 > modüllere de** bakın. `date` sorgular, `period` üretir.
 
+**Talep #5 (ihale teklif maliyetlendirme):** 11 aday değerlendirildi, 3'ü gönderildi.
+Elenenler: `tender`/`costing` motoru (alan adı, madde 11) · damga vergisi, karar pulu,
+teminat oranları (mevzuata bağlı, madde 10) · finansman giderinin matrahtan önce düşülmesi
+(iş kuralı) · `simpleInterest` (`dayCount` madde 9'da reddedildi; `date.daysBetween` var) ·
+kademeli araç maliyeti (`math.ceil` + `mul` karşılıyor) · başabaş çözücü (sınavı geçiyor,
+tek tüketici, analitik çözüm var) · `currency.breakEvenRate` (tek bölme) · kalem başına
+teklif fiyatı (alan kavramı).
+
 ---
 
 ## Çekirdeğin tüketiciye geri bildirdiği noktalar
@@ -307,6 +367,13 @@ bildirir:
   kuralınca ne de `INSTALL §6.2`'deki ev kurallarınca yakalanıyordu; ikisi de
   yalnız `0` literaline bakıyor. 12 numaralı talep o satırı zaten sildi, ama
   kural boşluğu genel olarak durmaktadır.
+- **Fixture notları ve tarama kodu (talep #5 denetimi).** Tüketicinin 23 vakalık fixture'ının
+  beklenen değerleri bağımsız hesapla 23/23 doğrulandı, ama iki vakanın notu yanlıştı
+  (`maxsafe-ondalikli`, `maxsafe-yakin-agirlik`: "20 basamaklı bölme sapar / beraberliğe
+  çöker" — sapmıyordu). Çekirdek notları düzelterek aldı. `tarama.py`'de iki hata bulundu,
+  yayımlanan ölçümleri etkilemiyor: `tam_dagitim` üslü yazımda (`1e-07`) ölçeği 0 alıyor;
+  `basit_yuvarlama` ondalıklı ağırlık toplamında `InvalidOperation` fırlatıyor. Aynı üslü
+  yazım tuzağı JS'te de vardır (`String(1e-7) === "1e-7"`); çekirdek bunu testle çiviledi.
 
 ---
 
@@ -322,3 +389,4 @@ yazılmıştır.
 | #2 | 1 Eylül 2026 | Borç/kredi modülü, uçtan uca inceleme | 2.5.0 → 2.6.0 |
 | #3 | 1 Eylül 2026 | SNN Fon ekranları (masaüstü + mobil), zincirin tamamı | 2.6.0 → 2.7.0 |
 | #4 | 13 Eylül 2026 | Sigorta tüketicisi: Türkiye plakası standardı (sözlü talep) | 2.7.0 → 2.8.0 |
+| #5 | 14 Eylül 2026 | SNN-Ihale-Maliyet: havuz dağıtımı + Ek #1 (fixture, tarama kodu) | 3.0.1 → 3.1.0 |

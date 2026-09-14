@@ -533,6 +533,23 @@ describe('BELGE İDDİALARI — v2.5.0 (tüketici raporu karşılığı)', () =>
   });
 });
 
+describe('BELGE İDDİALARI — v3.1.0 (talep #5 karşılığı)', () => {
+  const LR = { residual: 'largest-remainder' } as const;
+
+  it('MOTOR-DETAYLARI: math.allocate örnek bloğu', () => {
+    // Beklenen değerler Python `fractions` tam aritmetiğinden (bkz. math/allocate.test.ts).
+    expect(math.allocate(100000, [6080, 8160, 12080, 62360, 80120, 1560160, 133200, 120, 3820800], LR))
+      .toEqual([107, 144, 212, 1097, 1410, 27453, 2344, 2, 67231]);
+    expect(math.allocate(10, [1, 1, 1], LR)).toEqual([4, 3, 3]);
+    expect(math.allocate(-10, [1, 1, 1], LR)).toEqual([-4, -3, -3]);
+    expect(math.allocate(1000, [1e-7, 2e-7], LR)).toEqual([333, 667]);
+    expect(math.allocate(40, [160, 4, 136, 17], LR)).toEqual([20, 1, 17, 2]);
+    expect(math.allocate(41, [160, 4, 136, 17], LR)).toEqual([21, 0, 18, 2]);
+    expect(math.allocate(1000, [], LR)).toBeNull();
+    expect(math.allocate(100.5, [1, 2], LR)).toBeNull();
+  });
+});
+
 describe('BELGE İDDİALARI — v2.6.0 (tüketici raporu #2 karşılığı)', () => {
   it('MOTOR-DETAYLARI: math.irr örnek bloğu', () => {
     const kok = math.irr([1000, -600, -600]);
