@@ -248,8 +248,8 @@ Yüzde biçimi. Ondalık ayraç virgül. Örnek: `percent(12.345, 1) → "%12,3"
 
 | Mod | Davranış | `-3.2` | `3.2` | `0` |
 |---|---|---|---|---|
-| `'auto'` (varsayılan) | eksi görünür, artı görünmez | `"%-3,2"` | `"%3,2"` | `"%0"` |
-| `'always'` | artı da yazılır | `"%-3,2"` | `"%+3,2"` | `"%0"` |
+| `'auto'` (varsayılan) | eksi görünür, artı görünmez | `"-%3,2"` | `"%3,2"` | `"%0"` |
+| `'always'` | artı da yazılır | `"-%3,2"` | `"+%3,2"` | `"%0"` |
 | `'never'` | hiç işaret yazılmaz | `"%3,2"` | `"%3,2"` | `"%0"` |
 
 Sıfıra hiçbir modda işaret eklenmez — sıfır ne artı ne eksidir.
@@ -260,29 +260,30 @@ unutulunca eksi işareti kırmızı renkle üst üste binip çift olumsuzlama gi
 okunuyordu. İşaretsizleştirme **yuvarlamadan sonra** yapılır, bu yüzden
 `percent(-0.04, 1, { sign: 'never' })` → `"%0"` (asla `"%-0"`).
 
-**İşaret konumu — `opts.signPosition` (v2.9.0):** `'inner'` (varsayılan) · `'leading'`.
+**İşaret konumu — `opts.signPosition` (v2.9.0):** `'leading'` (**v3.0.0'dan itibaren varsayılan**) · `'inner'`.
 
-| | `'inner'` (varsayılan) | `'leading'` |
+| | `'leading'` (varsayılan, v3.0.0+) | `'inner'` (v2.x varsayılanı) |
 |---|---|---|
-| `percent(-4.3, 1, …)` | `"%-4,3"` | `"-%4,3"` |
-| `percent(4.3, 1, { sign: 'always', … })` | `"%+4,3"` | `"+%4,3"` |
+| `percent(-4.3, 1, …)` | `"-%4,3"` | `"%-4,3"` |
+| `percent(4.3, 1, { sign: 'always', … })` | `"+%4,3"` | `"%+4,3"` |
 
 Yüzde işareti **TDK Yazım Kılavuzu** gereği sayıdan önce ve boşluksuz yazılır (`%25`);
-TDK negatif yüzde için hüküm koymaz. `'inner'` bu kuralın harfiyen uygulanmasıdır ve
-eksi iki sembolün arasına sıkışır. `'leading'` **Unicode CLDR `tr-TR`** biçimidir
+TDK negatif yüzde için hüküm koymaz. `'leading'` **Unicode CLDR `tr-TR`** biçimidir
 (tarayıcılar ve `Intl.NumberFormat` bunu üretir; CLDR 48.0 ile ölçüldü): eksi en başta
-olduğu için tabloda yön ilk karakterden okunur.
+olduğu için tabloda yön ilk karakterden okunur. `'inner'` TDK kuralının negatif sayıya
+harfiyen uygulanmasıdır ve eksi iki sembolün arasına sıkışır; v2.x çıktısını korumak
+isteyen tüketici için vardır.
 
 **Sabit ondalık — `opts.fixed` (v2.9.0):** `true` ise ondalık kısım her zaman `digits`
 haneye tamamlanır: `percent(4.3, 2, { fixed: true }) → "%4,30"` ·
 `percent(5, 2, { fixed: true }) → "%5,00"`. Tablolarda virgüllerin hizası içindir.
+Varsayılanı `false`'tur.
 
-İkisi birlikte tam CLDR Türkçe biçimini verir:
-`percent(-4.3, 2, { signPosition: 'leading', fixed: true }) → "-%4,30"`.
+Varsayılan konumla birlikte tam CLDR Türkçe biçimini verir:
+`percent(-4.3, 2, { fixed: true }) → "-%4,30"`.
 
-⚠️ **Varsayılanlar bilinçli olarak değişmedi.** Varsayılanı `'leading'` yapmak
-tüketicinin gördüğü çıktıyı değiştirir ve MAJOR sürüm gerektirir (AI-RULES §4.0); bir
-sonraki MAJOR sürüme ertelendi. Karar: [`GERI-BILDIRIM-KAYDI.md`](GERI-BILDIRIM-KAYDI.md).
+⚠️ **v3.0.0 kırıcı değişiklik:** varsayılan konum `'inner'`'den `'leading'`'e geçti.
+Göç: [`MIGRATION-v3.md`](MIGRATION-v3.md). Karar: [`GERI-BILDIRIM-KAYDI.md`](GERI-BILDIRIM-KAYDI.md) (madde 24).
 
 **Bilinçli CLDR farkı:** CLDR'nin varsayılan işaret gösterimi `-0,04`'ü bir hanede
 `"-%0"` yazar; çekirdek sıfıra hiçbir modda işaret koymaz ve `"%0"` yazar (CLDR
@@ -934,6 +935,20 @@ Kesme işareti (`'`) daima eklenir.
 - gen: `suffix(3,'number','gen') → "3'ün"` · `suffix(2,'number','gen') → "2'nin"` · `suffix(2026,'year','gen') → "2026'nın"`
 
 **kind örnekleri:** `suffix(150000,'money','loc') → "₺1.500'da"` · `suffix(2,'percent','dat') → "%2'ye"`.
+
+**Negatif ve ondalıklı sayılar (v3.0.0 — kırıcı düzeltme):** Ek, sayının **okunuşunun son
+kelimesine** göre seçilir (TDK: `7,65'lik`). Negatif sayı "eksi iki" okunur → son kelime
+"iki"; ondalıklı sayı "iki tam onda beş" okunur → son kelime kesir kısmının sayısı.
+Ondalık ayraç virgüldür; yüzde işaretinin konumu `money.percent` varsayılanıyla aynıdır.
+
+- `suffix(-2,'number','dat') → "-2'ye"` · `suffix(-4,'percent','loc') → "-%4'te"`
+- `suffix(2.5,'number','dat') → "2,5'e"` · `suffix(7.65,'number','loc') → "7,65'te"`
+- `suffix(2.5,'percent','dat') → "%2,5'e"` · `suffix(-4.3,'percent','loc') → "-%4,3'te"`
+
+> v2.x bu değerlerde yanlış ek ve İngilizce ondalık üretiyordu: `suffix(-2,'percent','dat')`
+> → `"%-2'e"`, `suffix(2.5,'percent','dat')` → `"%2.5'e"`. Sebep: okunuş `numberToWords` ile
+> üretiliyor ve o fonksiyon negatif/ondalıklı sayıda boş dönüyordu. Tam ve pozitif
+> sayıların çıktısı değişmedi.
 
 **İyelik (yalın):** `suffix(3,'number',{iyelik:'benim'}) → "3'üm"` · `suffix(2,'number',{iyelik:'onun'}) → "2'si"`
 · `suffix(40,'number',{iyelik:'bizim'}) → "40'ımız"` · `suffix(40,'number',{iyelik:'onların'}) → "40'ları"`.

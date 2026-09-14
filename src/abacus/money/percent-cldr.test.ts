@@ -30,9 +30,11 @@ import { percent } from './index';
  * mevcut sözleşmesi sıfıra hiçbir modda işaret koymamaktır (CLDR 'exceptZero' ile
  * aynı); bu korunur.
  *
- * GERİYE UYUMLULUK: varsayılanlar DEĞİŞMEZ (`signPosition: 'inner'`,
- * `fixed: false`). Varsayılanı değiştirmek tüketicinin gördüğü çıktıyı
- * değiştirir → MAJOR (AI-RULES §4.0).
+ * v3.0.0 — KIRICI: varsayılan `signPosition` artık `'leading'`'dir (`-%4,3`).
+ * v2.9.0'da seçenek olarak geldi; varsayılanın değişmesi tüketicinin gördüğü
+ * çıktıyı değiştirdiği için MAJOR sürüme bırakılmıştı (AI-RULES §4.0).
+ * Eski yazım `signPosition: 'inner'` ile hâlâ alınabilir. `fixed` varsayılanı
+ * değişmedi (`false`). Göç: MIGRATION-v3.md.
  */
 
 describe("money.percent — signPosition: 'leading' (CLDR tr-TR)", () => {
@@ -84,7 +86,8 @@ describe('money.percent — fixed: true (sabit ondalık hane)', () => {
   });
 
   it('negatif değer sabit haneyle', () => {
-    expect(percent(-4.3, 2, { fixed: true })).toBe('%-4,30');
+    expect(percent(-4.3, 2, { fixed: true })).toBe('-%4,30');
+    expect(percent(-4.3, 2, { fixed: true, signPosition: 'inner' })).toBe('%-4,30');
   });
 
   it('tablo hizası: aynı hane sayısı, aynı virgül konumu', () => {
@@ -108,17 +111,22 @@ describe('money.percent — iki seçenek birlikte (tam CLDR tr-TR)', () => {
   });
 });
 
-describe('money.percent — varsayılan DEĞİŞMEDİ (REGRESYON)', () => {
-  it('v2.8 davranışı aynen korunur', () => {
-    expect(percent(-4.3, 1)).toBe('%-4,3');
-    expect(percent(-4.3, 2)).toBe('%-4,3');
-    expect(percent(4.3, 1, { sign: 'always' })).toBe('%+4,3');
-    expect(percent(12.345, 1)).toBe('%12,3');
-    expect(percent(-0.04, 1)).toBe('%0');
+describe('money.percent — v3.0.0 varsayılanı: işaret en başta (KIRICI)', () => {
+  it("varsayılan artık 'leading' — CLDR tr-TR", () => {
+    expect(percent(-4.3, 1)).toBe('-%4,3');
+    expect(percent(-4.3, 2)).toBe('-%4,3');
+    expect(percent(4.3, 1, { sign: 'always' })).toBe('+%4,3');
   });
 
-  it("signPosition: 'inner' açıkça verilince de aynı", () => {
+  it('işaretsiz çıktılar değişmedi', () => {
+    expect(percent(12.345, 1)).toBe('%12,3');
+    expect(percent(-0.04, 1)).toBe('%0');
+    expect(percent(-4.3, 1, { sign: 'never' })).toBe('%4,3');
+  });
+
+  it("eski v2.x yazımı signPosition: 'inner' ile alınır", () => {
     expect(percent(-4.3, 1, { signPosition: 'inner' })).toBe('%-4,3');
+    expect(percent(4.3, 1, { sign: 'always', signPosition: 'inner' })).toBe('%+4,3');
   });
 
   it('geçersiz girdi her seçenekle tire döner', () => {

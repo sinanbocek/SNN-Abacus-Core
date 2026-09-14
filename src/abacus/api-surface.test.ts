@@ -4,7 +4,7 @@ import * as abacus from './index';
 /**
  * GENEL API YÜZEYİ KİLİDİ
  *
- * Tüketici projeler `#semver:^2.x` aralığıyla bağlandığı için MINOR sürümler
+ * Tüketici projeler `#semver:^X.Y.Z` aralığıyla bağlandığı için MINOR sürümler
  * onlara OTOMATİK iner. Bu, çekirdeğe yeni bir borç yükler: yanlışlıkla kırıcı
  * bir değişikliği minor olarak çıkarmak, tüketici projeleri sessizce bozar.
  *
@@ -23,7 +23,7 @@ import * as abacus from './index';
  * `docs-claims.test.ts` ve motor testleri korur.
  */
 
-/** v2.8.0 itibarıyla dışa açık yüzey. Motor -> dışa açılan adlar. */
+/** v3.0.0 itibarıyla dışa açık yüzey. Motor -> dışa açılan adlar. */
 const API_SURFACE: Record<string, string[]> = {
   math: [
     'abs', 'add', 'ceil', 'div', 'equals', 'floor', 'irr', 'log', 'log10',

@@ -9,10 +9,10 @@
 Projelerinize GitHub üzerinden doğrudan npm paketi olarak ekleyin:
 
 ```bash
-npm install github:sinanbocek/SNN-Abacus-Core#semver:^2.9.0
+npm install github:sinanbocek/SNN-Abacus-Core#semver:^3.0.0
 ```
 
-> **Sürüm politikası:** `#semver:^2.9.0` aralığı ile bağlanın. Yama ve ek özellik sürümleri (2.1.1, 2.2.0) **otomatik gelir**; kırıcı major sürüm (3.0.0) **gelmez** ve elle geçilir. `package-lock.json` tam commit'i sabitlediği için build'ler tekrarlanabilir kalır. Ayrıntı: [INSTALL.md §4](INSTALL.md).
+> **Sürüm politikası:** `#semver:^3.0.0` aralığı ile bağlanın. Yama ve ek özellik sürümleri (2.1.1, 2.2.0) **otomatik gelir**; kırıcı major sürüm (4.0.0) **gelmez** ve elle geçilir. `package-lock.json` tam commit'i sabitlediği için build'ler tekrarlanabilir kalır. Ayrıntı: [INSTALL.md §4](INSTALL.md).
 
 ```typescript
 import { money, math, tradingMath, date, gold, silver, unit, period, collate } from '@snn/abacus-core';
@@ -54,7 +54,8 @@ collate.sortBy(['zam', 'çam', 'dal']);    // ["çam", "dal", "zam"]
 > Gelmiş her talep ve verilen karar orada tutulur — **reddedilenler gerekçeleriyle birlikte.**
 > Aradığınız şey daha önce değerlendirilip uygun görülmemiş olabilir.
 >
-> **v1.1.0 kullanıyorsanız:** yükseltmeden önce [MIGRATION-v2.md](MIGRATION-v2.md) okuyun — v2.0.0 kırıcı değişiklikler içerir.
+> **v2.x kullanıyorsanız:** yükseltmeden önce [MIGRATION-v3.md](MIGRATION-v3.md) okuyun — v3.0.0 negatif yüzdelerin ve `text.suffix` çıktısının yazımını değiştirir.
+> **v1.1.0 kullanıyorsanız:** önce [MIGRATION-v2.md](MIGRATION-v2.md).
 
 ---
 
@@ -84,7 +85,7 @@ gerçekten çalıştırılır.
 
 ## 🧪 Kalite & Test Kapsamı
 
-- **897 Test:** %100 yeşil (`vitest`) — bunların 202'si `KILAVUZ.md` örneklerinin çalıştırılmasıdır.
+- **914 Test:** %100 yeşil (`vitest`) — bunların 204'ü `KILAVUZ.md` örneklerinin çalıştırılmasıdır.
 - **Ölçülen Kapsam:** statements %93,0 · branches %89,3 · functions %100 · lines %98,0 — CI'da eşiklerle korunur (`npm run test:coverage`).
 - **TypeScript Strict:** Sıfır `any`, tam tip emniyeti.
 - **Belge İddiaları Test Edilir:** README/INSTALL/SPEC/MOTOR-DETAYLARI içindeki her kod örneği `docs-claims.test.ts` ile doğrulanır; belge ile kod ayrışırsa CI kırılır.

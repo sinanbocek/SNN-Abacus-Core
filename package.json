@@ -1,6 +1,6 @@
 {
   "name": "@snn/abacus-core",
-  "version": "2.9.0",
+  "version": "3.0.0",
   "description": "ABACUS Engine — Finansal ve Kurumsal Hesaplama & Biçimlendirme Referans Çekirdeği (SSOT)",
   "type": "module",
   "sideEffects": false,
@@ -24,6 +24,7 @@
     "README.md",
     "INSTALL.md",
     "MIGRATION-v2.md",
+    "MIGRATION-v3.md",
     "ABACUS-SPEC.md",
     "AI-RULES.md",
     "SNN-ABACUS-CORE-MOTOR-DETAYLARI.md",

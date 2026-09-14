@@ -430,8 +430,8 @@ describe('BELGE İDDİALARI — v2.3.0', () => {
   });
 
   it('MOTOR-DETAYLARI: money.percent showPositiveSign', () => {
-    expect(money.percent(12.345, 1, { showPositiveSign: true })).toBe('%+12,3');
-    expect(money.percent(-12.345, 1, { showPositiveSign: true })).toBe('%-12,3');
+    expect(money.percent(12.345, 1, { showPositiveSign: true })).toBe('+%12,3');
+    expect(money.percent(-12.345, 1, { showPositiveSign: true })).toBe('-%12,3');
     expect(money.percent(0, 1, { showPositiveSign: true })).toBe('%0');
     expect(money.percent(12.345)).toBe('%12,3');
   });
@@ -492,9 +492,9 @@ describe('BELGE İDDİALARI — v2.5.0 (tüketici raporu karşılığı)', () =>
   });
 
   it('INSTALL.md §3: yüzde işaret modu', () => {
-    expect(money.percent(-3.2, 1)).toBe('%-3,2');
+    expect(money.percent(-3.2, 1)).toBe('-%3,2');
     expect(money.percent(-3.2, 1, { sign: 'never' })).toBe('%3,2');
-    expect(money.percent(3.2, 1, { sign: 'always' })).toBe('%+3,2');
+    expect(money.percent(3.2, 1, { sign: 'always' })).toBe('+%3,2');
   });
 
   it('MOTOR-DETAYLARI: date kabul edilen girdi biçimleri tablosu', () => {
@@ -509,10 +509,10 @@ describe('BELGE İDDİALARI — v2.5.0 (tüketici raporu karşılığı)', () =>
   });
 
   it('MOTOR-DETAYLARI: money.percent işaret modu tablosu', () => {
-    expect(money.percent(-3.2, 1, { sign: 'auto' })).toBe('%-3,2');
+    expect(money.percent(-3.2, 1, { sign: 'auto' })).toBe('-%3,2');
     expect(money.percent(3.2, 1, { sign: 'auto' })).toBe('%3,2');
     expect(money.percent(0, 1, { sign: 'auto' })).toBe('%0');
-    expect(money.percent(-3.2, 1, { sign: 'always' })).toBe('%-3,2');
+    expect(money.percent(-3.2, 1, { sign: 'always' })).toBe('-%3,2');
     expect(money.percent(0, 1, { sign: 'always' })).toBe('%0');
     expect(money.percent(3.2, 1, { sign: 'never' })).toBe('%3,2');
     expect(money.percent(0, 1, { sign: 'never' })).toBe('%0');
@@ -656,10 +656,11 @@ describe('BELGE İDDİALARI — v2.8.0 (text.plate)', () => {
 
 describe('BELGE İDDİALARI — v2.9.0 (money.percent işaret konumu ve sabit ondalık)', () => {
   it('MOTOR-DETAYLARI: signPosition tablosu ve fixed örnekleri', () => {
-    expect(money.percent(-4.3, 1)).toBe('%-4,3');
-    expect(money.percent(-4.3, 1, { signPosition: 'leading' })).toBe('-%4,3');
-    expect(money.percent(4.3, 1, { sign: 'always' })).toBe('%+4,3');
-    expect(money.percent(4.3, 1, { sign: 'always', signPosition: 'leading' })).toBe('+%4,3');
+    // v3.0.0: varsayılan 'leading'; v2.x yazımı 'inner' ile.
+    expect(money.percent(-4.3, 1)).toBe('-%4,3');
+    expect(money.percent(-4.3, 1, { signPosition: 'inner' })).toBe('%-4,3');
+    expect(money.percent(4.3, 1, { sign: 'always' })).toBe('+%4,3');
+    expect(money.percent(4.3, 1, { sign: 'always', signPosition: 'inner' })).toBe('%+4,3');
     expect(money.percent(4.3, 2, { fixed: true })).toBe('%4,30');
     expect(money.percent(5, 2, { fixed: true })).toBe('%5,00');
     expect(money.percent(-4.3, 2, { signPosition: 'leading', fixed: true })).toBe('-%4,30');
@@ -671,7 +672,44 @@ describe('BELGE İDDİALARI — v2.9.0 (money.percent işaret konumu ve sabit on
     expect(money.percent(1234.5, 1)).toBe('%1234,5');
   });
 
-  it('INSTALL: v2.9.0 örneği', () => {
-    expect(money.percent(-4.3, 2, { signPosition: 'leading', fixed: true })).toBe('-%4,30');
+  it('INSTALL: yüzde örnekleri (v3.0.0 varsayılanı)', () => {
+    expect(money.percent(-3.2, 1)).toBe('-%3,2');
+    expect(money.percent(-3.2, 1, { sign: 'never' })).toBe('%3,2');
+    expect(money.percent(3.2, 1, { sign: 'always' })).toBe('+%3,2');
+    expect(money.percent(-4.3, 2, { fixed: true })).toBe('-%4,30');
+  });
+});
+
+describe('BELGE İDDİALARI — v3.0.0 (text.suffix negatif ve ondalıklı sayılar)', () => {
+  it('MOTOR-DETAYLARI: suffix örnekleri', () => {
+    expect(text.suffix(-2, 'number', 'dat')).toBe("-2'ye");
+    expect(text.suffix(-4, 'percent', 'loc')).toBe("-%4'te");
+    expect(text.suffix(2.5, 'number', 'dat')).toBe("2,5'e");
+    expect(text.suffix(7.65, 'number', 'loc')).toBe("7,65'te");
+    expect(text.suffix(2.5, 'percent', 'dat')).toBe("%2,5'e");
+    expect(text.suffix(-4.3, 'percent', 'loc')).toBe("-%4,3'te");
+    expect(text.suffix(2, 'percent', 'dat')).toBe("%2'ye");
+  });
+});
+
+describe('BELGE İDDİALARI — MIGRATION-v3.md', () => {
+  it('§1 money.percent v3.0.0 çıktıları', () => {
+    expect(money.percent(-4.3, 1)).toBe('-%4,3');
+    expect(money.percent(4.3, 1, { sign: 'always' })).toBe('+%4,3');
+    expect(money.percent(-4.3, 2, { fixed: true })).toBe('-%4,30');
+    expect(money.percent(-4.3, 1, { signPosition: 'inner' })).toBe('%-4,3');
+  });
+
+  it('§2 text.suffix v3.0.0 çıktıları', () => {
+    expect(text.suffix(-2, 'percent', 'dat')).toBe("-%2'ye");
+    expect(text.suffix(-2, 'number', 'dat')).toBe("-2'ye");
+    expect(text.suffix(2.5, 'percent', 'dat')).toBe("%2,5'e");
+    expect(text.suffix(7.65, 'number', 'loc')).toBe("7,65'te");
+  });
+
+  it('özet: değişmeyenler', () => {
+    expect(money.percent(4.3, 1)).toBe('%4,3');
+    expect(money.percent(-4.3, 1, { sign: 'never' })).toBe('%4,3');
+    expect(text.suffix(2, 'percent', 'dat')).toBe("%2'ye");
   });
 });

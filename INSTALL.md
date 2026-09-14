@@ -9,7 +9,7 @@ Bu rehber, **ABACUS Engine** (`@snn/abacus-core`) çekirdek motorunu herhangi bi
 Projelerinizin kök dizininde aşağıdaki komutu çalıştırarak `@snn/abacus-core` paketini doğrudan GitHub deposundan kurun:
 
 ```bash
-npm install github:sinanbocek/SNN-Abacus-Core#semver:^2.9.0
+npm install github:sinanbocek/SNN-Abacus-Core#semver:^3.0.0
 ```
 
 > 💡 **Bağımlılık Notu:** Paket, hassas matematiksel işlemler için gereken `decimal.js` bağımlılığını otomatik olarak indirip projenize bağlar. Ekstra bir `decimal.js` kurulumu gerekmez.
@@ -149,12 +149,12 @@ kaldırıldı); kurallar fiilî uygulamadan derlenmiştir ve rakam grubu gevşek
 ### Yüzde işareti — renkle anlatılan arayüzler
 
 ```typescript
-console.log(money.percent(-3.2, 1));                      // %-3,2
+console.log(money.percent(-3.2, 1));                      // -%3,2
 console.log(money.percent(-3.2, 1, { sign: 'never' }));   // %3,2   ← yön renkle anlatılır
-console.log(money.percent(3.2, 1, { sign: 'always' }));   // %+3,2
+console.log(money.percent(3.2, 1, { sign: 'always' }));   // +%3,2
 
-// v2.9.0 — tablolarda okunur negatif ve hizalı ondalık:
-console.log(money.percent(-4.3, 2, { signPosition: 'leading', fixed: true }));  // -%4,30
+// Tablolarda hizalı ondalık:
+console.log(money.percent(-4.3, 2, { fixed: true }));     // -%4,30
 ```
 
 ---
@@ -168,13 +168,13 @@ bu, güvenli güncellemelerin otomatik gelmesini, kırıcı olanların gelmemesi
 |---|---|---|
 | **Yama** (patch) | 2.1.0 → 2.1.1 | **otomatik gelir** |
 | **Ek özellik** (minor) | 2.1.0 → 2.2.0 | **otomatik gelir** |
-| **Kırıcı** (major) | 2.x → 3.0.0 | **GELMEZ** — `package.json` elle değiştirilir |
+| **Kırıcı** (major) | 3.x → 4.0.0 | **GELMEZ** — `package.json` elle değiştirilir |
 
 ### Bağlanma biçimleri
 
 ```jsonc
 // ÖNERİLEN — minor ve yamalar otomatik, major asla
-"@snn/abacus-core": "github:sinanbocek/SNN-Abacus-Core#semver:^2.9.0"
+"@snn/abacus-core": "github:sinanbocek/SNN-Abacus-Core#semver:^3.0.0"
 
 // Yalnız yama otomatik (daha muhafazakâr)
 "@snn/abacus-core": "github:sinanbocek/SNN-Abacus-Core#semver:~2.1.0"
@@ -202,7 +202,7 @@ yeşilse birleştirilir. Otomatik ama körü körüne değil.
 
 Otomatik gelmez ve gelmemelidir. Geçiş için `MIGRATION-*.md` belgesi okunur,
 pin elle yükseltilir, projenin testleri çalıştırılır.
-v1.1.0 → v2.0.0 için: [MIGRATION-v2.md](MIGRATION-v2.md).
+v2.x → v3.0.0 için: [MIGRATION-v3.md](MIGRATION-v3.md) · v1.1.0 → v2.0.0 için: [MIGRATION-v2.md](MIGRATION-v2.md).
 
 ---
 

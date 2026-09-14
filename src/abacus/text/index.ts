@@ -1,4 +1,4 @@
-import { div, floor, mod } from '../math';
+import { abs, div, floor, mod } from '../math';
 import { formatMoney } from '../internal/money-format';
 import { IL_SAYISI } from '../internal/constants';
 import { isEmailShaped } from '../internal/patterns';
@@ -668,16 +668,28 @@ export function suffix(value: number, kind: SuffixKind, arg: SuffixArg): string 
     formattedValue = formatMoney(value);
     lastWord = 'lira';
   } else {
+    // Ek, sayının OKUNUŞUNUN son kelimesine göre seçilir (TDK: `7,65'lik`).
+    // Negatif sayı "eksi iki" okunur → son kelime "iki". Ondalıklı sayı
+    // "iki tam onda beş" okunur → son kelime kesir kısmının sayısı ("beş").
+    // v2.x bunları numberToWords'e doğrudan veriyordu; o fonksiyon negatif ve
+    // ondalıklı sayıda boş döndüğü için ek rastgele düşüyordu.
+    const isaret = value < 0 ? '-' : '';
+    // `= ''` yalnız noUncheckedIndexedAccess içindir: split en az bir eleman döner.
+    const [tamKisim = '', kesirKisim] = String(abs(value)).split('.');
+    const yazi = kesirKisim === undefined ? tamKisim : `${tamKisim},${kesirKisim}`;
+    const okunanKisim = kesirKisim === undefined ? tamKisim : kesirKisim;
+
     switch (kind) {
       case 'year':
       case 'number':
-        formattedValue = `${value}`;
+        formattedValue = `${isaret}${yazi}`;
         break;
       case 'percent':
-        formattedValue = `%${value}`;
+        // Konum money.percent varsayılanıyla aynı (v3.0.0, CLDR tr-TR): -%4,3
+        formattedValue = `${isaret}%${yazi}`;
         break;
     }
-    const wordsText = numberToWords(value, { spaced: true });
+    const wordsText = numberToWords(Number(okunanKisim), { spaced: true });
     const words = wordsText.split(' ');
     lastWord = words[words.length - 1] ?? '';
   }

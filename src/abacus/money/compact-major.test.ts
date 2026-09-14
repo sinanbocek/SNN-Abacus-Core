@@ -35,28 +35,29 @@ describe('money.percent — işaret modu (rapor §2)', () => {
   });
 
   it("'always' artıyı yazar, sıfıra işaret koymaz", () => {
-    expect(percent(3.2, 1, { sign: 'always' })).toBe('%+3,2');
-    expect(percent(-3.2, 1, { sign: 'always' })).toBe('%-3,2');
+    // v3.0.0: işaret en başta (signPosition varsayılanı 'leading').
+    expect(percent(3.2, 1, { sign: 'always' })).toBe('+%3,2');
+    expect(percent(-3.2, 1, { sign: 'always' })).toBe('-%3,2');
     expect(percent(0, 1, { sign: 'always' })).toBe('%0');
   });
 
-  it("'auto' varsayılandır ve v2.4.0 davranışının aynısıdır", () => {
+  it("'auto' varsayılandır", () => {
     expect(percent(3.2, 1, { sign: 'auto' })).toBe(percent(3.2, 1));
     expect(percent(-3.2, 1, { sign: 'auto' })).toBe(percent(-3.2, 1));
-    expect(percent(-3.2, 1)).toBe('%-3,2');
+    expect(percent(-3.2, 1)).toBe('-%3,2');
     expect(percent(3.2, 1)).toBe('%3,2');
   });
 
   it('showPositiveSign geriye dönük çalışır (REGRESYON)', () => {
-    expect(percent(12.3, 1, { showPositiveSign: true })).toBe('%+12,3');
-    expect(percent(-12.3, 1, { showPositiveSign: true })).toBe('%-12,3');
+    expect(percent(12.3, 1, { showPositiveSign: true })).toBe('+%12,3');
+    expect(percent(-12.3, 1, { showPositiveSign: true })).toBe('-%12,3');
     expect(percent(0, 1, { showPositiveSign: true })).toBe('%0');
   });
 
   it('sign verilirse showPositiveSign YOK SAYILIR', () => {
     expect(percent(3.2, 1, { showPositiveSign: true, sign: 'never' })).toBe('%3,2');
     expect(percent(3.2, 1, { showPositiveSign: true, sign: 'auto' })).toBe('%3,2');
-    expect(percent(3.2, 1, { showPositiveSign: false, sign: 'always' })).toBe('%+3,2');
+    expect(percent(3.2, 1, { showPositiveSign: false, sign: 'always' })).toBe('+%3,2');
   });
 
   it('geçersiz girdi her modda tire döner', () => {

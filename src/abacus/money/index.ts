@@ -166,8 +166,8 @@ export const parse = parseMoney;
 /**
  * `percent` işaret modu (v2.5.0).
  *
- * - `'auto'`   — varsayılan: eksi görünür, artı görünmez ("%-3,2" · "%3,2").
- * - `'always'` — artı da yazılır ("%+3,2"); `showPositiveSign: true` karşılığı.
+ * - `'auto'`   — varsayılan: eksi görünür, artı görünmez ("-%3,2" · "%3,2").
+ * - `'always'` — artı da yazılır ("+%3,2"); `showPositiveSign: true` karşılığı.
  * - `'never'`  — hiç işaret yazılmaz ("%3,2"); yönü RENKLE anlatan finansal
  *   arayüzler için. Tüketicinin `Math.abs(v)` yazmasını gereksiz kılar —
  *   o çağrı unutulduğunda eksi işareti kırmızı renkle üst üste binip çift
@@ -179,7 +179,7 @@ export type PercentSign = 'auto' | 'always' | 'never';
 
 export interface PercentOptions {
   /**
-   * Pozitif değerlerin önüne '+' koyar ("%+12,3"). Değişim/fark gösteren
+   * Pozitif değerlerin önüne '+' koyar ("+%12,3"). Değişim/fark gösteren
    * tablolarda yönü görünür kılmak için kullanılır.
    * Sıfıra işaret eklenmez — sıfır ne artı ne eksidir.
    *
@@ -195,15 +195,12 @@ export interface PercentOptions {
   /**
    * İşaretin (`-` / `+`) yüzde simgesine göre konumu (v2.9.0).
    *
-   * - `'inner'` (varsayılan): `%-4,3` — TDK kuralının harfiyen uygulanması
-   *   (önce `%`, sonra işaretli sayı). v2.8 ve öncesinin davranışı.
-   * - `'leading'`: `-%4,3` — Unicode CLDR `tr-TR` biçimi; tarayıcıların ve
-   *   `Intl.NumberFormat`'ın Türkçe için ürettiği yazım (CLDR 48.0 ile ölçüldü).
-   *   Eksi en başta olduğu için tabloda yön ilk karakterden okunur.
-   *   `sign: 'always'` ile artı da öne gelir (`+%4,3`).
-   *
-   * Varsayılan bilinçli olarak `'inner'` kalır: değiştirmek tüketicinin gördüğü
-   * çıktıyı değiştirir ve MAJOR sürüm gerektirir (AI-RULES §4.0).
+   * - `'leading'` (**v3.0.0'dan itibaren varsayılan**): `-%4,3` — Unicode CLDR
+   *   `tr-TR` biçimi; tarayıcıların ve `Intl.NumberFormat`'ın Türkçe için
+   *   ürettiği yazım (CLDR 48.0 ile ölçüldü). Eksi en başta olduğu için tabloda
+   *   yön ilk karakterden okunur. `sign: 'always'` ile artı da öne gelir (`+%4,3`).
+   * - `'inner'`: `%-4,3` — TDK kuralının (önce `%`, sonra sayı) negatif sayıya
+   *   harfiyen uygulanması; v2.x'in varsayılanı. Eski çıktıyı korumak için.
    */
   signPosition?: PercentSignPosition;
   /**
@@ -225,10 +222,11 @@ export type PercentSignPosition = 'inner' | 'leading';
  *
  * @example
  * money.percent(3.2, 1)                                          // "%3,2"
- * money.percent(-3.2, 1)                                         // "%-3,2"
+ * money.percent(-3.2, 1)                                         // "-%3,2"
  * money.percent(-3.2, 1, { sign: 'never' })                      // "%3,2"
- * money.percent(3.2, 1, { sign: 'always' })                      // "%+3,2"
- * money.percent(-4.3, 2, { signPosition: 'leading', fixed: true }) // "-%4,30"
+ * money.percent(3.2, 1, { sign: 'always' })                      // "+%3,2"
+ * money.percent(-4.3, 2, { fixed: true })                        // "-%4,30"
+ * money.percent(-4.3, 1, { signPosition: 'inner' })              // "%-4,3" (v2.x)
  */
 export function percent(
   value: number | null | undefined,
@@ -262,7 +260,7 @@ export function percent(
   }
   sayi = sayi.replace('.', ',');
 
-  return opts?.signPosition === 'leading' ? `${isaret}%${sayi}` : `%${isaret}${sayi}`;
+  return opts?.signPosition === 'inner' ? `%${isaret}${sayi}` : `${isaret}%${sayi}`;
 }
 
 /**

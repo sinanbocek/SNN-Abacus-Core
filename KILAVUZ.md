@@ -314,9 +314,9 @@ money.compactMajor(1500000, { style: 'B/Mn/Mr' })     // → '₺1,5Mn'
 money.decimal(2.5)               // → '2,5'
 money.fmtDecimalGrouped(70000)   // → '70.000'
 money.ratio(8.712)               // → '8,71x'
-money.percent(-3.2, 1)                        // → '%-3,2'
+money.percent(-3.2, 1)                        // → '-%3,2'
 money.percent(-3.2, 1, { sign: 'never' })     // → '%3,2'
-money.percent(3.2, 1, { sign: 'always' })     // → '%+3,2'
+money.percent(3.2, 1, { sign: 'always' })     // → '+%3,2'
 ```
 
 Yönü **renkle** anlatan arayüzlerde `sign: 'never'` kullanın; eksi işareti kırmızı
@@ -325,16 +325,16 @@ renkle üst üste binmez.
 **Negatif yüzdeyi okunur yazmak ve tabloda hizalamak**
 
 ```js
-money.percent(-4.3, 2)                                          // → '%-4,3'
-money.percent(-4.3, 2, { signPosition: 'leading' })             // → '-%4,3'
+money.percent(-4.3, 2)                                          // → '-%4,3'
 money.percent(4.3, 2, { fixed: true })                          // → '%4,30'
-money.percent(-4.3, 2, { signPosition: 'leading', fixed: true }) // → '-%4,30'
+money.percent(-4.3, 2, { fixed: true })                         // → '-%4,30'
+money.percent(-4.3, 2, { signPosition: 'inner' })               // → '%-4,3'
 ```
 
 `%` Türkçede sayının **solunda** durur (TDK: `%25`); `4,3%` İngilizce yazımdır.
-Varsayılan `%-4,3` eksiyi iki sembolün arasına sıkıştırır. Tablolarda
-`signPosition: 'leading'` (tarayıcıların Türkçe biçimi) ve sütun hizası için
-`fixed: true` kullanın. Varsayılan geriye uyumluluk için değişmedi.
+Eksi ise en başa gelir (`-%4,3`) — tarayıcıların Türkçe biçimi, v3.0.0'dan beri
+varsayılan. Tablolarda sütun hizası için `fixed: true` kullanın. v2.x'in `%-4,3`
+yazımı gerekiyorsa `signPosition: 'inner'` verin.
 
 **Metinden okumak**
 
@@ -538,7 +538,12 @@ text.numberToWords(2026, { spaced: true })   // → 'İki Bin Yirmi Altı'
 text.suffix(2026, 'year', 'loc')      // → "2026'da"
 text.suffix(2, 'percent', 'dat')      // → "%2'ye"
 text.suffix(150000, 'money', 'loc')   // → "₺1.500'da"
+text.suffix(-2, 'percent', 'dat')     // → "-%2'ye"
+text.suffix(2.5, 'number', 'dat')     // → "2,5'e"
 ```
+
+Negatif ve ondalıklı sayılarda ek okunuşa göre seçilir: "eksi iki" → iki**ye**,
+"iki tam onda beş" → beş**e**.
 
 **Ses bilgisi yardımcıları** — kendi ek kuralınızı yazarken:
 
@@ -694,5 +699,5 @@ tradingMath.calculateThresholdDays(0, 35)       // → null
 | `text.upper` ile plaka büyütmek | `'34ABİ12'` — geçersiz | `text.plate` |
 | `text.searchKey` ile sıralamak | `ç` ile `c` karışır | `collate.sortBy` |
 | `x ?? 0` ile `null` gizlemek | "hesaplanamadı" 0 görünür | `null`'ı açıkça ele alın |
-| Negatif yüzdeyi `4,3%` gibi sağa yazmak | İngilizce yazım; Türkçede `%` soldadır | `money.percent(v, 2, { signPosition: 'leading' })` → `-%4,3` |
+| Negatif yüzdeyi `4,3%` gibi sağa yazmak | İngilizce yazım; Türkçede `%` soldadır | `money.percent(-4.3, 1)` → `-%4,3` |
 | Ham `0.1 + 0.2` | `0.30000000000000004` | `math.add(0.1, 0.2)` |

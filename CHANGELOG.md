@@ -4,6 +4,63 @@ Bu projedeki tüm önemli değişiklikler bu dosyada belgelenir.
 Format [Keep a Changelog](https://keepachangelog.com/tr/) temellidir;
 sürümleme [Semantic Versioning](https://semver.org/lang/tr/) kurallarına uyar.
 
+## [3.0.0] - 2026-09-14
+
+> ⚠️ **KIRICI SÜRÜM.** Hiçbir ad kaldırılmadı veya yeniden adlandırılmadı; kod derlenmeye
+> devam eder. Değişen, iki fonksiyonun **görünen çıktısıdır** ve değişiklik **sessizdir**.
+> Göç: [`MIGRATION-v3.md`](MIGRATION-v3.md).
+> Kararlar: [`GERI-BILDIRIM-KAYDI.md`](GERI-BILDIRIM-KAYDI.md) (madde 24, 26).
+
+### Değişenler — KIRICI
+
+- **`money.percent` — varsayılan işaret konumu artık `'leading'`.**
+
+  ```
+  percent(-4.3, 1)                     v2.x "%-4,3"  → "-%4,3"
+  percent(4.3, 1, { sign: 'always' })  v2.x "%+4,3"  → "+%4,3"
+  ```
+
+  Yüzde işareti TDK gereği sayıdan önce yazılır (`%25`) ama TDK negatif için hüküm
+  koymaz; v2.x eksiyi iki sembolün arasına sıkıştırıyordu. Unicode CLDR `tr-TR`
+  (tarayıcılar, `Intl.NumberFormat`) `-%4,3` yazar. v2.9.0'da seçenek olarak geldi;
+  varsayılan değişikliği AI-RULES §4.0 gereği bu MAJOR sürüme bırakılmıştı.
+  Eski yazım: `signPosition: 'inner'`. Pozitif ve işaretsiz çıktılar değişmedi.
+
+- **`text.suffix` — negatif ve ondalıklı sayılarda doğru ek, virgüllü ondalık.**
+
+  ```
+  suffix(-2, 'percent', 'dat')   v2.x "%-2'e"   → "-%2'ye"
+  suffix(-2, 'number', 'dat')    v2.x "-2'e"    → "-2'ye"
+  suffix(2.5, 'percent', 'dat')  v2.x "%2.5'e"  → "%2,5'e"
+  ```
+
+  Ek, sayının okunuşunun son kelimesine göre seçilir (TDK: `7,65'lik`). v2.x okunuşu
+  `numberToWords` ile üretiyordu; o fonksiyon negatif ve ondalıklı sayıda boş döndüğü için
+  **ek rastgele düşüyordu**. Artık negatif sayı "eksi iki", ondalıklı sayı "iki tam onda
+  beş" gibi okunur. Yüzde işaretinin konumu `money.percent` varsayılanıyla aynıdır.
+  Bu hata 3.0.0 hazırlanırken ölçüldü; mevcut hiçbir test negatif veya ondalıklı `suffix`
+  değerine bakmıyordu. Eski (hatalı) davranışı geri getiren bir seçenek yoktur.
+  Tam ve pozitif sayıların çıktısı değişmedi.
+
+### Belgeler
+
+- **Yeni: [`MIGRATION-v3.md`](MIGRATION-v3.md)** — iki değişikliğin gerekçesi, tarama
+  komutu, kontrol listesi. Örnekleri `docs-claims.test.ts` ile çivilidir.
+- Motor belgesi, kılavuz, INSTALL ve README yeni varsayılana göre güncellendi; sürüm
+  aralıkları `^3.0.0`.
+
+### Test
+
+- Yeni dosya: `text/suffix-sayi.test.ts`. Beklenen ekler TDK kurallarından (kesme
+  işareti ve sayıların yazılışı) türetildi.
+- Eski varsayılana dayanan 14 test beklentisi bilinçli olarak güncellendi; beklenmedik
+  bir kırılma olmadı. Liste göç belgesinin içeriğini oluşturdu.
+- Mutasyon doğrulaması: yeni kodun 8 korumasının 7'si kırmızı verdi; kalan varsayılan
+  değer (`tamKisim = ''`) yalnız TypeScript'in katı dizi erişimi için var, çalışma
+  zamanında kullanılmıyor — yorumla belgelendi.
+
+---
+
 ## [2.9.0] - 2026-09-14
 
 > Tümü eklemelidir; hiçbir mevcut davranış değişmemiştir.

@@ -63,8 +63,9 @@ elenenler neden elendi) değerlendirme maliyetini ciddi biçimde düşürüyor.
 | 19 | Q, W, X harfleri reddedilsin | Talep #4 | ✅ Kabul (sahip kararı) | 2.8.0 |
 | 22 | Büyük `İ` de `I`'ya çevrilsin (Caps Lock) | Tasarım sırasında | ✅ Kabul (sahip kararı) | 2.8.0 |
 | 23 | Negatif yüzde okunur yazılsın (`-%4,3`) ve sabit ondalık (`%4,30`) | Sahip | ✅ Kabul — **seçenek olarak** | 2.9.0 |
-| 24 | `money.percent` varsayılanı `-%4,3` olsun | Sahip | ⏳ **Ertelendi — sonraki MAJOR** | — |
+| 24 | `money.percent` varsayılanı `-%4,3` olsun | Sahip | ✅ Kabul — **kırıcı** | 3.0.0 |
 | 25 | Yüzde işareti sağa yazılsın (`-4,30%`) | Sahip | ❌ **Red** | — |
+| 26 | `text.suffix` negatif/ondalıklı sayıda doğru ek ve virgül | 3.0.0 hazırlığı (ölçüm) | ✅ Kabul — **kırıcı düzeltme** | 3.0.0 |
 | 20 | Plaka türü sınıflandırması (resmî/diplomatik/yabancı/geçici) | Tasarım sırasında | ❌ **Red** | — |
 | 21 | Başta `TR` önekine tolerans | Tasarım sırasında | ❌ **Red** (sahip kararı) | — |
 
@@ -208,9 +209,11 @@ küçük harf, tek haneli il kodu.
 **Yeniden başvuru koşulu:** Sahada `TR` önekli girdilerin gerçekten geldiğini gösteren
 ölçüm (ör. plaka tanıma sistemi çıktısı).
 
-### 24 · `money.percent` varsayılanı `-%4,3` olsun — ERTELENDİ
+### 24 · `money.percent` varsayılanı `-%4,3` olsun — 3.0.0'DA YAPILDI
 
-**Karar: ertelendi — sonraki MAJOR sürümde yapılacak.**
+**Karar: v2.9.0'da ertelendi, sahip kararıyla 3.0.0'da yapıldı.** Göç: [`MIGRATION-v3.md`](MIGRATION-v3.md).
+
+Aşağıdaki gerekçe erteleme kararının kaydıdır:
 
 Doğru yazım `-%4,3` (Unicode CLDR `tr-TR`). Ama varsayılanı değiştirmek tüketicinin
 gördüğü çıktıyı değiştirir: `^2.x` ile bağlı herkese otomatik iner ve örneğin çıktıda
@@ -230,6 +233,17 @@ kaynaklanıyordu; bu, `signPosition: 'leading'` ile çözüldü (madde 23).
 **Yeniden başvuru koşulu:** TDK kuralının değişmesi veya çekirdeğin Türkçe dışında bir
 okuyucu dilini desteklemeye başlaması (bkz. `internal/currency-registry` — ayraçlar ve
 simge konumu okuyucunun diline bağlıdır ve şu an kapsam dışıdır).
+
+### 26 · `text.suffix` negatif ve ondalıklı sayılar — 3.0.0'A DAHİL EDİLDİ
+
+**Karar: kabul — kırıcı düzeltme, sahip kararıyla 3.0.0'a dahil edildi.**
+
+3.0.0 hazırlanırken ölçüldü: `text.suffix` yüzde işaretini kendisi yazıyordu ve negatif
+ile ondalıklı sayılarda **yanlış ek** üretiyordu (`%-2'e`, `%2.5'e`). Sebep, okunuşun
+`numberToWords` ile üretilmesi ve o fonksiyonun bu sayılarda boş dönmesiydi. Yalnız
+`money.percent` değişseydi iki motor aynı sayıyı farklı yazacaktı; `suffix`'i sonra
+düzeltmek ise yine kırıcı olup 4.0.0 gerektirecekti. Kırıcı değişiklikler tek MAJOR'da
+toplandı.
 
 ---
 
