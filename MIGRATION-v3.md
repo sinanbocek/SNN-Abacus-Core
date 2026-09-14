@@ -49,8 +49,11 @@ money.percent(-4.3, 2, { fixed: true })     // v2.9 "%-4,30"  → v3.0.0 "-%4,30
 kırılacak:
 
 ```bash
-grep -rn "%-[0-9]\|%+[0-9]" src/ test/
+grep -rnE "['\"\`]%[-+][0-9]" src/ test/
 ```
+
+Desen yalnız tırnak içindeki yüzde metnini arar. Tırnak şartı bilinçlidir: Tailwind
+sınıflarındaki `calc(100%+8px)` gibi ifadeler yanlış alarm vermez.
 
 **b) Metin ayrıştıran kodu tarayın.** Çıktının `%-` ile başladığını varsayan kod
 (ör. `etiket.startsWith('%-')` ile renk seçmek) sessizce yanlış çalışır. Yönü metinden
