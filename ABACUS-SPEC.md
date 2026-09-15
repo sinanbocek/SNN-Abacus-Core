@@ -66,7 +66,7 @@ silver.gramSilverPrice(31, 34.20);        // 3405 (kuruş)
 | `math` | `add`, `sub`, `mul`, `div`\|null, `round` (half-up), `abs`, `floor`, `ceil`, `mod`\|null, `ratio`\|null, `percent`\|null, **`percentChange`\|null**, **`equals`**, `pow`\|null, `log`\|null (doğal), `log10`\|null, `max`\|null, `irr`\|null (dönemsel), **`allocate`**\|null (dizi; Σ = total) | decimal.js kapsülü; `allocate` BigInt |
 | `money` | `format`, `parse`\|null, `formatMajor`, `toMinor`\|null, `formatMinorInput`, `decimal`, `ratio`, `percent`, `parseNumber`\|null, `fmtDecimalGrouped`, `formatGroupedInput`, `toWords`, `compact`, `compactMajor`, `knownCurrencyCodes` | alt birim ↔ metin |
 | `currency` | `convert(minor, rate)`\|null, `cross(minor, from, to)`\|null | kur parametreyle gelir |
-| `date` | `format`, `parse`\|null, `monthName`, `daysBetween`\|null, `daysUntil`\|null, `relative`, `dayName`, `weekday`\|null, `isWeekend`\|null, **`isBefore`\|null**, **`isAfter`\|null**, **`isSameDay`\|null** | Intl'siz, TR, Europe/Istanbul; tarih SORGULAR |
+| `date` | `format`, `parse`\|null, `monthName`, `daysBetween`\|null, `daysUntil`\|null, `relative`, `relativeTime`, `dayName`, `weekday`\|null, `isWeekend`\|null, **`isBefore`\|null**, **`isAfter`\|null**, **`isSameDay`\|null** | Intl'siz, TR, Europe/Istanbul; tarih SORGULAR |
 | `text` | `toAsciiLower`, `toTrLower`, `lower`, `upper`, `title`, `join`, **`searchKey`**, `phone`, `plate`, `whatsapp`, `email`, `website`, `websiteUrl`, `name`, `company`, `numberToWords`, `lastVowel`, `isBackVowel`, `isRoundedVowel`, `endsWithHardConsonant`, `endsWithVowel`, `suffix` | TR harf güvenli |
 | `validate` | `vkn`, `tckn`, `ikn`, `iban`, `email` | resmî checksum, hepsi `boolean` |
 | `mask` | `money`, `vkn`, `iban`, `phone` | PII gizleme |

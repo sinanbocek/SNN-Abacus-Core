@@ -157,6 +157,7 @@ math.div(math.log(1000), math.log(10))     // → 2.9999999999999996
 | Tarihi ekrana yazmak | `date.format` |
 | İki tarih arası gün | `date.daysBetween` |
 | "Yarın", "3 gün önce" | `date.relative` |
+| "5 dk önce", "3 saat önce" | `date.relativeTime` |
 | Haftanın günü (ekran) | `date.dayName` |
 | Haftanın günü (karar) | `date.weekday` / `date.isWeekend` |
 | Bir tarihe gün/ay eklemek | `period.addDays` / `period.addMonths` |
@@ -476,6 +477,21 @@ date.relative('2026-08-16', '2026-08-15')           // → 'yarın'
 date.relative('2026-08-12', '2026-08-15')           // → '3 gün önce'
 date.relative('2026-08-22', '2026-08-15', 'natural')   // → 'haftaya Cumartesi'
 ```
+
+**Dakika/saat çözünürlüğü** — `relativeTime` epoch milisaniye alır; `now` yine parametredir.
+24 saatten sonra `relative`'e devreder (İstanbul günü), ay/yıl birimi yoktur.
+
+```js
+// Uygulamada: const now = Date.now();  — saati TÜKETİCİ okur
+// Aşağıda now = 1789466400000 (15 Eylül 2026, 13:00 İstanbul)
+date.relativeTime(1789466370000, 1789466400000)                     // → 'az önce'
+date.relativeTime(1789466100000, 1789466400000)                     // → '5 dakika önce'
+date.relativeTime(1789455600000, 1789466400000, { style: 'short' }) // → '3 sa önce'
+date.relativeTime(1789467600000, 1789466400000, { style: 'short' }) // → '20 dk sonra'
+```
+
+⚠️ `0` geçerli bir damgadır (1970). "Henüz çekilmedi" gibi bir durumu `null` ile
+ayırın; çekirdek `0`'a `'—'` demez.
 
 **Karşılaştırma** — gün düzeyinde; saat yok sayılır. Geçersiz tarihte `null`, `false` değil.
 

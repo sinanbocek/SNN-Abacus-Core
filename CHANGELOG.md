@@ -4,6 +4,41 @@ Bu projedeki tüm önemli değişiklikler bu dosyada belgelenir.
 Format [Keep a Changelog](https://keepachangelog.com/tr/) temellidir;
 sürümleme [Semantic Versioning](https://semver.org/lang/tr/) kurallarına uyar.
 
+## [3.2.0] - 2026-09-15
+
+> Eklemeli. Mevcut hiçbir ad veya davranış değişmedi.
+> Karar: [`GERI-BILDIRIM-KAYDI.md`](GERI-BILDIRIM-KAYDI.md) (madde 32, talep #6).
+
+### Eklenenler
+
+- **`date.relativeTime(fromMs, nowMs, { style })`** — dakika/saat çözünürlüklü göreli süre.
+
+  ```
+  relativeTime(now - 30_000, now)                       → 'az önce'
+  relativeTime(now - 5 * 60_000, now)                   → '5 dakika önce'
+  relativeTime(now - 3 * 3_600_000, now, { style: 'short' }) → '3 sa önce'
+  relativeTime(now - 72 * 3_600_000, now)               → '3 gün önce'   (date.relative'e devir)
+  ```
+
+  Üç tüketicide (trade-kasa, GHS-Panel, Gunum-Var) dört ayrı kopya vardı ve hepsi farklı
+  yazıyordu (`Az önce`/`az önce`, `sa`/`saat`, `dk`/`dakika`, `ay`/`yıl`); ikisi `Math.*` ve
+  `Intl` kullanıyordu. Yazım politikası sahip kararıyla belirlendi:
+  - `style: 'long'` (varsayılan: dakika/saat) · `'short'` (dk/sa). Harfler küçük.
+  - 24 saat ve üstünde **`date.relative`'e devreder** (İstanbul günü); ay/yıl birimi yok.
+  - Gelecek simetrik: `5 dk sonra`. Aşağı yuvarlar.
+  - Girdi epoch ms, güvenli tam sayı; aksi `'—'`. `0` ve negatif damga **geçerlidir**.
+  - ⚠️ Bilinçli sıçrama: 24 saat eşiğinde takvim gününe geçildiği için `23 saat önce`'den
+    sonra `dün` atlanıp `2 gün önce` gelebilir. Testle çivilendi.
+- Tip: `RelativeTimeStyle`.
+
+### Tüketicilere not
+
+- **trade-kasa** `rateAgeLabel` → `relativeTime(ts, now, { style: 'short' })`. Fark: saat
+  `3 sa önce` yazılır (bugün `3 saat önce`). `null`/`0` → `'—'` kontrolü tüketicide kalır.
+- **GHS-Panel** `formatRelativeTime` → `short`. `Az önce` küçük harfe iner; 7 gün sonrası
+  tarih gösterimi isteniyorsa `date.format` ile tüketicide yapılır.
+- **Gunum-Var** `timeAgo` → `long`. `ay`/`yıl` birimleri kaybolur (`92 gün önce`).
+
 ## [3.1.0] - 2026-09-14
 
 > Eklemeli. Mevcut hiçbir ad veya davranış değişmedi.
