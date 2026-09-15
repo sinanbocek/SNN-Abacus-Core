@@ -6,13 +6,13 @@ Kapanan kayıtlar: `docs/teknik-borc-arsiv.md`
 > **Teknik borç nedir?** Bir işi hızlı bitirmek için kestirme yol kullanmak, sonradan
 > ödenecek bir borç almak gibidir. Borç ödenmedikçe faizi (bakım zorluğu, hata riski) büyür.
 
-> **Standart:** `~/.claude/standartlar/teknik-borc-standardi.md` · **Oluşturulma:** 2026-09-15 · **Açık:** 9 (P1: 0 · P2: 5 · P3: 4)
+> **Standart:** `~/.claude/standartlar/teknik-borc-standardi.md` · **Oluşturulma:** 2026-09-15 · **Açık:** 10 (P1: 0 · P2: 6 · P3: 4)
 
 > **2026-09-15:** Kütük ilk kez oluşturuldu. Kayıtlar keşif turunda bulundu (dokümanlar, oturum günlüğü, kod, test/lint çıktıları); kritik iddialar bağımsız olarak yeniden ölçüldü. Ölçülemeyenler kayıt içinde "ölçülmedi/hipotez" diye belirtilmiştir.
 
 ## İçindekiler
 
-- **🟡 P2 — Planlı:** TB-001, TB-002, TB-003, TB-004, TB-005
+- **🟡 P2 — Planlı:** TB-001, TB-002, TB-003, TB-004, TB-005, TB-010
 - **🟢 P3 — Fırsatta:** TB-006, TB-007, TB-008, TB-009
 
 ## Öncelikler
@@ -125,6 +125,24 @@ Kapanan kayıtlar: `docs/teknik-borc-arsiv.md`
 - **Etki:** Kuralı kullanan tüm tüketici projeler (ör. Portföy'deki `|| 1` kur yedeği borcu).
 - **Çözüm yönü:** Önce `eslint/index.js` kuralını oku; sonra `?? <sayı>` / `|| <sayı>` için seçici kural ve `eslint-config.test.ts` testi ekle.
 - **Neden Şimdi Çözülmüyor:** Keşif sırasında bulundu, planlanmadı.
+
+---
+
+### TB-010 — `money.parseNumber` Türkçe olmayan yazımları hata vermeden yanlış sayıya çeviriyor
+- **Tespit Tarihi:** 2026-09-15 (keşif turu: salt okunur inceleme + bağımsız ölçüm)
+- **Öncelik:** P2 (Planlı)
+
+#### 🟢 Sade Anlatım
+- **Sorun ne?** Metni sayıya çeviren fonksiyon yalnızca Türkçe yazımı ("1.234,56") doğru okuyor. "1234.56" gibi farklı bir yazım gelince "okuyamadım" demek yerine sessizce yüz kat büyük bir sayı üretiyor; parantezli eksi tutarı da artı okuyor.
+- **Benzetme:** Yabancı dilde yazılmış bir çeki okuyamayan veznedarın "anlamadım" demek yerine rakamları kafasına göre birleştirip ödeme yapması.
+- **Çözülmezse ne olur?** Excel'den ya da başka bir kaynaktan gelen farklı biçimli bir sayı, kullanan projede hesaplara yanlış tutar olarak girer ve hata fark edilmez.
+- **Senden beklenen karar:** Düzeltme `parseNumber`'ın davranışını değiştirir (bugün yanlış sayı dönen girdiler `null` döner) — kullanan projelerde kırıcı olabilir; ayrı katı bir `parseDecimal` mı eklensin, yoksa `parseNumber` mı düzeltilsin?
+
+#### 🔧 Teknik Detay
+- **Açıklama:** `src/abacus/money/index.ts:275-281`: JSDoc "Türkçe biçimli sayı metnini sayıya çevirir… Çözümlenemeyen girdide `null` döner (ABACUS-SPEC §2.1)". Kod `:277` `val.replace(/\./g, '').replace(',', '.').replace(/[^0-9.\-]/g, '')` → tüm noktaları ve rakam dışı karakterleri siliyor. **Ölçüm (2026-09-15, v3.1.0, tsx):** `"1234.56"` → `123456`, `"1e3"` → `13`, `"(1.210,50)"` → `1210.5` (işaret kayboluyor), `"1.234,56"` → `1234.56` (doğru), `"abc"` → `null`. Sözleşme (çözümlenemeyende `null`) ile davranış çelişiyor.
+- **Etki:** Tüketiciler: SNN-Ihale `src/infrastructure/excel/decimalCell.ts:25` (önüne kendi biçim kapısını koyarak korunuyor — o projenin kütüğünde TB-005); diğer tüketicilerdeki kullanım sayılmadı.
+- **Çözüm yönü:** (1) Tüketicilerde `parseNumber` çağrılarını say. (2) Yukarıdaki beş girdiyle kırmızı test yaz. (3) Katı biçim doğrulaması ekle (Türkçe dışı → `null`, parantezli eksi ya reddedilir ya işaretli okunur) veya hane sınırsız ayrı `parseDecimal` yayımla; `GERI-BILDIRIM-KAYDI.md` sürecine göre sürüm ve CHANGELOG.
+- **Neden Şimdi Çözülmüyor:** SNN-Ihale kütüğünden taşınan "çekirdek talep adayı" (2026-09-14); proje ayrımı gereği hatanın kendisi burada kayıtlı.
 
 ---
 
