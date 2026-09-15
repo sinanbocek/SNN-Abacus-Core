@@ -6,14 +6,14 @@ Kapanan kayıtlar: `docs/teknik-borc-arsiv.md`
 > **Teknik borç nedir?** Bir işi hızlı bitirmek için kestirme yol kullanmak, sonradan
 > ödenecek bir borç almak gibidir. Borç ödenmedikçe faizi (bakım zorluğu, hata riski) büyür.
 
-> **Standart:** `~/.claude/standartlar/teknik-borc-standardi.md` · **Oluşturulma:** 2026-09-15 · **Açık:** 10 (P1: 0 · P2: 6 · P3: 4)
+> **Standart:** `~/.claude/standartlar/teknik-borc-standardi.md` · **Oluşturulma:** 2026-09-15 · **Açık:** 11 (P1: 0 · P2: 6 · P3: 5)
 
 > **2026-09-15:** Kütük ilk kez oluşturuldu. Kayıtlar keşif turunda bulundu (dokümanlar, oturum günlüğü, kod, test/lint çıktıları); kritik iddialar bağımsız olarak yeniden ölçüldü. Ölçülemeyenler kayıt içinde "ölçülmedi/hipotez" diye belirtilmiştir.
 
 ## İçindekiler
 
 - **🟡 P2 — Planlı:** TB-001, TB-002, TB-003, TB-004, TB-005, TB-010
-- **🟢 P3 — Fırsatta:** TB-006, TB-007, TB-008, TB-009
+- **🟢 P3 — Fırsatta:** TB-006, TB-007, TB-008, TB-009, TB-011
 
 ## Öncelikler
 
@@ -217,5 +217,23 @@ Kapanan kayıtlar: `docs/teknik-borc-arsiv.md`
 - **Etki:** Yalnızca depo düzeni.
 - **Çözüm yönü:** `git rm commit_msg.txt` ve `.gitignore` kaydı.
 - **Neden Şimdi Çözülmüyor:** Keşif sırasında bulundu, planlanmadı.
+
+---
+
+### TB-011 — Ata (Cumhuriyet) altınının saflık ve ağırlığı çekirdekte yok
+- **Tespit Tarihi:** 2026-09-15 (keşif turu: salt okunur inceleme + bağımsız ölçüm)
+- **Öncelik:** P3 (Fırsatta)
+
+#### 🟢 Sade Anlatım
+- **Sorun ne?** Ortak hesap kütüphanesi altını yalnızca ayara göre (24, 22, 21, 18) ve çeyrek/yarım/tam ziynet olarak tanıyor. Ata altınının kendine özgü saflığı ve ağırlığı yok; bu yüzden Portföy projesi bu değerleri kendi içinde elle yazmak zorunda kalmış.
+- **Benzetme:** Resmî fiyat listesinde olmayan bir ürünü her dükkânın kendi defterinden satması.
+- **Çözülmezse ne olur?** Bugün Portföy'deki elle yazılmış değerler doğru; ama başka bir proje ata altını hesaplarsa farklı değer kullanabilir.
+- **Senden beklenen karar:** Yok.
+
+#### 🔧 Teknik Detay
+- **Açıklama:** `src/abacus/gold/index.ts:14-19` `PURITY` yalnız ayar anahtarlı (`24: 0.995, 22: 0.916, 21: 0.875, 18: 0.750`); `:21-25` `ZIYNET_GRAM` yalnız `quarter 1.754 / half 3.508 / full 7.016`. `src/abacus/gold*` içinde `0.917`, `917`, `ata`, `cumhuriyet`, `7.216` geçişi **0** (2026-09-15, v3.1.0). Tüketici: SNN-Portfoy-Yonetimi `src/config/goldTypes.ts:11, 39-40` 0,917 saflık ve 7,216 gr elle yazılı (o projenin kütüğünde TB-026).
+- **Etki:** Ata altını değerleyen tüketici projeler (bugün SNN-Portfoy-Yonetimi).
+- **Çözüm yönü:** Ata altınının resmî saflık (0,917) ve ağırlık (7,216 gr) değerlerini kaynağıyla doğrula; `gold` modülüne ayar dışı bir tür (ör. `ZIYNET_GRAM.ata` + ayrı saflık) olarak ekle; test + `api-surface.test.ts` + CHANGELOG; tüketiciye sürüm notu.
+- **Neden Şimdi Çözülmüyor:** SNN-Portfoy-Yonetimi tüketici raporu #3 §4 ile iletilmiş; proje ayrımı gereği eksikliğin kendisi burada kayıtlı (2026-09-15).
 
 ---
