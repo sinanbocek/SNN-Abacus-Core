@@ -73,6 +73,7 @@ elenenler neden elendi) değerlendirme maliyetini ciddi biçimde düşürüyor.
 | 29 | `math.npv` dışa açılsın (madde 8 yeniden başvurusu) | Talep #5 B | ❌ **Red** (ertelendi) | — |
 | 30 | `unit` motoruna `volume` kategorisi | Talep #5 C | ❌ **Red** (ertelendi) | — |
 | 31 | `allocate` eşitlikte büyük ağırlık öncelikli | Ek #1 §3 | ❌ **Red** — yerine tam aritmetik | — |
+| 32 | `date.relativeTime` — dakika/saat çözünürlüklü göreli süre | Talep #6 (trade-kasa TB-009 notu + tarama) | ✅ Kabul (yazım politikası sahip kararıyla) | 3.2.0 |
 
 ---
 
@@ -174,6 +175,76 @@ ağırlıkta oluşur, anahtar hiç devreye girmez ve hiçbir mutasyon onu sınay
 kod eklenmedi.
 
 **Yeniden başvuru koşulu:** Yok; tam aritmetik sözleşmeye girdi.
+
+### 32 · `date.relativeTime` — KABUL
+
+**Karar: kabul — yazım politikası sahip kararıyla belirlendi (2026-09-15); 3.2.0 MINOR.**
+
+**Nasıl geldi.** trade-kasa, Hero'daki kur yaşı etiketini application katmanına taşırken
+(`c830a4b`, TB-009) şu notu düştü: *"`date.relative` yalnız gün çözünürlüğündedir;
+dakika/saat desteği çekirdeğe eklenene kadar burada tutulur."* Resmî talep açılmadı;
+not üzerine çekirdek tarafı tüketicileri taradı.
+
+**Dört şart:**
+
+1. **Gerçek ekran.** trade-kasa Hero (kur yaşı), GHS-Panel ve Gunum-Var listeleri.
+2. **§4.1 sınavı.** Süreyi Türkçe metne çevirmek alan bilmez; kur, bildirim, yorum,
+   senkron zamanı — başka şirketin başka alanı aynen kullanır. **Geçer.**
+3. **Ölçüm.** 3 tüketicide 4 bağımsız kopya bulundu, hepsi farklı yazıyor:
+
+   | Yer | Yazım | Sapma |
+   |---|---|---|
+   | trade-kasa `application/settings/rateAge.ts` | `az önce` · `5 dk önce` · `3 saat önce` | saf, `now` parametre |
+   | GHS-Panel `src/utils/dateUtils.ts` | `Az önce` · `5 dk önce` · `3 sa önce` | 7 gün sonra `toLocaleDateString`; `Math.floor` |
+   | Gunum-Var `src/utils/dateUtils.ts` `timeAgo` | `5 dakika önce` · `ay` · `yıl` | `new Date()` içeride, test edilemez |
+   | Gunum-Var `src/utils/abacus/date.ts` | `Intl.RelativeTimeFormat` | geleceğe "az önce" der |
+
+   Aynı kullanıcı üç uygulamada aynı bilgiyi üç yazımla görüyor; iki kopya §4 kırmızı
+   çizgilerini (`Math.*`, `Intl`/`toLocale*`) ihlal ediyor.
+4. **Alternatif.** Tüketicide kalması madde 9'un tersine yol açıyor: ikinci ve üçüncü
+   tüketici **zaten** var ve **zaten** farklı politika seçmişler. Kalırsa ayrışma büyür.
+
+**Madde 9 itirazı ("yazım bir tercihtir") nasıl karşılandı.** Politika tek tüketiciye
+göre çivilenmedi; dört kopya yan yana konup sahip kararıyla belirlendi:
+
+| Karar | Seçilen | Elenen |
+|---|---|---|
+| Kısaltma | `style: 'long' \| 'short'`, varsayılan `'long'` | yalnız tam / yalnız kısa |
+| 1 dakikadan kısa | `az önce`, **küçük harf** (`date.relative` ile tutarlı; büyütme tüketicide `text.upper`) | `Az önce`, `şimdi` |
+| 24 saat ve üstü | **`date.relative`'e devredilir** (`dün`, `3 gün önce`) — iki fonksiyon asla çelişmez | `ay`/`yıl` birimleri (ay uzunluğu yeni tercih doğurur), N gün sonra tarihe dönüş (eşik tüketicinin işi) |
+| Gelecek | `5 dk sonra` / `3 saat sonra` (simetrik) | `az önce`ye kırpma (bozuk saati gizler), `'—'` (planlı olayı öldürür) |
+
+**Sözleşme (taslak):**
+
+```ts
+date.relativeTime(fromMs: number, nowMs: number, opts?: { style?: 'long' | 'short' }): string
+```
+
+| Fark | `long` | `short` |
+|---|---|---|
+| geçersiz girdi (NaN, Infinity, tam sayı değil) | `—` | `—` |
+| < 1 dk (iki yön) | `az önce` | `az önce` |
+| 1–59 dk | `5 dakika önce` / `sonra` | `5 dk önce` / `sonra` |
+| 1–23 sa | `3 saat önce` / `sonra` | `3 sa önce` / `sonra` |
+| ≥ 24 sa | `date.relative(İstanbul günü)` | aynı |
+
+Aşağı yuvarlama tam sayı aritmetiğiyle; `now` zorunlu (saf fonksiyon).
+
+**Bilinen ve kabul edilen sıçrama.** 24 saat eşiğinde takvim gününe geçildiği için
+`23 saat önce`'den sonra `dün` atlanıp `2 gün önce` görülebilir (ör. şimdi 01:00, kaynak iki
+gün önce 19:00 = 30 saat). Tutarlılık pürüzsüzlüğe tercih edildi.
+
+Geçersiz girdi yalnız güvenli tam sayı olmayan değerdir (NaN, Infinity, ondalıklı). `0` ve
+negatif damgalar **geçerlidir** (sahip kararı): çekirdek sıfıra "henüz yok" anlamı yüklemez;
+o ayrımı tüketici `null` ile yapar. İstanbul günü 0001–9999 yılları dışına düşerse `'—'`.
+
+**Tüketici etkisi.** trade-kasa: `short` ile karşılanır, **bir farkla** — bugün `5 dk önce`
+ile `3 saat önce`yi karışık yazıyor; `short` saatte `3 sa önce` der (ilk değerlendirmede
+"tam karşılanır" yazılmıştı, uygulama sırasında düzeltildi). Ayrıca `fetchedAt` `null`/`0`
+için `'—'` kontrolünü kendisi korumalı. GHS-Panel: `short`; 7 gün
+sonrası tarih isterse kendisi `date.format` ile yapar. Gunum-Var: `ay`/`yıl` kaybolur
+(`92 gün önce`) — **itiraz gelirse yeniden görüşülecek tek nokta budur.**
+
 ### 10 · KKDF/BSMV vergi mekaniği
 
 **Karar: red — sabit değil, `gold.PURITY` emsali tutmuyor.**
@@ -390,3 +461,4 @@ yazılmıştır.
 | #3 | 1 Eylül 2026 | SNN Fon ekranları (masaüstü + mobil), zincirin tamamı | 2.6.0 → 2.7.0 |
 | #4 | 13 Eylül 2026 | Sigorta tüketicisi: Türkiye plakası standardı (sözlü talep) | 2.7.0 → 2.8.0 |
 | #5 | 14 Eylül 2026 | SNN-Ihale-Maliyet: havuz dağıtımı + Ek #1 (fixture, tarama kodu) | 3.0.1 → 3.1.0 |
+| #6 | 15 Eylül 2026 | trade-kasa TB-009 notu + çekirdek taraması (trade-kasa, GHS-Panel, Gunum-Var): dakika/saat göreli süre | 3.1.0 → 3.2.0 |

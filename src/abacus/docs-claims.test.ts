@@ -471,6 +471,16 @@ describe('BELGE İDDİALARI — v2.4.0', () => {
     expect(date.relative('2026-08-12', bugun, 'natural')).toBe('3 gün önce');
     expect(date.relative('2026-08-18', bugun)).toBe('3 gün sonra');
   });
+
+  it('KILAVUZ + MOTOR-DETAYLARI: relativeTime', () => {
+    const now = Date.UTC(2026, 7, 15, 10, 0, 0);
+    expect(date.relativeTime(now - 30_000, now)).toBe('az önce');
+    expect(date.relativeTime(now - 5 * 60_000, now)).toBe('5 dakika önce');
+    expect(date.relativeTime(now - 3 * 3_600_000, now, { style: 'short' })).toBe('3 sa önce');
+    expect(date.relativeTime(now + 20 * 60_000, now, { style: 'short' })).toBe('20 dk sonra');
+    expect(date.relativeTime(now - 92 * 86_400_000, now)).toBe('92 gün önce');
+    expect(date.relativeTime(0, 60_000)).toBe('1 dakika önce');
+  });
 });
 
 describe('BELGE İDDİALARI — v2.5.0 (tüketici raporu karşılığı)', () => {

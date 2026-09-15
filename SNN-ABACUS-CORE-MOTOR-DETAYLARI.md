@@ -826,6 +826,21 @@ Türkçe bağıl zaman. **Bugün parametre** (saf/deterministik). Geçersizde `'
 gün öncesini hem iki hafta öncesini anlatabildiği için belirsizdir, çekirdek
 tahmin etmez (bilinçli kapsam sınırı).
 
+### `relativeTime(fromMs, nowMs, opts?: { style?: RelativeTimeStyle }): string` — v3.2.0
+Dakika/saat çözünürlüklü bağıl süre. Girdi **epoch ms** (güvenli tam sayı); `nowMs` zorunlu.
+Aşağı yuvarlar. Güvenli tam sayı olmayan girdide `'—'`; `0` ve negatif damga geçerlidir.
+
+| Fark | `'long'` (varsayılan) | `'short'` |
+|---|---|---|
+| < 1 dk (iki yön) | `az önce` | `az önce` |
+| 1–59 dk | `5 dakika önce` / `sonra` | `5 dk önce` / `sonra` |
+| 1–23 sa | `3 saat önce` / `sonra` | `3 sa önce` / `sonra` |
+| ≥ 24 sa | `relative(İstanbul günü)`: `dün` · `3 gün önce` | aynı |
+
+⚠️ 24 saat eşiğinde takvim gününe geçildiği için `23 saat önce`'den sonra `dün` atlanıp
+`2 gün önce` gelebilir (şimdi 01:00, kaynak iki gün önce 19:00). Bilinçli: `relative` ile
+asla çelişmez. Ay/yıl birimi yoktur (`92 gün önce`). Karar: `GERI-BILDIRIM-KAYDI.md` madde 32.
+
 ### `dayName(iso: string, form: NameForm = 'short'): string`
 Türkçe gün adı, **İstanbul gününe göre**. Varsayılan kısa (Paz/Pzt/...),
 `form: 'long'` ile uzun (Pazar/Pazartesi/...). Geçersizde `'—'`.

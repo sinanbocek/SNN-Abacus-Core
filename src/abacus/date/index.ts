@@ -2,7 +2,7 @@
  * ABACUS `date` motoru — Türkçe tarih/saat BİÇİMLENDİRME ve gün SORGULAMA.
  *
  * Kapsamı: biçimlendirme (`format`), ayrıştırma (`parse`), ad üretimi
- * (`dayName`, `monthName`), bağıl zaman (`relative`), gün farkı
+ * (`dayName`, `monthName`), bağıl zaman (`relative`, `relativeTime`), gün farkı
  * (`daysBetween`, `daysUntil`), karşılaştırma (`isBefore`, `isAfter`,
  * `isSameDay`) ve hafta günü (`weekday`, `isWeekend`).
  *
@@ -19,7 +19,7 @@
  * Bağımlılık tek yönlüdür: `period` → `date`.
  */
 
-import { abs, div, round, sub } from '../math';
+import { abs, div, floor, round, sub } from '../math';
 import { toTrLower } from '../internal/tr-case';
 
 export type DateFormatStyle =
@@ -36,6 +36,9 @@ export type NameForm = 'short' | 'long';
 
 /** `relative` çıktı stili. Bkz. `relative`. */
 export type RelativeStyle = 'plain' | 'natural';
+
+/** `relativeTime` birim yazımı: `'long'` → dakika/saat · `'short'` → dk/sa. */
+export type RelativeTimeStyle = 'long' | 'short';
 
 const MONTH_NAMES_FULL = [
   'Ocak',
@@ -91,6 +94,8 @@ const ISTANBUL_OFFSET_MINUTES = 180;
 
 const MS_PER_DAY = 86400000;
 const MS_PER_MINUTE = 60000;
+const MINUTES_PER_HOUR = 60;
+const HOURS_PER_DAY = 24;
 
 interface DateParts {
   year: number;
@@ -341,6 +346,69 @@ export function relative(iso: string, today: string, style: RelativeStyle = 'pla
   }
 
   return `${diff} gün sonra`;
+}
+
+/**
+ * Zaman damgasını (epoch ms) İstanbul takvim gününe (`YYYY-MM-DD`) çevirir.
+ * Takvimin temsil edemediği değerde (Date aralığı dışı, 0001–9999 dışı) null.
+ */
+function istanbulDayOf(ms: number): string | null {
+  const shifted = new Date(ms + ISTANBUL_OFFSET_MINUTES * MS_PER_MINUTE);
+  const year = shifted.getUTCFullYear();
+  if (!Number.isInteger(year) || year < 1 || year > 9999) return null;
+  const yyyy = `${year}`.padStart(4, '0');
+  return `${yyyy}-${pad2(shifted.getUTCMonth() + 1)}-${pad2(shifted.getUTCDate())}`;
+}
+
+/**
+ * Şimdiye göre dakika/saat çözünürlüklü Türkçe göreli süre (kayıt madde 32).
+ *
+ * | Fark | `'long'` (varsayılan) | `'short'` |
+ * |---|---|---|
+ * | < 1 dk (iki yön) | az önce | az önce |
+ * | 1–59 dk | 5 dakika önce/sonra | 5 dk önce/sonra |
+ * | 1–23 sa | 3 saat önce/sonra | 3 sa önce/sonra |
+ * | ≥ 24 sa | `relative` (İstanbul günü): dün · 3 gün önce | aynı |
+ *
+ * Aşağı yuvarlar (5 dk 59 sn → 5 dk). Ay/yıl birimi YOKTUR.
+ *
+ * ⚠️ 24 saatten sonra takvim gününe geçildiği için `23 saat önce`'nin ardından
+ * `dün` atlanıp `2 gün önce` gelebilir. Bilinçli: iki fonksiyon asla çelişmez.
+ *
+ * `nowMs` zorunludur — saf motor saati kendisi okumaz. `0` ve negatif damga
+ * geçerlidir; "henüz yok" ayrımını tüketici `null` ile yapar.
+ * Güvenli tam sayı olmayan girdide '—'.
+ *
+ * @example relativeTime(now - 5 * 60_000, now)                     // '5 dakika önce'
+ * @example relativeTime(now - 3 * 3_600_000, now, { style: 'short' }) // '3 sa önce'
+ */
+export function relativeTime(
+  fromMs: number,
+  nowMs: number,
+  opts?: { style?: RelativeTimeStyle }
+): string {
+  if (!Number.isSafeInteger(fromMs) || !Number.isSafeInteger(nowMs)) return '—';
+
+  const kisa = opts?.style === 'short';
+  const farkMs = sub(fromMs, nowMs);
+  const yon = farkMs < 0 ? 'önce' : 'sonra';
+
+  const dakikaHam = div(abs(farkMs), MS_PER_MINUTE);
+  if (dakikaHam === null) return '—';
+  const dakika = floor(dakikaHam);
+
+  if (dakika < 1) return 'az önce';
+  if (dakika < MINUTES_PER_HOUR) return `${dakika} ${kisa ? 'dk' : 'dakika'} ${yon}`;
+
+  const saatHam = div(dakika, MINUTES_PER_HOUR);
+  if (saatHam === null) return '—';
+  const saat = floor(saatHam);
+  if (saat < HOURS_PER_DAY) return `${saat} ${kisa ? 'sa' : 'saat'} ${yon}`;
+
+  const kaynakGun = istanbulDayOf(fromMs);
+  const bugun = istanbulDayOf(nowMs);
+  if (kaynakGun === null || bugun === null) return '—';
+  return relative(kaynakGun, bugun);
 }
 
 /**
