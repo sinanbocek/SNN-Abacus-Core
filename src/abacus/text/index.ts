@@ -2,7 +2,13 @@ import { abs, div, floor, mod } from '../math';
 import { formatMoney } from '../internal/money-format';
 import { IL_SAYISI } from '../internal/constants';
 import { isEmailShaped } from '../internal/patterns';
-import { foldChar, toAsciiLower as leafAsciiLower, toTrLower as leafTrLower, toTrUpper } from '../internal/tr-case';
+import {
+  foldChar,
+  toAsciiLower as leafAsciiLower,
+  toAsciiUpper as leafAsciiUpper,
+  toTrLower as leafTrLower,
+  toTrUpper,
+} from '../internal/tr-case';
 
 export interface NumberToWordsOptions {
   spaced?: boolean;
@@ -97,6 +103,20 @@ const SINGLE_WORD_COMPANY_MAP: Record<string, string> = {
  * 'I' harfini Türkçe 'ı' yerine ASCII 'i' yapar.
  */
 export const toAsciiLower = leafAsciiLower;
+
+/**
+ * ASCII harf BÜYÜTME — `toAsciiLower` işinin ikizi. Yalnız a-z aralığını
+ * büyütür; Türkçe harflere dokunmaz.
+ *
+ * ⚠️ **Hangisini kullanmalıyım?** Türkçe METİN için `text.upper`
+ * (`irmak` -> `İRMAK`). ASCII KOD alanları için bu iş: şasi ve motor numarası,
+ * ürün kodu, barkod, IBAN öneki. `upper` bu alanlarda kodu BOZAR:
+ * `upper('irmaksasi')` -> `'İRMAKSASİ'`, oysa doğrusu `'IRMAKSASI'`.
+ *
+ * @example toAsciiUpper('irmaksasi')  // 'IRMAKSASI'
+ * @example toAsciiUpper('ağrı')       // 'AğRı' — Türkçe harf değişmez (bkz. upper)
+ */
+export const toAsciiUpper = leafAsciiUpper;
 
 
 /**
@@ -786,4 +806,34 @@ export function suffix(value: number, kind: SuffixKind, arg: SuffixArg): string 
   }
 
   return `${formattedValue}'${posSuffix}${caseSuffix}`;
+}
+
+/**
+ * GİRİŞ SÜZME — metinden yalnız rakamları bırakır, isteğe bağlı olarak keser.
+ *
+ * Kullanıcı kutuya yazarken CANLI süzme içindir: harf, boşluk ve simge kutuya
+ * hiç girmez; hata "kaydet" anına kalmaz. Aynı iki satırlık kural tüketici
+ * projelerde onlarca kez yeniden yazılıyordu (talep #7, kayıt madde 33).
+ *
+ * `maxLength` verilirse sonuç o uzunlukta kesilir. Geçersiz `maxLength`
+ * (negatif, ondalıklı, güvenli tam sayı sınırı dışı) '—' döndürür —
+ * sessizce yok sayılmaz (ABACUS-SPEC §0.5, madde 27 emsali). Burada
+ * `gecerliHane` KULLANILMAZ: o sınır (20) ondalık hane içindir, alan uzunluğu
+ * için değil — bir kod alanı 20 karakterden uzun olabilir.
+ *
+ * ⚠️ Yalnız RAKAM bırakır: eksi işareti, virgül ve nokta da silinir. Para
+ * kutusu için `money.formatGroupedInput` (canlı biçim) ve `money.parseNumber`
+ * (geri okuma) kullanılır.
+ *
+ * @example digits('2o0a7')        // '207'
+ * @example digits('20267', 4)     // '2026'
+ * @example digits('121212scca')   // '121212'
+ */
+export function digits(raw: string, maxLength?: number): string {
+  if (maxLength !== undefined && (!Number.isSafeInteger(maxLength) || maxLength < 0)) {
+    return '—';
+  }
+  if (!raw) return '';
+  const onlyDigits = raw.replace(/[^0-9]/g, '');
+  return maxLength === undefined ? onlyDigits : onlyDigits.slice(0, maxLength);
 }

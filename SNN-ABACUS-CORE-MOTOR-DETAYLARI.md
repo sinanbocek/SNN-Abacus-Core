@@ -886,6 +886,15 @@ Geçersizde `stored`/`display` boş, `valid: false`, `raw` korunur.
 **`toTrLower(str): string`** ve takma adı **`lower`** — Türkçe küçültme (İ→i, I→ı harita).
 Örnek: `lower('İSTANBUL') → "istanbul"` · `lower('IŞIK') → "ışık"`.
 **`upper(str): string`** — Türkçe büyütme (i→İ, ı→I). Örnek: `upper('iğne') → "İĞNE"` · `upper('ışık') → "IŞIK"`.
+
+**`toAsciiUpper(str): string`** — v3.3.0. ASCII büyütme (a-z), `toAsciiLower` ikizi. Türkçe harfe dokunmaz.
+⚠️ Şasi/motor numarası, ürün kodu, barkod gibi KOD alanlarında `upper` kodu bozar:
+`upper('irmaksasi') → "İRMAKSASİ"`, oysa doğrusu `toAsciiUpper('irmaksasi') → "IRMAKSASI"`.
+
+**`digits(raw, maxLength?): string`** — v3.3.0. Giriş kutusunda canlı süzme: yalnız rakam bırakır,
+`maxLength` verilirse keser. Örnek: `digits('2o0a7') → "207"` · `digits('20267', 4) → "2026"`.
+Eksi/virgül/nokta da silinir; para kutusu için `money.formatGroupedInput` + `money.parseNumber`.
+Geçersiz `maxLength` (negatif, ondalıklı, güvenli tam sayı dışı) → `'—'`. Karar: madde 33.
 **`title(str): string`** — Başlık biçimi + istisna sözlüğü. Bağlaçlar (ve/ile/veya...) küçük
 (ama ilk kelimeyse büyük), kısaltmalar (TYC/A.Ş.) korunur. Örnek: `title('ahmet yılmaz') → "Ahmet Yılmaz"`
 · `title('iSTANBUL') → "İstanbul"` · `title('abc san ve tic') → "Abc San ve Tic"` · `title('ve abc') → "Ve Abc"`

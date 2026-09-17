@@ -74,6 +74,12 @@ elenenler neden elendi) değerlendirme maliyetini ciddi biçimde düşürüyor.
 | 30 | `unit` motoruna `volume` kategorisi | Talep #5 C | ❌ **Red** (ertelendi) | — |
 | 31 | `allocate` eşitlikte büyük ağırlık öncelikli | Ek #1 §3 | ❌ **Red** — yerine tam aritmetik | — |
 | 32 | `date.relativeTime` — dakika/saat çözünürlüklü göreli süre | Talep #6 (trade-kasa TB-009 notu + tarama) | ✅ Kabul (yazım politikası sahip kararıyla) | 3.2.0 |
+| 33A | `text.toAsciiUpper` — `toAsciiLower` ikizi | Talep #7 A | ✅ Kabul | 3.3.0 |
+| 33B | `text.digits(raw, maxLength?)` — giriş süzme | Talep #7 B | ✅ Kabul (`input` motoru değil, `text`) | 3.3.0 |
+| 33C | `input.groupedAmount` | Talep #7 C | ❌ **Red** — `money.formatGroupedInput` zaten var | — |
+| 33D | `input.amountToNumber` | Talep #7 D | ❌ **Red** — `money.parseNumber` zaten var | — |
+| 33E | `input.code` (ASCII kod süzme) | Talep #7 E | ❌ **Red** (ertelendi) — tek ekran | — |
+| 33F | Ham `Intl`/`toLocaleString`/`toFixed`/`toUpperCase`/`toLowerCase` lint kuralı | Talep #7 F | ✅ Kabul — **hata**, kaçış kapısı açık | 3.3.0 |
 
 ---
 
@@ -244,6 +250,80 @@ ile `3 saat önce`yi karışık yazıyor; `short` saatte `3 sa önce` der (ilk d
 için `'—'` kontrolünü kendisi korumalı. GHS-Panel: `short`; 7 gün
 sonrası tarih isterse kendisi `date.format` ile yapar. Gunum-Var: `ay`/`yıl` kaybolur
 (`92 gün önce`) — **itiraz gelirse yeniden görüşülecek tek nokta budur.**
+
+### 33 · Giriş süzme katmanı — KABUL (A, B, F) · RED (C, D, E)
+
+**Karar: 3.3.0 MINOR. Talebin altı maddesinden üçü alındı, ikisi zaten vardı, biri ertelendi.**
+Belirsiz kalan tek nokta (lint sertliği) sahip tarafından çekirdeğe bırakıldı (2026-09-18).
+
+**Şart 1 (ekran) karşılandı, madde 9 itirazı düşüyor:** GHS-Panel araç formu (2026-09-17,
+finansal alana `121212scca` girilebiliyordu) ve SNN-İhale gün kutusu (2026-09-16, `3asa`).
+İki proje, iki ayrı gün, birbirinden habersiz iki ayrı çözüm.
+
+#### C ve D — RED: karşılıkları çekirdekte zaten var
+
+Talebin kendi örnekleri, mevcut fonksiyonlarla çalıştırıldı (2026-09-18, v3.2.0):
+
+```
+money.formatGroupedInput('121212scca') => "121.212"    (istenen groupedAmount ile aynı)
+money.formatGroupedInput('1250000')    => "1.250.000"
+money.formatGroupedInput('000')        => "0"
+money.formatGroupedInput('')           => ""
+money.parseNumber('1.250.000')         => 1250000      (istenen amountToNumber ile aynı)
+money.parseNumber('abc')               => null
+```
+
+Tek fark: `formatGroupedInput` virgülü de kabul eder (serbest ondalık kutu). Tam sayı kutusu
+isteyen tüketici ya sonucu `parseNumber` ile okuyup yeniden biçimler ya da virgülü kendi
+tarafında engeller. Yeni ad açmak aynı işin iki kapısı demekti.
+
+**Asıl teşhis eksik fonksiyon değil, BULUNAMAMA.** Talebin kendi kanıtı bunu gösteriyor:
+`SNN-Portfoy-Yonetimi/src/NewApp/components/FormattedInput.tsx` giriş kutusunu
+`Intl.NumberFormat` ile kuruyor. Çare madde 15 emsali: kılavuza yönlendirme (eklendi) +
+madde F'deki lint kuralı (Intl ve toLocaleString artık hata).
+
+#### A — KABUL: ölçülmüş boşluk
+
+`text.upper('irmaksasi')` -> `'İRMAKSASİ'` (doğrulandı). Şasi/motor numarası gibi ASCII kod
+alanlarında kodu bozar. `toAsciiLower` vardı, büyütme ikizi yoktu; tüketici ya yanlış harf
+üretmek ya da ham `toUpperCase` ile §4.3'ü çiğnemek zorundaydı. `toAsciiUpper` yalnız a-z
+aralığına dokunur — `toAsciiLower` ile aynı bilinçli sınır (Türkçe harf değişmez).
+
+#### B — KABUL, ama yeni motor DEĞİL
+
+`input` motoru açılmadı: B metin->metin işidir, `text`e girer; C ve D zaten `money`dedir.
+İmza `text.digits(raw, maxLength?)`. Geçersiz `maxLength` (negatif, ondalıklı, güvenli tam
+sayı dışı) `'—'` döner (madde 27 emsali). `gecerliHane` KULLANILMADI: oradaki 20 sınırı
+ondalık hane içindir, alan uzunluğu için değil.
+
+#### E — RED (ertelendi)
+
+§4.1 sınavını geçiyor ama tek ekrandan (GHS şasi alanı) geliyor — madde 30 emsali.
+A geldikten sonra tüketicide tek satırdır. **Yeniden başvuru koşulu:** ikinci bir tüketicide
+ASCII kod alanı. O geldiğinde imza `text.code(raw, maxLength)` olarak kabul edilmiş sayılır.
+
+#### F — KABUL: hata seviyesi, kaçış kapısı açık
+
+Kapılar: `toLocaleString`, `toFixed`, `toUpperCase`, `toLowerCase` (no-restricted-properties)
+ve `Intl.*` (no-restricted-syntax). Uyarı değil **hata** seçildi: uyarılar birikip görünmez
+olur, oysa ham `toUpperCase` bugün SESSİZCE yanlış harf üretiyor. Kod alanında bilinçli
+kullanım `eslint-disable-next-line` ile geçer ve o satır "burada ASCII isteniyor" diye belge
+bırakır; v3.3.0'dan sonra o satır bile gerekmez (`toAsciiUpper`). Madde 5a emsali; kural yine
+ADA bakar, TİPE değil.
+
+#### Ölçüm uyuşmazlığı (kayda geçirilir)
+
+Talep 6 projede **129 geçiş / 41 dosya** dedi. Çekirdek tarafının bağımsız ölçümü
+(2026-09-18, rakam süzme kalıpları, `src` altı): **63 geçiş / 45 dosya** — üstelik bunun bir
+kısmı `GHS-Panel-bes-test` ve `GHS-Panel-borc-bes` kopya depolarından geliyor; kopyalar
+çıkarılınca ~**43 geçiş / 27 dosya**. SNN-Yonetici-Ozeti için iddia edilen 59 geçiş
+bulunamadı (o projede rakam süzme kalıbı yok; `toUpperCase` + `Intl` dahil toplam 8 geçiş).
+**Kararı değiştirmedi** — tekrar her hâlükârda gerçek ve yaygın. Talep sahibine not: sayım
+kopya depoları ve `dist/` çıktılarını dışarıda bırakmalı.
+
+Ayrıca değerlendirme sırasında `toAsciiLower`'ın büyük `İ` harfini dönüştürmemesi önce kusur
+sanıldı; kod okununca bunun belgelenmiş bilinçli sınır olduğu görüldü (yalnız A-Z).
+`toAsciiUpper` aynı sınırla yazıldı.
 
 ### 10 · KKDF/BSMV vergi mekaniği
 
@@ -462,3 +542,4 @@ yazılmıştır.
 | #4 | 13 Eylül 2026 | Sigorta tüketicisi: Türkiye plakası standardı (sözlü talep) | 2.7.0 → 2.8.0 |
 | #5 | 14 Eylül 2026 | SNN-Ihale-Maliyet: havuz dağıtımı + Ek #1 (fixture, tarama kodu) | 3.0.1 → 3.1.0 |
 | #6 | 15 Eylül 2026 | trade-kasa TB-009 notu + çekirdek taraması (trade-kasa, GHS-Panel, Gunum-Var): dakika/saat göreli süre | 3.1.0 → 3.2.0 |
+| #7 | 18 Eylül 2026 | Giriş süzme katmanı (SNN-Standartlar/giris-alanlari-standardi.md; GHS-Panel araç formu + SNN-İhale gün kutusu) | 3.2.0 → 3.3.0 |

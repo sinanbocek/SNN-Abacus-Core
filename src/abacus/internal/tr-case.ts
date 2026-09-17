@@ -54,6 +54,26 @@ export function toAsciiLower(str: string): string {
 }
 
 /**
+ * ASCII harf BÜYÜTME (i -> I, Türkçe İ değil). Şasi/motor numarası, ürün kodu,
+ * barkod gibi ASCII kod alanları için. `toAsciiLower` işinin ikizidir:
+ * yalnız a-z aralığına dokunur, Türkçe harfleri olduğu gibi bırakır.
+ */
+export function toAsciiUpper(str: string): string {
+  if (!str) return '';
+  let res = '';
+  for (let i = 0; i < str.length; i++) {
+    const ch = str[i];
+    if (!ch) continue;
+    if (ch >= 'a' && ch <= 'z') {
+      res += String.fromCharCode(ch.charCodeAt(0) - 32);
+    } else {
+      res += ch;
+    }
+  }
+  return res;
+}
+
+/**
  * Türkçe harf küçültme (İ -> i, I -> ı). Ham `toLowerCase` kullanılmaz.
  */
 export function toTrLower(str: string): string {
