@@ -173,6 +173,9 @@ Karar için `weekday` veya `isWeekend` kullanın.
 |---|---|
 | Türkçe küçük harf (ekranda gösterilecek metin) | `text.lower` / `text.toTrLower` |
 | E-posta, web adresi (Türkçe kural uygulanmamalı) | `text.toAsciiLower` |
+| ASCII KOD alanı büyütme (şasi, motor no, ürün kodu, barkod) | `text.toAsciiUpper` |
+| Kutuya yalnız rakam girsin (canlı süzme) | `text.digits` |
+| Para kutusu canlı biçim / geri okuma | `money.formatGroupedInput` / `money.parseNumber` |
 | Arama / eşleştirme (Türkçe harfler katlanır) | `text.searchKey` |
 | Alfabetik sıralama | `collate.sortBy` |
 
@@ -532,8 +535,22 @@ text.upper('iğne')              // → 'İĞNE'
 text.lower('İSTANBUL')          // → 'istanbul'
 text.toTrLower('IŞIK')          // → 'ışık'
 text.toAsciiLower('ISIK')       // → 'isik'
+text.toAsciiUpper('irmaksasi')  // → 'IRMAKSASI'
 text.title('ahmet yılmaz')      // → 'Ahmet Yılmaz'
 ```
+
+**Giriş kutusu süzme (kullanıcı yazarken)**
+
+```js
+text.digits('2o0a7')                  // → '207'
+text.digits('20267', 4)               // → '2026'
+money.formatGroupedInput('121212scca')  // → '121.212'
+money.parseNumber('1.250.000')          // → 1250000
+```
+
+⚠️ **Para kutusu için yeni bir fonksiyon aramayın.** Canlı biçim
+`money.formatGroupedInput`, geri okuma `money.parseNumber` — ikisi de v2.x'ten beri
+çekirdekte. Harf ve simge ikisinde de kendiliğinden süzülür.
 
 ⚠️ Ham `toUpperCase()` Türkçede yanlıştır (`'i'` → `'I'`). `lower` ile `toTrLower` aynı
 fonksiyondur.

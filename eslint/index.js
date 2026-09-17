@@ -59,12 +59,68 @@ const MINOR_UNIT_GATES = [
   },
 ];
 
+/**
+ * ÇEKİRDEK DIŞI BİÇİMLEME VE HARF KAPILARI (v3.3.0, talep #7 madde F).
+ *
+ * Bu kapılar çekirdekte KARŞILIĞI OLDUĞU HÂLDE tüketicide yeniden yazılıyordu.
+ * Ölçüm (2026-09-18, 6 proje + kopya depolar): rakam süzme kalıbı 63 geçiş /
+ * 45 dosya; `FormattedInput.tsx` giriş kutusunu `Intl.NumberFormat` ile
+ * kuruyordu. Kural ADA bakar, TİPE değil (madde 5a ile aynı sınır).
+ *
+ * `toUpperCase` neden HATA, uyarı değil: ham çağrı Türkçe metinde sessizce
+ * YANLIŞ harf üretir ('irmak' -> 'IRMAK', doğrusu 'İRMAK'). Kod alanlarında
+ * ise doğru çağrıdır; o durumda bilinçli geçiş beklenir:
+ *
+ *   // eslint-disable-next-line no-restricted-properties -- ASCII şasi numarası
+ *
+ * v3.3.0'dan sonra o satır bile gerekmez: kod alanı için `text.toAsciiUpper`.
+ */
+const FORMAT_GATES = [
+  {
+    property: 'toLocaleString',
+    message:
+      'Ham toLocaleString yasak (ABACUS-SPEC §4.2). Para için money.formatMajor/format, ' +
+      'tarih için date.format, giriş kutusu için money.formatGroupedInput kullanın.',
+  },
+  {
+    property: 'toFixed',
+    message:
+      'Ham toFixed yasak (ABACUS-SPEC §4.4). math.round / money.fmtDecimalGrouped kullanın.',
+  },
+  {
+    property: 'toUpperCase',
+    message:
+      'Ham toUpperCase Türkçe metinde YANLIŞ harf üretir: "irmak" -> "IRMAK" (doğrusu "İRMAK"). ' +
+      'Türkçe metin için text.upper, ASCII kod alanı için (şasi, ürün kodu, barkod) ' +
+      'text.toAsciiUpper kullanın (v3.3.0).',
+  },
+  {
+    property: 'toLowerCase',
+    message:
+      'Ham toLowerCase Türkçe metinde YANLIŞ harf üretir: "IRMAK" -> "irmak" (doğrusu "ırmak"). ' +
+      'Türkçe metin için text.lower/toTrLower, e-posta ve web adresi için text.toAsciiLower kullanın.',
+  },
+];
+
+/**
+ * `new Intl.NumberFormat(...)` / `Intl.DateTimeFormat(...)` çağrılarını yakalar.
+ * Çekirdek Intl'siz çalışır; tüketicide Intl kullanmak iki farklı yazım demektir
+ * (ölçüm: SNN-Portfoy-Yonetimi/src/NewApp/components/FormattedInput.tsx).
+ */
+const INTL_GATE = {
+  selector: "MemberExpression[object.name='Intl']",
+  message:
+    'Ham Intl yasak (ABACUS-SPEC §4.2). Sayı ve para için money motoru, tarih için date motoru, ' +
+    'giriş kutusu için money.formatGroupedInput + money.parseNumber kullanın.',
+};
+
 /** ABACUS'un tüketiciye önerdiği kural kümesi. */
 const recommended = [
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     rules: {
-      'no-restricted-properties': ['error', ...MINOR_UNIT_GATES],
+      'no-restricted-properties': ['error', ...MINOR_UNIT_GATES, ...FORMAT_GATES],
+      'no-restricted-syntax': ['error', INTL_GATE],
     },
   },
 ];
@@ -73,6 +129,8 @@ export default {
   configs: { recommended },
   /** Kural nesnelerini kendi yapılandırmanızla birleştirmek isterseniz. */
   minorUnitGates: MINOR_UNIT_GATES,
+  formatGates: FORMAT_GATES,
+  intlGate: INTL_GATE,
 };
 
-export { recommended, MINOR_UNIT_GATES };
+export { recommended, MINOR_UNIT_GATES, FORMAT_GATES, INTL_GATE };

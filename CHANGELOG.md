@@ -4,6 +4,52 @@ Bu projedeki tüm önemli değişiklikler bu dosyada belgelenir.
 Format [Keep a Changelog](https://keepachangelog.com/tr/) temellidir;
 sürümleme [Semantic Versioning](https://semver.org/lang/tr/) kurallarına uyar.
 
+## [3.3.0] - 2026-09-18
+
+> Eklemeli — mevcut hiçbir ad veya davranış değişmedi.
+> **Ama ESLint kuralları sertleşti**, aşağıya bakın.
+> Karar: [`GERI-BILDIRIM-KAYDI.md`](GERI-BILDIRIM-KAYDI.md) (madde 33, talep #7).
+
+### Eklenenler
+
+- **`text.toAsciiUpper(str)`** — `toAsciiLower` işinin büyütme ikizi. Yalnız `a-z` aralığını
+  büyütür, Türkçe harfe dokunmaz.
+
+  ```
+  text.upper('irmaksasi')         -> 'İRMAKSASİ'   ← şasi numarası için YANLIŞ
+  text.toAsciiUpper('irmaksasi')  -> 'IRMAKSASI'   ← doğru
+  ```
+
+  Şasi ve motor numarası, ürün kodu, barkod, IBAN öneki gibi ASCII KOD alanları içindir.
+  Türkçe METİN için `text.upper` kullanılmaya devam edilir.
+- **`text.digits(raw, maxLength?)`** — giriş kutusunda canlı süzme; yalnız rakam bırakır,
+  `maxLength` verilirse keser. `digits('2o0a7') -> '207'` · `digits('20267', 4) -> '2026'`.
+  Geçersiz `maxLength` (negatif, ondalıklı, güvenli tam sayı dışı) -> `'—'`.
+
+### Değişenler — ESLint yapılandırması (tüketiciyi ilgilendirir)
+
+`@snn/abacus-core/eslint` kural kümesine beş yeni kapı eklendi. Kuralları kullanan projelerde
+**yeni hatalar çıkabilir** (kod davranışı değişmedi, yalnız denetim sertleşti):
+
+| Yakalanan | Yerine |
+|---|---|
+| `Intl.*` (ör. `new Intl.NumberFormat`) | `money` / `date` motorları, `money.formatGroupedInput` |
+| `toLocaleString` | `money.formatMajor` / `date.format` |
+| `toFixed` | `math.round` / `money.fmtDecimalGrouped` |
+| `toUpperCase` | `text.upper` (Türkçe metin) · `text.toAsciiUpper` (kod alanı) |
+| `toLowerCase` | `text.lower` (Türkçe metin) · `text.toAsciiLower` (e-posta, web) |
+
+Bilinçli kullanım `// eslint-disable-next-line no-restricted-properties -- gerekçe` ile geçer.
+
+### Talep edilip ALINMAYANLAR
+
+- **`groupedAmount` / `amountToNumber`:** karşılıkları zaten var —
+  `money.formatGroupedInput` ve `money.parseNumber`. Talebin örnekleri bu ikisiyle
+  çalıştırıldı, çıktılar birebir aynı. Kılavuza yönlendirme eklendi.
+- **`input` motoru:** açılmadı. Süzme işi `text`e, para işi `money`de kaldı.
+- **`input.code` (ASCII kod süzme):** tek ekrandan geldiği için ertelendi; `toAsciiUpper`
+  ile tüketicide tek satır.
+
 ## [3.2.0] - 2026-09-15
 
 > Eklemeli. Mevcut hiçbir ad veya davranış değişmedi.
