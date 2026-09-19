@@ -37,7 +37,7 @@ const API_SURFACE: Record<string, string[]> = {
   text: [
     'company', 'email', 'endsWithHardConsonant', 'endsWithVowel', 'isBackVowel',
     'isRoundedVowel', 'join', 'lastVowel', 'lower', 'name', 'numberToWords',
-    'digits', 'phone', 'plate', 'searchKey', 'suffix', 'title', 'toAsciiLower',
+    'digits', 'phone', 'plate', 'properNounSuffix', 'searchKey', 'suffix', 'title', 'toAsciiLower',
     'toAsciiUpper', 'toTrLower', 'upper',
     'website',
     'websiteUrl', 'whatsapp',

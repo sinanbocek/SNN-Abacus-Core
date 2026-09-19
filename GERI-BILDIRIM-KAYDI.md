@@ -107,6 +107,11 @@ birleştirir. Sabit etikete bağlı tüketicilere (`#vX.Y.Z`) hiç gelmez, elle 
 | 33D | `input.amountToNumber` | Talep #7 D | ❌ **Red** — `money.parseNumber` zaten var | — |
 | 33E | `input.code` (ASCII kod süzme) | Talep #7 E | ❌ **Red** (ertelendi) — tek ekran | — |
 | 33F | Ham `Intl`/`toLocaleString`/`toFixed`/`toUpperCase`/`toLowerCase` lint kuralı | Talep #7 F | ✅ Kabul — **hata**, kaçış kapısı açık | 3.3.0 |
+| 34A | `text.properNounSuffix` — özel ada hâl eki | Talep #8 (issue #23) | ✅ Kabul | 3.5.0 |
+| 34B | Uzun hâl adları (`locative`, `ablative`…) | Talep #8 | ❌ **Red** — mevcut `SuffixCase` sözlüğü (`loc`/`abl`/…) kullanılır |  |
+| 34C | `locativeAdjective` (`VakıfBank'taki`) | Talep #8 (ertelenmiş aday) | ❌ **Red** (ertelendi) — tek ekran, madde 33E emsali | — |
+| 34D | İyelik tespiti genel desenle (`/(sı\|si\|su\|sü)$/`) | Talep #8'in getirdiği uygulama | ❌ **Red** — yer adlarını iyelik sanıyor; kurum sonu listesi kullanıldı | — |
+| 34E | Sessiz sayısal varsayılan kapısı pakete girsin | TB-005 (iç denetim) | ✅ Kabul | 3.4.0 |
 
 ---
 
@@ -555,6 +560,32 @@ bildirir:
 
 ---
 
+### Talep #8 — özel ad hâl eki (madde 34)
+
+**Neden kabul edildi.** İmza yalnız **metin** biliyor; işe ait hiçbir kavram geçmiyor
+(`AI-RULES §4.1` ayıracı). Talep elenerek geldi: 7 aday bakılmış, 5'i elenmişti ve
+elenenlerin ikisi (`toTurkishTitleCase`, `formatNaturalDate`) çekirdekte **zaten
+vardı** — bu, talebin gerçekten sınandığını gösteriyor. İkinci tüketici (Gunum-Var)
+ölçülerek gösterilmişti: aynı iş bağımsız kopyalanmış ve dört addan üçünde yanlış
+üretiyordu.
+
+**Sahip kararı — kelime listesi.** İyelik tespiti bir Türkçe kurum sözcüğü listesi
+gerektiriyor. Liste alan kavramı değildir (kasa/trade/dekont değil), dil bilgisidir;
+`text.plate` emsaline (§4.1 Sınır durumu 4) benzer biçimde "fiilî uygulama" olarak
+kabul edildi. Liste eksik olabilir; eksik sonu bildirmek bu defter üzerinden yapılır.
+
+**Taşınan kod olduğu gibi ALINMADI — ve iyi ki alınmamış.** Talep, tüketicinin 119
+satırlık ve 18 testi geçen uygulamasını "taşınmaya hazır" diye sunmuştu. Ölçüldü:
+o kod `/(sı|si|su|sü|…)$/` deseniyle **yer adlarını iyelik sanıyor** —
+`Gürsu` → `Gürsu'nda`, `Aksu` → `Aksu'nda`, `Karasu` → `Karasu'nda`; doğrusu
+`Gürsu'da`. 18 test bir yer adını hiç denememişti. Çekirdek deseni atıp kurum sonu
+listesi kullandı ve geri gidişi testle çiviledi.
+
+**Ders:** "çalışıyor, 18 testi var" bir kodu ölçmeden almak için yeterli değildir;
+testin neyi denemediği, neyi denediği kadar önemlidir.
+
+---
+
 ## Kaynak raporlar
 
 Raporların kendisi tüketici deposunda tutulur; çekirdek onların **kararını**
@@ -570,3 +601,4 @@ yazılmıştır.
 | #5 | 14 Eylül 2026 | SNN-Ihale-Maliyet: havuz dağıtımı + Ek #1 (fixture, tarama kodu) | 3.0.1 → 3.1.0 |
 | #6 | 15 Eylül 2026 | trade-kasa TB-009 notu + çekirdek taraması (trade-kasa, GHS-Panel, Gunum-Var): dakika/saat göreli süre | 3.1.0 → 3.2.0 |
 | #7 | 18 Eylül 2026 | Giriş süzme katmanı (SNN-Standartlar/giris-alanlari-standardi.md; GHS-Panel araç formu + SNN-İhale gün kutusu) | 3.2.0 → 3.3.0 |
+| #8 | 19 Eylül 2026 | GHS-Panel: özel adlara hâl eki (issue #23; ikinci tüketici olarak Gunum-Var ölçüldü) | 3.4.0 → 3.5.0 |

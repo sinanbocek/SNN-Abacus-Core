@@ -67,7 +67,7 @@ silver.gramSilverPrice(31, 34.20);        // 3405 (kuruş)
 | `money` | `format`, `parse`\|null, `formatMajor`, `toMinor`\|null, `formatMinorInput`, `decimal`, `ratio`, `percent`, `parseNumber`\|null, `fmtDecimalGrouped`, `formatGroupedInput`, `toWords`, `compact`, `compactMajor`, `knownCurrencyCodes` | alt birim ↔ metin |
 | `currency` | `convert(minor, rate)`\|null, `cross(minor, from, to)`\|null | kur parametreyle gelir |
 | `date` | `format`, `parse`\|null, `monthName`, `daysBetween`\|null, `daysUntil`\|null, `relative`, `relativeTime`, `dayName`, `weekday`\|null, `isWeekend`\|null, **`isBefore`\|null**, **`isAfter`\|null**, **`isSameDay`\|null** | Intl'siz, TR, Europe/Istanbul; tarih SORGULAR |
-| `text` | `toAsciiLower`, **`toAsciiUpper`**, **`digits`**, `toTrLower`, `lower`, `upper`, `title`, `join`, **`searchKey`**, `phone`, `plate`, `whatsapp`, `email`, `website`, `websiteUrl`, `name`, `company`, `numberToWords`, `lastVowel`, `isBackVowel`, `isRoundedVowel`, `endsWithHardConsonant`, `endsWithVowel`, `suffix` | TR harf güvenli |
+| `text` | `toAsciiLower`, **`toAsciiUpper`**, **`digits`**, `toTrLower`, `lower`, `upper`, `title`, `join`, **`searchKey`**, `phone`, `plate`, `whatsapp`, `email`, `website`, `websiteUrl`, `name`, `company`, `numberToWords`, `lastVowel`, `isBackVowel`, `isRoundedVowel`, `endsWithHardConsonant`, `endsWithVowel`, `suffix`, **`properNounSuffix`** | TR harf güvenli |
 | `validate` | `vkn`, `tckn`, `ikn`, `iban`, `email` | resmî checksum, hepsi `boolean` |
 | `mask` | `money`, `vkn`, `iban`, `phone` | PII gizleme |
 | `tradingMath` | `volumeFromQty`, `qtyFromVolume`, `leverage`\|null, `calculateThresholdDays`\|null, `validateTradeDirections`, `computeRiskReward`, `computePortfolioRatios` | ticari |
