@@ -303,7 +303,9 @@ export default [
       // Sessiz varsayılan yasağı ARTIK BURADA DEĞİL — v3.4.0'dan beri yayınlanan
       // yapılandırmanın içinde (`configs.recommended`). Elle yazmayın: iki yerde
       // iki farklı liste durursa hangisinin geçerli olduğu tartışma konusu olur.
-      // Yalnız bu kuralı almak isterseniz: `abacusEslint.silentDefaultGates`.
+      // Sessiz varsayılan korumasını istiyorsanız `recommended` yerine `strict`
+      // açın (v3.5.1'den beri). `recommended` major hat içinde sabittir ve
+      // minor sürümle sertleşmez — bu koruma bilinçli olarak opt-in'dir.
       'no-restricted-globals': [
         'error',
         {

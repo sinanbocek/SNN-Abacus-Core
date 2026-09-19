@@ -15,16 +15,27 @@ import abacusEslint from '../../eslint/index.js';
  * zorlayıcısıdır — yapılandırma bozulursa veya kural adı değişirse kırılır.
  */
 
-/** Verilen kaynağı yayınlanan yapılandırmayla denetler, mesajları döner. */
-async function lint(source: string): Promise<ESLint.LintResult['messages']> {
+/** Verilen kaynağı İSTENEN yapılandırmayla denetler, mesajları döner. */
+async function lintWith(
+  config: unknown,
+  source: string,
+): Promise<ESLint.LintResult['messages']> {
   const eslint = new ESLint({
     overrideConfigFile: true,
-    overrideConfig: abacusEslint.configs.recommended,
+    overrideConfig: config as never,
   });
   const results = await eslint.lintText(source, { filePath: 'tuketici-ornek.ts' });
   const first = results[0];
   return first === undefined ? [] : first.messages;
 }
+
+/** Yayınlanan `recommended` ile denetler — tüketiciye OTOMATİK inen sözleşme. */
+const lint = (source: string): Promise<ESLint.LintResult['messages']> =>
+  lintWith(abacusEslint.configs.recommended, source);
+
+/** Opt-in `strict` ile denetler — tüketici isteyerek açar. */
+const lintStrict = (source: string): Promise<ESLint.LintResult['messages']> =>
+  lintWith(abacusEslint.configs.strict, source);
 
 describe('yayınlanan ESLint yapılandırması — alt birim kapıları (rapor §5a)', () => {
   it('money.format çağrısını YAKALAR', async () => {
@@ -76,17 +87,38 @@ describe('yayınlanan ESLint yapılandırması — alt birim kapıları (rapor �
     expect(messages).toHaveLength(0);
   });
 
+  // v3.5.1: `recommended` MAJOR hat içinde SABİT SÖZLEŞMEDİR. Sessiz varsayılan
+  // kapısı v3.4.0'da oraya eklendi; v3.5.0 yayılınca bir tüketicinin CI'ı 92 hatayla
+  // kırmızıya döndü — kendi kodlarına hiç dokunmadıkları hâlde. Kapı doğruydu,
+  // YERİ yanlıştı. Aşağıdaki iki test o geri gidişi tutar.
+  it('recommended sessiz varsayılan kapısını İÇERMEZ', async () => {
+    for (const source of ['const a = deger ?? 0;', 'const b = GERI_GUN[kod] ?? 1;']) {
+      expect(await lint(source), source).toHaveLength(0);
+    }
+  });
+
+  it('strict, recommended kapılarının hepsini taşır (üst küme)', () => {
+    const props = (c: { rules: Record<string, unknown[]> }) =>
+      (c.rules['no-restricted-properties'] as unknown[]).length;
+    const syntax = (c: { rules: Record<string, unknown[]> }) =>
+      (c.rules['no-restricted-syntax'] as unknown[]).length;
+    const rec = abacusEslint.configs.recommended[0];
+    const str = abacusEslint.configs.strict[0];
+    expect(props(str)).toBe(props(rec));
+    expect(syntax(str)).toBeGreaterThan(syntax(rec));
+  });
+
   // TB-005: kural bugüne dek yalnız INSTALL §6.2 şablonundaydı, pakette yoktu;
   // üstelik yalnız `0` literaline bakıyordu, `GERI_GUN[kod] ?? 1` kaçıyordu.
-  it('sıfır varsayılanı her yerde yakalanır (eski davranış korunur)', async () => {
+  it('strict: sıfır varsayılanı her yerde yakalanır', async () => {
     for (const source of ['const a = deger ?? 0;', 'const b = deger || 0;']) {
-      const messages = await lint(source);
+      const messages = await lintStrict(source);
       expect(messages, source).toHaveLength(1);
       expect(messages[0]?.message, source).toContain('Sessiz');
     }
   });
 
-  it('aranmış/hesaplanmış değere HERHANGİ bir sayı varsayılanı yakalanır', async () => {
+  it('strict: aranmış/hesaplanmış değere HERHANGİ bir sayı varsayılanı yakalanır', async () => {
     for (const source of [
       'const a = GERI_GUN[kod] ?? 1;',
       'const b = POW_2_MAP[10 - i] ?? 1;',
@@ -94,12 +126,12 @@ describe('yayınlanan ESLint yapılandırması — alt birim kapıları (rapor �
       'const d = hesapla() || 0;',
       'const e = liste[0] ?? -1;',
     ]) {
-      const messages = await lint(source);
+      const messages = await lintStrict(source);
       expect(messages, source).toHaveLength(1);
     }
   });
 
-  it('meşru seçenek varsayılanı yakalanmaz — yanlış alarm üretilmiyor', async () => {
+  it('strict: meşru seçenek varsayılanı yakalanmaz — yanlış alarm üretilmiyor', async () => {
     // Ölçüm: "her sayıyı yakala" denendi ve çekirdeğin KENDİ kodunda patladı
     // (`opts?.digits ?? 1`, unit/index.ts:112). Bu testler o geri gidişi tutar.
     for (const source of [
@@ -110,15 +142,15 @@ describe('yayınlanan ESLint yapılandırması — alt birim kapıları (rapor �
       'const e = deger ?? [];',
       'const f = deger ?? digerDeger;',
     ]) {
-      const messages = await lint(source);
+      const messages = await lintStrict(source);
       expect(messages, source).toHaveLength(0);
     }
   });
 
-  it('BİLİNEN SINIR: düz değişkene sıfır dışı sayı varsayılanı yakalanmaz', async () => {
+  it('strict BİLİNEN SINIR: düz değişkene sıfır dışı sayı varsayılanı yakalanmaz', async () => {
     // Gizlenmiyor, belgeleniyor: sözdiziminden bunun aranmış bir sonuç mu yoksa
     // çağıranın atlayabileceği bir seçenek mi olduğu anlaşılmıyor.
-    expect(await lint('const a = deger ?? 1;')).toHaveLength(0);
+    expect(await lintStrict('const a = deger ?? 1;')).toHaveLength(0);
   });
 
   it('yapılandırma düz bir ESLint flat-config dizisidir', () => {

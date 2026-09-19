@@ -112,6 +112,7 @@ birleştirir. Sabit etikete bağlı tüketicilere (`#vX.Y.Z`) hiç gelmez, elle 
 | 34C | `locativeAdjective` (`VakıfBank'taki`) | Talep #8 (ertelenmiş aday) | ❌ **Red** (ertelendi) — tek ekran, madde 33E emsali | — |
 | 34D | İyelik tespiti genel desenle (`/(sı\|si\|su\|sü)$/`) | Talep #8'in getirdiği uygulama | ❌ **Red** — yer adlarını iyelik sanıyor; kurum sonu listesi kullanıldı | — |
 | 34E | Sessiz sayısal varsayılan kapısı pakete girsin | TB-005 (iç denetim) | ✅ Kabul | 3.4.0 |
+| 35 | Kapı `configs.recommended`'a minor sürümde eklenmesin | v3.5.0 yayılım ölçümü | ✅ Kabul — **geri alma**; kapı `strict`e taşındı | 3.5.1 |
 
 ---
 

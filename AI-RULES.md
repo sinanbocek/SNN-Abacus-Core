@@ -117,6 +117,19 @@ onlara OTOMATİK iner.** Bu, sürüm numarasını bir etiketten sorumluluğa çe
   de kırıcıdır. Ölçüt niyet değil, **tüketicinin gördüğü çıktıdır**.
 - Şüphe varsa MAJOR seçilir. Gereksiz major sürüm ucuzdur; sessiz kırılma değildir.
 
+**Yayınlanan lint yapılandırması da bu taahhüde dahildir.** `eslint/index.js`'teki
+`configs.recommended` bir **major hat içinde sabit sözleşmedir**: minor sürümde oraya
+yeni kapı EKLENMEZ. Tüketici `^3.x` ile bağlı olduğu için eklenen kapı kendiliğinden
+iner ve tüketicinin CI'ı, kendi koduna hiç dokunmadığı hâlde kırmızıya döner.
+
+> **Ölçüldü (2026-09-19):** sessiz varsayılan kapısı v3.4.0'da `recommended`'a eklendi.
+> v3.5.0 yayılınca SNN-Proje-ve-Nakit-Akis'in CI'ı **92 hatayla** düştü. Kapı doğruydu,
+> yeri yanlıştı; v3.5.1 geri aldı.
+
+Yeni kapı önce **`configs.strict`**e girer (tüketici isteyerek açar), `recommended`'a
+ancak MAJOR sürümde taşınır. Zorlayıcısı: `eslint-config.test.ts` → *"recommended sessiz
+varsayılan kapısını İÇERMEZ"* ve *"strict üst kümedir"*.
+
 **Makine zorlaması:** `src/abacus/api-surface.test.ts` dışa açılan her adı
 çiviler. Bir ad silinir/yeniden adlandırılırsa test kırılır ve MAJOR gerektiğini
 söyler; yeni ad eklenirse kırılır ve MINOR gerektiğini söyler. Listeyi güncellemek
