@@ -6,11 +6,20 @@
 > Buradaki kayıtlar yalnızca tarihçe değildir; bir sonraki benzer işte okunması
 > gereken **ders** içerir. Kapanış biçimi: `~/.claude/standartlar/teknik-borc-standardi.md` → Kapanış.
 >
-> **Kayıt sayısı:** 7 · **Oluşturulma:** 2026-09-15
+> **Kayıt sayısı:** 8 · **Oluşturulma:** 2026-09-15
 
 ---
 
 ## Kapanan Kalemler
+
+- **Kapanış:** 2026-09-19 — **TB-010: `money.parseNumber` Türkçe olmayan yazımları hata vermeden yanlış sayıya çeviriyor.** (P1)
+  - **Ne yapıldı (sade):** Sayı okuyucu artık yalnız Türkçe yazımı kabul ediyor. Anlamadığı bir yazım gelince sessizce bir sayı uydurmuyor, "okuyamadım" diyor. Kırıcı bir düzeltme olduğu için sürüm **4.0.0**'a çıktı ve geçiş rehberi yazıldı.
+  - **Ölçülen sonuç:** `parseNumber('1234.56')` v3'te **123456** (100 kat yanlış) → v4'te `null`. Aynı şekilde `'1.5'`→15, `'1e3'`→13, `'12abc34'`→1234, `'(1.210,50)'`→1210.5 (işaret kaybı) hepsi `null`. Türkçe yazımların **hiçbiri** değişmedi (`'1.234,56'`, `'1 234,56'`, `'1.250.000'`, `'-1.234,56'`, U+00A0 dahil). Test 1039 → **1074**; 31 vakalık sözleşme testi + 4 rehber testi. Kırmızı-önce doğrulandı (7 test kırmızıydı), mutasyonla sınandı (3 hane kuralı gevşetilince `expected 123 to be null`).
+  - **Ders (üç tane, hepsi pahalıya mal olabilirdi):**
+    1. **Etkiyi ölçmeden karar verme.** 8 tüketicinin 4'ü çağırıyordu (40 çağrı). Kırıcı olduğunun kanıtı tahminle değil ölçümle geldi: `SNN-Ihale-Maliyet` v3'ün **yanlış** davranışını bir teste yazmıştı (`decimalCell.test.ts:1-7`). Bir tüketici yanlış davranışa bilerek dayanıyorsa düzeltme MAJOR'dır.
+    2. **Dilbilgisini uydurma, ölçülmüş olanı al.** Aynı tüketici sorunu zaten çözmüş, kendi kapısını yazmış ve yorumuna *"Çekirdeğe talep adayı"* diye not düşmüştü. Çekirdek o dilbilgisini aldı — böylece o projenin mevcut testleri kırılmadı. Kendi kurallarımı yazsaydım `'1 234,56'` (boşluklu binlik) kapsam dışı kalır ve onları kırardım.
+    3. **`?? 0` zinciri düzeltmeyi zehirler.** İki tüketici sonucu `?? 0` ile sarıyor; onlarda v4 "yanlış sayı" yerine **0** üretecek ve toplam sessizce kayacak. Düzeltme tek başına yetmiyor; sürüm notunda ve rehberde ayrıca uyarıldı.
+
 
 - **Kapanış:** 2026-09-19 — **TB-005: Dağıtılan lint kuralı "eksik değere sessizce sayı koyma" hatasını kaçırıyor.**
   - **Ne yapıldı (sade):** "Hesaplanamadı" cevabını uydurma bir sayıyla değiştirmeyi yasaklayan kural, artık kütüphaneyle birlikte dağıtılıyor ve yalnız sıfırı değil aranmış bir değere konan **her** sayıyı yakalıyor.

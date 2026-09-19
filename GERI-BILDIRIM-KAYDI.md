@@ -113,6 +113,7 @@ birleştirir. Sabit etikete bağlı tüketicilere (`#vX.Y.Z`) hiç gelmez, elle 
 | 34D | İyelik tespiti genel desenle (`/(sı\|si\|su\|sü)$/`) | Talep #8'in getirdiği uygulama | ❌ **Red** — yer adlarını iyelik sanıyor; kurum sonu listesi kullanıldı | — |
 | 34E | Sessiz sayısal varsayılan kapısı pakete girsin | TB-005 (iç denetim) | ✅ Kabul | 3.4.0 |
 | 35 | Kapı `configs.recommended`'a minor sürümde eklenmesin | v3.5.0 yayılım ölçümü | ✅ Kabul — **geri alma**; kapı `strict`e taşındı | 3.5.1 |
+| 36 | `money.parseNumber` yalnız Türkçe biçim okusun | TB-010 (iç denetim + tüketici etki ölçümü) | ✅ Kabul — **kırıcı düzeltme** | 4.0.0 |
 
 ---
 

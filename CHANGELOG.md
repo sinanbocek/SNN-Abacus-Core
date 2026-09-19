@@ -4,6 +4,51 @@ Bu projedeki tüm önemli değişiklikler bu dosyada belgelenir.
 Format [Keep a Changelog](https://keepachangelog.com/tr/) temellidir;
 sürümleme [Semantic Versioning](https://semver.org/lang/tr/) kurallarına uyar.
 
+## [4.0.0] - 2026-09-19
+
+> ⚠️ **KIRICI.** Tek davranış değişti; hiçbir ad kaldırılmadı, kodunuz derlenmeye devam eder.
+> Geçiş rehberi: [MIGRATION-v4.md](MIGRATION-v4.md) · Karar: [`docs/teknik-borc.md`](docs/teknik-borc.md) TB-010.
+
+### Kırıcı — `money.parseNumber` yalnız Türkçe biçim okur
+
+v3 Türkçe olmayan yazımı **sessizce yanlış sayıya** çeviriyordu; JSDoc ise
+*"çözümlenemeyen girdide `null` döner"* vaat ediyordu. Kod sözleşmeyi ihlal ediyordu.
+
+```
+                   v3.x        v4.0.0
+'1.234,56'    ->   1234.56     1234.56    (değişmedi)
+'1 234,56'    ->   1234.56     1234.56    (değişmedi)
+'1.250.000'   ->   1250000     1250000    (değişmedi)
+'1234.56'     ->   123456      null       <- 100 KAT yanlıştı
+'1.5'         ->   15          null
+'1e3'         ->   13          null
+'12abc34'     ->   1234        null
+'(1.210,50)'  ->   1210.5      null       <- işaret kaybı vardı
+```
+
+Kabul edilen dilbilgisi: isteğe bağlı eksi · 3'erli **nokta, boşluk veya U+00A0**
+binlik grupları · virgülden sonra istenen kadar ondalık.
+
+Dilbilgisi uydurulmadı: `SNN-Ihale-Maliyet` v3'ün gevşekliğine karşı kendi kapısını
+(`readDecimalCell`) yazmış ve yorumunda *"Çekirdeğe talep adayı"* diye işaretlemişti.
+Çekirdek o kapıyı aldı — böylece o projenin mevcut testleri de kırılmıyor.
+
+### ⚠️ `?? 0` ile saranlar: sessiz sapma riski
+
+Ölçüldü — iki tüketici sonucu `?? 0` ile sarıyor (`trade-kasa/format.ts:15`,
+`SNN-Yonetici-Ozeti/mizanParser.ts:36`). Bu kalıpta v3'te *yanlış ama sıfırdan farklı*
+dönen girdiler artık **0** olur ve toplam sessizce kayar. Rehberde açık `null` denetimine
+çevirme reçetesi var.
+
+### Neden MAJOR
+
+`AI-RULES §4.0`: *"Ölçüt niyet değil, tüketicinin gördüğü çıktıdır. Şüphe varsa MAJOR."*
+Bir tüketici v3'ün yanlış davranışını bir teste yazmıştı; şüphe yoktu.
+
+**Major sürüm otomatik inmez** — `^3.x` ile bağlıysanız pin'i elle yükseltin.
+
+---
+
 ## [3.5.1] - 2026-09-19
 
 > **Düzeltme: `configs.recommended` eski hâline döndü.** v3.4.0'da oraya eklenen sessiz
