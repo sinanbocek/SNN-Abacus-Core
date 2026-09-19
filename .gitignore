@@ -3,3 +3,4 @@ dist
 .agent
 *.log
 coverage
+commit_msg.txt

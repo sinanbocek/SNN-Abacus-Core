@@ -13,8 +13,8 @@ Kapanan kayıtlar: `docs/teknik-borc-arsiv.md`
 ## İçindekiler
 
 - **🔴 P1 — Acil:** TB-010
-- **🟡 P2 — Planlı:** TB-001, TB-004, TB-005, TB-012
-- **🟢 P3 — Fırsatta:** TB-008, TB-009, TB-011
+- **🟡 P2 — Planlı:** TB-001, TB-004, TB-012
+- **🟢 P3 — Fırsatta:** TB-011
 
 ## Öncelikler
 
@@ -79,23 +79,6 @@ Kapanan kayıtlar: `docs/teknik-borc-arsiv.md`
 
 ---
 
-### TB-005 — Dağıtılan lint kuralı "eksik değere sessizce sayı koyma" hatasını kaçırıyor
-- **Tespit Tarihi:** 2026-09-15 (keşif turu: salt okunur inceleme + bağımsız ölçüm)
-- **Öncelik:** P2 (Planlı)
-
-#### 🟢 Sade Anlatım
-- **Sorun ne?** Kütüphanenin diğer projelere dağıttığı denetim kuralı, eksik bir değerin yerine sessizce 0 konmasını yakalıyor ama 1 gibi başka bir sayı konmasını yakalamıyor.
-- **Benzetme:** Duman dedektörünün yalnızca mutfakta çalışıp salonda çalışmaması.
-- **Çözülmezse ne olur?** Kullanan projelerde yanlış varsayılan sayılar (ör. kur yoksa 1) fark edilmeden kalır ve hesaplar sessizce yanlış çıkar.
-- **Senden beklenen karar:** Kural sıkılaştırılsın mı? Kullanan projelerde yeni lint hataları çıkaracaktır.
-
-#### 🔧 Teknik Detay
-- **Açıklama:** `GERI-BILDIRIM-KAYDI.md` kuralın yalnızca `0` literaline baktığını ve "kural boşluğu genel olarak durmaktadır" diye kaydediyor. **Düzeltme (2026-09-19 denetimi, kural gövdesi okundu):** kayıt kuralın `eslint/index.js` içinde yayımlandığını söylüyordu — **yanlış.** Yayımlanan pakette sessiz varsayılan kuralı **yok**; `eslint/index.js` yalnız üç kapı veriyor (`MINOR_UNIT_GATES`, `FORMAT_GATES`, `INTL_GATE`, `:122-123`). Kural aslında `INSTALL.md:307-313`'teki **ev kuralı şablonundadır** ve tüketici onu kendi yapılandırmasına kopyalar. Seçici `right.value=0` eşleştiriyor, yani `?? 1` gerçekten kaçıyor — boşluk gerçek, yeri yanlış yazılmıştı.
-- **Etki:** Kuralı kullanan tüm tüketici projeler (ör. Portföy'deki `|| 1` kur yedeği borcu).
-- **Çözüm yönü:** Önce `eslint/index.js` kuralını oku; sonra `?? <sayı>` / `|| <sayı>` için seçici kural ve `eslint-config.test.ts` testi ekle.
-- **Neden Şimdi Çözülmüyor:** Keşif sırasında bulundu, planlanmadı.
-
----
 
 ### TB-010 — `money.parseNumber` Türkçe olmayan yazımları hata vermeden yanlış sayıya çeviriyor
 - **Tespit Tarihi:** 2026-09-15 (keşif turu: salt okunur inceleme + bağımsız ölçüm)
@@ -120,41 +103,7 @@ Kapanan kayıtlar: `docs/teknik-borc-arsiv.md`
 
 
 
-### TB-008 — Oturum günlüğü bir aydır güncellenmemiş
-- **Tespit Tarihi:** 2026-09-15 (keşif turu: salt okunur inceleme + bağımsız ölçüm)
-- **Öncelik:** P3 (Fırsatta)
 
-#### 🟢 Sade Anlatım
-- **Sorun ne?** Yapılan işlerin günlüğü 18 Ağustos'tan (v1.1.0) beri tutulmamış; arada iki büyük sürüm çıkmış.
-- **Benzetme:** Gemi seyir defterine bir aydır hiçbir şey yazılmaması.
-- **Çözülmezse ne olur?** "Nerede kalmıştık?" sorusu yalnızca kod geçmişinden cevaplanabilir.
-- **Senden beklenen karar:** Bu dosya tutulmaya devam edecek mi, yoksa `GERI-BILDIRIM-KAYDI.md` + `CHANGELOG.md` yeterli mi?
-
-#### 🔧 Teknik Detay
-- **Açıklama:** `.agent/session_log.md` tek oturum: 2026-08-18, "Versiyon: v1.1.0". O tarihten sonra v2.7.0–v3.1.0 arası en az 10 commit var. Kayıt görevini fiilen `GERI-BILDIRIM-KAYDI.md` ve `CHANGELOG.md` üstlenmiş görünüyor (gözlem).
-- **Etki:** Süreç kaydı.
-- **Çözüm yönü:** Karar verildikten sonra dosyayı kaldır ya da güncelle.
-- **Neden Şimdi Çözülmüyor:** Keşif sırasında bulundu, planlanmadı.
-
----
-
-### TB-009 — Depoda ilk sürümden kalma eski bir commit mesajı dosyası duruyor
-- **Tespit Tarihi:** 2026-09-15 (keşif turu: salt okunur inceleme + bağımsız ölçüm)
-- **Öncelik:** P3 (Fırsatta)
-
-#### 🟢 Sade Anlatım
-- **Sorun ne?** Geçici olması gereken bir not dosyası kalıcı olarak depoya girmiş ve artık yanlış bilgi (eski test sayısı) içeriyor. Depo herkese açık.
-- **Benzetme:** Vitrinde geçen yılın fiyat etiketinin durması.
-- **Çözülmezse ne olur?** Depoyu inceleyen kişi yanlış test sayısı görür.
-- **Senden beklenen karar:** Silinsin mi?
-
-#### 🔧 Teknik Detay
-- **Açıklama:** `git ls-files` içinde `commit_msg.txt`; içeriği ilk sürüme ait ("7 motor… 163 unit test"). Güncel: **45 test dosyası, 1013 test** (2026-09-19 ölçümü; kayıt açıldığında 43/979 yazılmıştı — dosyadaki sayı her sürümde daha da eskiyor). `.gitignore` kapsamıyor.
-- **Etki:** Yalnızca depo düzeni.
-- **Çözüm yönü:** `git rm commit_msg.txt` ve `.gitignore` kaydı.
-- **Neden Şimdi Çözülmüyor:** Keşif sırasında bulundu, planlanmadı.
-
----
 
 ### TB-011 — Ata (Cumhuriyet) altınının saflık ve ağırlığı çekirdekte yok
 - **Tespit Tarihi:** 2026-09-15 (keşif turu: salt okunur inceleme + bağımsız ölçüm)
