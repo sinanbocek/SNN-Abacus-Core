@@ -94,17 +94,17 @@ describe('date.isWeekend — hafta sonu kararı (rapor #3 §1)', () => {
 
   it('raporun son iş günü kuralı artık metne bağlı değil', () => {
     // GERI_GUN sözlüğü ve `?? 1` sessiz varsayılanı yerine:
-    const geriGun = (iso: string): number | null => {
+    const daysBack = (iso: string): number | null => {
       const g = weekday(iso);
       if (g === null) return null;
       if (g === 1) return 3; // Pazartesi → Cuma
       if (g === 0) return 2; // Pazar → Cuma
       return 1;
     };
-    expect(geriGun('2026-09-07')).toBe(3); // Pazartesi
-    expect(geriGun('2026-09-06')).toBe(2); // Pazar
-    expect(geriGun('2026-09-05')).toBe(1); // Cumartesi
-    expect(geriGun('2026-09-02')).toBe(1); // Çarşamba
-    expect(geriGun('gecersiz')).toBeNull(); // sessiz varsayılan YOK
+    expect(daysBack('2026-09-07')).toBe(3); // Pazartesi
+    expect(daysBack('2026-09-06')).toBe(2); // Pazar
+    expect(daysBack('2026-09-05')).toBe(1); // Cumartesi
+    expect(daysBack('2026-09-02')).toBe(1); // Çarşamba
+    expect(daysBack('gecersiz')).toBeNull(); // sessiz varsayılan YOK
   });
 });

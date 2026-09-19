@@ -91,9 +91,9 @@ describe('money.percent — fixed: true (sabit ondalık hane)', () => {
   });
 
   it('tablo hizası: aynı hane sayısı, aynı virgül konumu', () => {
-    const sutun = [4.3, 12.45, 0.5].map((v) => percent(v, 2, { fixed: true }));
-    expect(sutun).toEqual(['%4,30', '%12,45', '%0,50']);
-    for (const h of sutun) expect(h.length - h.indexOf(',')).toBe(3);
+    const column = [4.3, 12.45, 0.5].map((v) => percent(v, 2, { fixed: true }));
+    expect(column).toEqual(['%4,30', '%12,45', '%0,50']);
+    for (const h of column) expect(h.length - h.indexOf(',')).toBe(3);
   });
 });
 

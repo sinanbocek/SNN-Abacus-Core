@@ -1,6 +1,6 @@
 import { abs, div, floor, mod } from '../math';
 import { formatMoney } from '../internal/money-format';
-import { IL_SAYISI } from '../internal/constants';
+import { PROVINCE_COUNT } from '../internal/constants';
 import { isEmailShaped } from '../internal/patterns';
 import {
   foldChar,
@@ -347,60 +347,60 @@ const PLAKA_RAKAM_EN_COK = 5;
  * `34 YK 123` ise sıradan bir plakadır (`yeniKayit: false`).
  */
 export function plate(raw: string): PlateResult {
-  const gecersiz: PlateResult = {
+  const invalid: PlateResult = {
     stored: '', display: '', raw: raw ?? '', valid: false, yeniKayit: false,
   };
-  if (!raw) return gecersiz;
+  if (!raw) return invalid;
 
-  let sikistirilmis = '';
+  let compacted = '';
   for (let i = 0; i < raw.length; i++) {
     const ch = raw[i] as string;
     if (PLAKA_AYRACLARI.includes(ch)) continue;
 
     if (ch >= '0' && ch <= '9') {
-      sikistirilmis += ch;
+      compacted += ch;
     } else if (ch === 'ı' || ch === 'İ') {
       // Türkçe klavyenin I harfleri: noktasız ı ve (Caps Lock açıkken i
       // tuşunun yazdığı) büyük İ, plakadaki I'dır. Küçük noktalı i özel dal
       // gerektirmez — aşağıdaki ASCII yolundan zaten I olur.
-      sikistirilmis += 'I';
+      compacted += 'I';
     } else if (ch >= 'a' && ch <= 'z') {
       // ASCII büyük harf. toUpperCase yasaktır (Türkçe yerelde i → İ olur).
-      sikistirilmis += String.fromCharCode(ch.charCodeAt(0) - 32);
+      compacted += String.fromCharCode(ch.charCodeAt(0) - 32);
     } else if (ch >= 'A' && ch <= 'Z') {
-      sikistirilmis += ch;
+      compacted += ch;
     } else {
-      return gecersiz;
+      return invalid;
     }
   }
 
-  const parca = sikistirilmis.match(/^(\d{1,2})([A-Z]{1,3})(\d*)$/);
-  if (!parca) return gecersiz;
+  const piece = compacted.match(/^(\d{1,2})([A-Z]{1,3})(\d*)$/);
+  if (!piece) return invalid;
 
-  const ilKodu = Number(parca[1]);
-  const harfler = parca[2] as string;
-  const rakamlar = parca[3] as string;
+  const provinceCode = Number(piece[1]);
+  const letters = piece[2] as string;
+  const digitPart = piece[3] as string;
 
-  if (ilKodu < 1 || ilKodu > IL_SAYISI) return gecersiz;
+  if (provinceCode < 1 || provinceCode > PROVINCE_COUNT) return invalid;
 
-  for (const harf of harfler) {
-    if (!PLAKA_HARFLERI.includes(harf)) return gecersiz;
+  for (const letter of letters) {
+    if (!PLAKA_HARFLERI.includes(letter)) return invalid;
   }
 
-  const il = ilKodu < 10 ? `0${ilKodu}` : `${ilKodu}`;
+  const il = provinceCode < 10 ? `0${provinceCode}` : `${provinceCode}`;
 
-  if (rakamlar.length === 0) {
-    if (harfler !== YENI_KAYIT_HARFLERI) return gecersiz;
-    return { stored: `${il}${harfler}`, display: `${il} ${harfler}`, raw, valid: true, yeniKayit: true };
+  if (digitPart.length === 0) {
+    if (letters !== YENI_KAYIT_HARFLERI) return invalid;
+    return { stored: `${il}${letters}`, display: `${il} ${letters}`, raw, valid: true, yeniKayit: true };
   }
 
-  if (rakamlar.length < PLAKA_RAKAM_EN_AZ || rakamlar.length > PLAKA_RAKAM_EN_COK) {
-    return gecersiz;
+  if (digitPart.length < PLAKA_RAKAM_EN_AZ || digitPart.length > PLAKA_RAKAM_EN_COK) {
+    return invalid;
   }
 
   return {
-    stored: `${il}${harfler}${rakamlar}`,
-    display: `${il} ${harfler} ${rakamlar}`,
+    stored: `${il}${letters}${digitPart}`,
+    display: `${il} ${letters} ${digitPart}`,
     raw,
     valid: true,
     yeniKayit: false,
@@ -693,23 +693,23 @@ export function suffix(value: number, kind: SuffixKind, arg: SuffixArg): string 
     // "iki tam onda beş" okunur → son kelime kesir kısmının sayısı ("beş").
     // v2.x bunları numberToWords'e doğrudan veriyordu; o fonksiyon negatif ve
     // ondalıklı sayıda boş döndüğü için ek rastgele düşüyordu.
-    const isaret = value < 0 ? '-' : '';
+    const sign = value < 0 ? '-' : '';
     // `= ''` yalnız noUncheckedIndexedAccess içindir: split en az bir eleman döner.
     const [tamKisim = '', kesirKisim] = String(abs(value)).split('.');
-    const yazi = kesirKisim === undefined ? tamKisim : `${tamKisim},${kesirKisim}`;
-    const okunanKisim = kesirKisim === undefined ? tamKisim : kesirKisim;
+    const written = kesirKisim === undefined ? tamKisim : `${tamKisim},${kesirKisim}`;
+    const readPart = kesirKisim === undefined ? tamKisim : kesirKisim;
 
     switch (kind) {
       case 'year':
       case 'number':
-        formattedValue = `${isaret}${yazi}`;
+        formattedValue = `${sign}${written}`;
         break;
       case 'percent':
         // Konum money.percent varsayılanıyla aynı (v3.0.0, CLDR tr-TR): -%4,3
-        formattedValue = `${isaret}%${yazi}`;
+        formattedValue = `${sign}%${written}`;
         break;
     }
-    const wordsText = numberToWords(Number(okunanKisim), { spaced: true });
+    const wordsText = numberToWords(Number(readPart), { spaced: true });
     const words = wordsText.split(' ');
     lastWord = words[words.length - 1] ?? '';
   }

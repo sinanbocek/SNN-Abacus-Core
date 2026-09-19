@@ -123,24 +123,24 @@ describe('math.allocate — değişmezler (1000 rastgele sepet)', () => {
 
   it('1 · toplam her zaman havuza eşit', () => {
     for (const s of sepetler) {
-      const sonuc = allocate(s.total, s.weights, LR) as number[];
-      expect(topla(sonuc), JSON.stringify(s)).toBe(s.total);
+      const result = allocate(s.total, s.weights, LR) as number[];
+      expect(topla(result), JSON.stringify(s)).toBe(s.total);
     }
   });
 
   it('2 · uzunluk ağırlık sayısına eşit · 3 · her pay tam sayı', () => {
     for (const s of sepetler) {
-      const sonuc = allocate(s.total, s.weights, LR) as number[];
-      expect(sonuc.length).toBe(s.weights.length);
-      expect(sonuc.every((x) => Number.isSafeInteger(x))).toBe(true);
+      const result = allocate(s.total, s.weights, LR) as number[];
+      expect(result.length).toBe(s.weights.length);
+      expect(result.every((x) => Number.isSafeInteger(x))).toBe(true);
     }
   });
 
   it('4 · sıfır ağırlıklı kalem sıfır pay alır', () => {
     for (const s of sepetler) {
-      const sonuc = allocate(s.total, s.weights, LR) as number[];
+      const result = allocate(s.total, s.weights, LR) as number[];
       s.weights.forEach((w, i) => {
-        if (w === 0) expect(sonuc[i]).toBe(0);
+        if (w === 0) expect(result[i]).toBe(0);
       });
     }
   });
@@ -159,12 +159,12 @@ describe('math.allocate — değişmezler (1000 rastgele sepet)', () => {
 
   it('7 · monotonluk: w[i] > w[j] → r[i] >= r[j]', () => {
     for (const s of sepetler) {
-      const sonuc = allocate(s.total, s.weights, LR) as number[];
-      const sira = s.weights.map((w, i) => ({ w, p: sonuc[i] as number })).sort((a, b) => a.w - b.w);
-      for (let k = 1; k < sira.length; k++) {
-        const onceki = sira[k - 1] as { w: number; p: number };
-        const simdiki = sira[k] as { w: number; p: number };
-        if (simdiki.w > onceki.w) expect(simdiki.p).toBeGreaterThanOrEqual(onceki.p);
+      const result = allocate(s.total, s.weights, LR) as number[];
+      const order = s.weights.map((w, i) => ({ w, p: result[i] as number })).sort((a, b) => a.w - b.w);
+      for (let k = 1; k < order.length; k++) {
+        const previous = order[k - 1] as { w: number; p: number };
+        const simdiki = order[k] as { w: number; p: number };
+        if (simdiki.w > previous.w) expect(simdiki.p).toBeGreaterThanOrEqual(previous.p);
       }
     }
   });

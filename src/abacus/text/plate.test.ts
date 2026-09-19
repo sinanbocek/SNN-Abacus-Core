@@ -89,9 +89,9 @@ describe('text.plate — Türkçe klavye tuzağı', () => {
 
   it('çıktıda hiçbir zaman Türkçe özel harf bulunmaz', () => {
     for (const girdi of ['34abi12', '34 ABİ 12', '34abı12']) {
-      const sonuc = plate(girdi);
-      expect(sonuc.display).not.toContain('İ');
-      expect(sonuc.stored).not.toContain('İ');
+      const result = plate(girdi);
+      expect(result.display).not.toContain('İ');
+      expect(result.stored).not.toContain('İ');
     }
   });
 });

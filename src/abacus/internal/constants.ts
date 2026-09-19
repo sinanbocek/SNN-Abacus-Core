@@ -17,4 +17,4 @@ export const ONS_TO_GRAM = 31.1034768;
  * eklendi). Yeni il kurulduğunda bu değer artırılır ve MINOR sürüm çıkarılır —
  * geçerli plaka kümesi yalnızca GENİŞLER, hiçbir plaka geçersizleşmez.
  */
-export const IL_SAYISI = 81;
+export const PROVINCE_COUNT = 81;

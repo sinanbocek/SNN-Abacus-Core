@@ -27,12 +27,12 @@ import README from '../../README.md?raw';
 
 /** §2 tablosunda bir motor satırının ikinci sütunundaki adları toplar. */
 function specNames(engine: string): string[] | null {
-  const satir = SPEC.split('\n').find((l: string) => l.startsWith(`| \`${engine}\` |`));
-  if (satir === undefined) return null;
+  const line = SPEC.split('\n').find((l: string) => l.startsWith(`| \`${engine}\` |`));
+  if (line === undefined) return null;
 
   // Sütunlar: | `motor` | adlar | not |  — kaçışlı \| sütun ayırıcı değildir.
-  const sutunlar = satir.split(/(?<!\\)\|/);
-  const adlar = sutunlar[2];
+  const columns = line.split(/(?<!\\)\|/);
+  const adlar = columns[2];
   if (adlar === undefined) return null;
 
   const bulunan = new Set<string>();
@@ -46,8 +46,8 @@ describe('ABACUS-SPEC §2 — dışa açılan fonksiyon tablosu gerçek API ile 
   const motorlar = Object.keys(abacus).sort();
 
   it('her motorun şartnamede bir satırı var', () => {
-    const eksik = motorlar.filter((m) => specNames(m) === null);
-    expect(eksik).toEqual([]);
+    const missing = motorlar.filter((m) => specNames(m) === null);
+    expect(missing).toEqual([]);
   });
 
   for (const motor of motorlar) {
@@ -70,18 +70,18 @@ describe('README.md — motor özeti gerçek API ile eşleşir', () => {
   const motorlar = Object.keys(abacus).sort();
 
   /** `| **`motor`** | fonksiyonlar | açıklama |` satırlarını ayrıştırır. */
-  function readmeSatirlari(): Map<string, string[]> {
-    const tablo = new Map<string, string[]>();
-    for (const satir of README.split(/\r?\n/)) {
-      const m = satir.match(/^\| \*\*`([A-Za-z]+)`\*\* \|([^|]*)\|/);
+  function readmeLines(): Map<string, string[]> {
+    const table = new Map<string, string[]>();
+    for (const line of README.split(/\r?\n/)) {
+      const m = line.match(/^\| \*\*`([A-Za-z]+)`\*\* \|([^|]*)\|/);
       if (!m || m[1] === undefined || m[2] === undefined) continue;
       const adlar = new Set<string>();
       for (const a of m[2].matchAll(/`([A-Za-z_][A-Za-z0-9_]*)`/g)) {
         if (a[1] !== undefined) adlar.add(a[1]);
       }
-      tablo.set(m[1], [...adlar].sort());
+      table.set(m[1], [...adlar].sort());
     }
-    return tablo;
+    return table;
   }
 
   it('başlıktaki motor sayısı barrel ile aynı', () => {
@@ -91,13 +91,13 @@ describe('README.md — motor özeti gerçek API ile eşleşir', () => {
   });
 
   it('tablodaki motorlar barrel ile aynı', () => {
-    expect([...readmeSatirlari().keys()].sort()).toEqual(motorlar);
+    expect([...readmeLines().keys()].sort()).toEqual(motorlar);
   });
 
   for (const motor of motorlar) {
     it(`\`${motor}\` satırının Fonksiyonlar sütunu tam listedir`, () => {
       const gercek = Object.keys((abacus as Record<string, object>)[motor] as object).sort();
-      expect(readmeSatirlari().get(motor)).toEqual(gercek);
+      expect(readmeLines().get(motor)).toEqual(gercek);
     });
   }
 });

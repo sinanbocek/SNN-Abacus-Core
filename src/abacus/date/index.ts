@@ -339,9 +339,9 @@ export function relative(iso: string, today: string, style: RelativeStyle = 'pla
   }
 
   if (style === 'natural' && diff >= 2 && diff <= 13) {
-    const gun = dayName(iso, 'long');
-    if (gun !== '—') {
-      return diff <= 6 ? `${gun} günü` : `haftaya ${gun}`;
+    const dayCount = dayName(iso, 'long');
+    if (dayCount !== '—') {
+      return diff <= 6 ? `${dayCount} günü` : `haftaya ${dayCount}`;
     }
   }
 
@@ -389,26 +389,26 @@ export function relativeTime(
 ): string {
   if (!Number.isSafeInteger(fromMs) || !Number.isSafeInteger(nowMs)) return '—';
 
-  const kisa = opts?.style === 'short';
-  const farkMs = sub(fromMs, nowMs);
-  const yon = farkMs < 0 ? 'önce' : 'sonra';
+  const shortForm = opts?.style === 'short';
+  const diffMs = sub(fromMs, nowMs);
+  const direction = diffMs < 0 ? 'önce' : 'sonra';
 
-  const dakikaHam = div(abs(farkMs), MS_PER_MINUTE);
-  if (dakikaHam === null) return '—';
-  const dakika = floor(dakikaHam);
+  const rawMinutes = div(abs(diffMs), MS_PER_MINUTE);
+  if (rawMinutes === null) return '—';
+  const minuteCount = floor(rawMinutes);
 
-  if (dakika < 1) return 'az önce';
-  if (dakika < MINUTES_PER_HOUR) return `${dakika} ${kisa ? 'dk' : 'dakika'} ${yon}`;
+  if (minuteCount < 1) return 'az önce';
+  if (minuteCount < MINUTES_PER_HOUR) return `${minuteCount} ${shortForm ? 'dk' : 'dakika'} ${direction}`;
 
-  const saatHam = div(dakika, MINUTES_PER_HOUR);
-  if (saatHam === null) return '—';
-  const saat = floor(saatHam);
-  if (saat < HOURS_PER_DAY) return `${saat} ${kisa ? 'sa' : 'saat'} ${yon}`;
+  const rawHours = div(minuteCount, MINUTES_PER_HOUR);
+  if (rawHours === null) return '—';
+  const hourCount = floor(rawHours);
+  if (hourCount < HOURS_PER_DAY) return `${hourCount} ${shortForm ? 'sa' : 'saat'} ${direction}`;
 
-  const kaynakGun = istanbulDayOf(fromMs);
-  const bugun = istanbulDayOf(nowMs);
-  if (kaynakGun === null || bugun === null) return '—';
-  return relative(kaynakGun, bugun);
+  const sourceDay = istanbulDayOf(fromMs);
+  const today = istanbulDayOf(nowMs);
+  if (sourceDay === null || today === null) return '—';
+  return relative(sourceDay, today);
 }
 
 /**
@@ -419,20 +419,20 @@ export function relativeTime(
  * "bilemedim" birbirinden ayrılır (ABACUS-SPEC §2.2).
  */
 export function isBefore(isoA: string, isoB: string): boolean | null {
-  const fark = daysBetween(isoA, isoB);
-  return fark === null ? null : fark > 0;
+  const delta = daysBetween(isoA, isoB);
+  return delta === null ? null : delta > 0;
 }
 
 /** `isBefore`'un çifti. Geçersiz girdide null. */
 export function isAfter(isoA: string, isoB: string): boolean | null {
-  const fark = daysBetween(isoA, isoB);
-  return fark === null ? null : fark < 0;
+  const delta = daysBetween(isoA, isoB);
+  return delta === null ? null : delta < 0;
 }
 
 /** İki tarihin aynı güne düşüp düşmediği. Geçersiz girdide null. */
 export function isSameDay(isoA: string, isoB: string): boolean | null {
-  const fark = daysBetween(isoA, isoB);
-  return fark === null ? null : fark === 0;
+  const delta = daysBetween(isoA, isoB);
+  return delta === null ? null : delta === 0;
 }
 
 /**

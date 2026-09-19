@@ -2,7 +2,7 @@ import { abs, div, floor, mod, mul, round } from '../math';
 import { numberToWords } from '../text';
 import { formatMoney, groupThousands } from '../internal/money-format';
 import { parseMoney } from '../internal/money-parse';
-import { gecerliHane } from '../internal/hane';
+import { isValidDigits } from '../internal/hane';
 import type { CurrencyDef, CurrencyRef } from '../internal/currency-registry';
 import {
   knownCurrencyCodes,
@@ -130,7 +130,7 @@ export function formatMinorInput(minor: number | null | undefined, digits = 0): 
  */
 export function decimal(value: number | null | undefined, digits = 1): string {
   if (value === null || value === undefined || !Number.isFinite(value)) return '—';
-  if (!gecerliHane(digits)) return '—';
+  if (!isValidDigits(digits)) return '—';
   return String(round(value, digits)).replace('.', ',');
 }
 
@@ -239,7 +239,7 @@ export function percent(
     return '—';
   }
   // v3.0.0: geçersiz hane sayısında decimal.js fırlatıyordu; artık '—'.
-  if (!gecerliHane(digits)) return '—';
+  if (!isValidDigits(digits)) return '—';
   const rounded = round(value, digits);
 
   // `sign` verilmişse o kazanır; verilmemişse eski `showPositiveSign` okunur.
@@ -249,21 +249,21 @@ export function percent(
   // İşaret yuvarlama SONRASI belirlenir ki "-0,04" birinci basamakta "%0"
   // olsun, "%-0" değil: sıfıra hiçbir modda işaret konmaz. 'never' modunda
   // eksi metinden düşer — yön çağıran tarafta (renkle) anlatılıyor.
-  let isaret = '';
-  if (rounded < 0 && mode !== 'never') isaret = '-';
-  else if (rounded > 0 && mode === 'always') isaret = '+';
+  let sign = '';
+  if (rounded < 0 && mode !== 'never') sign = '-';
+  else if (rounded > 0 && mode === 'always') sign = '+';
 
-  let sayi = String(abs(rounded));
+  let numeric = String(abs(rounded));
   // `digits` burada 0..20 arası tam sayıdır (yukarıdaki gecerliHane).
   if (opts?.fixed === true && digits > 0) {
-    const nokta = sayi.indexOf('.');
-    const mevcut = nokta === -1 ? 0 : sayi.length - nokta - 1;
-    if (nokta === -1) sayi += '.';
-    for (let i = mevcut; i < digits; i++) sayi += '0';
+    const dotAt = numeric.indexOf('.');
+    const existing = dotAt === -1 ? 0 : numeric.length - dotAt - 1;
+    if (dotAt === -1) numeric += '.';
+    for (let i = existing; i < digits; i++) numeric += '0';
   }
-  sayi = sayi.replace('.', ',');
+  numeric = numeric.replace('.', ',');
 
-  return opts?.signPosition === 'inner' ? `%${isaret}${sayi}` : `${isaret}%${sayi}`;
+  return opts?.signPosition === 'inner' ? `%${sign}${numeric}` : `${sign}%${numeric}`;
 }
 
 /** Binlik ayraç: nokta, boşluk ya da Excel'in bölünmez boşluğu (U+00A0). */
@@ -315,7 +315,7 @@ export function fmtDecimalGrouped(value: number | null | undefined, digits = 0):
   // ABACUS-SPEC §2.1: biçimlendirme işleri geçersiz girdide '—' döner.
   // '0' döndürmek "değer yok" ile "değer sıfır"ı birbirine karıştırırdı.
   if (value === null || value === undefined || !Number.isFinite(value)) return '—';
-  if (!gecerliHane(digits)) return '—';
+  if (!isValidDigits(digits)) return '—';
   const rounded = round(value, digits);
   const parts = String(rounded).split('.');
   const intPart = parts[0] ? groupThousands(Number(parts[0])) : '0';
@@ -377,33 +377,33 @@ export function toWords(kurus: number, opts?: ToWordsOptions): string {
   const spaced = opts?.spaced ?? false;
   const joinStr = spaced ? ' ' : '';
 
-  const absKurus = abs(kurus);
-  const tlDiv = div(absKurus, 100);
-  const kMod = mod(absKurus, 100);
-  if (tlDiv === null || kMod === null) return '—';
+  const absMinor = abs(kurus);
+  const majorDivisor = div(absMinor, 100);
+  const kMod = mod(absMinor, 100);
+  if (majorDivisor === null || kMod === null) return '—';
 
-  const lira = floor(tlDiv);
-  const kurusPart = round(kMod, 0);
+  const major = floor(majorDivisor);
+  const minorPart = round(kMod, 0);
 
   const negativeWord = kurus < 0 ? `Eksi${joinStr}` : '';
   const prefix = `Yalnız ${negativeWord}`;
 
-  if (lira === 0 && kurusPart === 0) {
-    const zeroTL = spaced ? 'Sıfır Türk Lirası' : 'SıfırTürkLirası';
-    return `${prefix}${zeroTL}`;
+  if (major === 0 && minorPart === 0) {
+    const zeroMajor = spaced ? 'Sıfır Türk Lirası' : 'SıfırTürkLirası';
+    return `${prefix}${zeroMajor}`;
   }
 
-  if (kurusPart === 0) {
-    const liraWords = numberToWords(lira, opts);
-    if (!liraWords) return '—';
-    const tlSuffix = spaced ? 'Türk Lirası' : 'TürkLirası';
-    return `${prefix}${liraWords}${joinStr}${tlSuffix}`;
+  if (minorPart === 0) {
+    const majorWords = numberToWords(major, opts);
+    if (!majorWords) return '—';
+    const majorSuffix = spaced ? 'Türk Lirası' : 'TürkLirası';
+    return `${prefix}${majorWords}${joinStr}${majorSuffix}`;
   }
 
-  const liraWords = lira > 0 ? numberToWords(lira, opts) : 'Sıfır';
-  const kurusWords = numberToWords(kurusPart, opts);
-  if (!liraWords || !kurusWords) return '—';
-  return `${prefix}${liraWords}${joinStr}Lira${joinStr}${kurusWords}${joinStr}Kuruş`;
+  const majorWords = major > 0 ? numberToWords(major, opts) : 'Sıfır';
+  const minorWords = numberToWords(minorPart, opts);
+  if (!majorWords || !minorWords) return '—';
+  return `${prefix}${majorWords}${joinStr}Lira${joinStr}${minorWords}${joinStr}Kuruş`;
 }
 
 export function compact(kurus: number | null | undefined, opts?: CompactMoneyOptions): string {
@@ -421,29 +421,29 @@ export function compact(kurus: number | null | undefined, opts?: CompactMoneyOpt
   if (cur === null) return '—';
 
   const isNegative = kurus < 0;
-  const absKurus = abs(kurus);
-  const tlValue = div(absKurus, minorFactor(cur));
+  const absMinor = abs(kurus);
+  const majorValue = div(absMinor, minorFactor(cur));
 
-  if (tlValue === null) return '—';
+  if (majorValue === null) return '—';
 
   // 1.000 birim altı kısaltmasız standart biçime düşer
-  if (tlValue < 1000) {
+  if (majorValue < 1000) {
     return format(kurus, { form, kurus: false, currency: cur });
   }
 
   let divisor = 1000;
   let unit = style === 'K/M' ? 'K' : 'B';
 
-  if (tlValue >= 1000000000) {
+  if (majorValue >= 1000000000) {
     divisor = 1000000000;
     unit = style === 'K/M' ? 'B' : 'Mr';
-  } else if (tlValue >= 1000000) {
+  } else if (majorValue >= 1000000) {
     divisor = 1000000;
     unit = style === 'K/M' ? 'M' : 'Mn';
   }
 
   // Sessiz varsayilan (?? 0) yok: hesaplanamazsa bicimlendirme sentineli doner.
-  const scaled = div(tlValue, divisor);
+  const scaled = div(majorValue, divisor);
   if (scaled === null) return '—';
   let scaledVal = scaled;
 

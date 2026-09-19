@@ -12,8 +12,7 @@ Kapanan kayıtlar: `docs/teknik-borc-arsiv.md`
 
 ## İçindekiler
 
-- **🟡 P2 — Planlı:** TB-001, TB-004, TB-012
-- **🟢 P3 — Fırsatta:** TB-011
+- **🟢 P3 — Fırsatta:** TB-013
 
 ## Öncelikler
 
@@ -38,86 +37,24 @@ Kapanan kayıtlar: `docs/teknik-borc-arsiv.md`
 
 ---
 
-## 🟡 P2 — Planlı
-
-### TB-001 — Toplama, çıkarma ve çarpma bozuk sayıyı sessizce geçiriyor
-- **Tespit Tarihi:** 2026-09-15 (keşif turu: salt okunur inceleme + bağımsız ölçüm)
-- **Öncelik:** P2 (Planlı)
-
-#### 🟢 Sade Anlatım
-- **Sorun ne?** Temel dört işlemden üçü, bozuk bir sayı (sayı olmayan değer ya da sonsuz) gelince "hata" demiyor; bozuk değeri sonuç olarak geri veriyor. Kütüphanenin kendi kuralı ise hatada boş (`null`) dönmek.
-- **Benzetme:** Tartıya taş yerine boş kutu konunca "hata" demeyen, ekranda anlamsız bir işaret gösteren terazi.
-- **Çözülmezse ne olur?** Kullanan bir projede bozuk bir girdi toplamlara karışırsa, raporda anlamsız tutar çıkar ve hatanın kaynağı zor bulunur.
-- **Senden beklenen karar:** Dönüş tipi `number | null` olsun mu? Bu, kullanan tüm projeleri etkileyen büyük sürüm (v4) demek; alternatif: ayrı güvenli fonksiyonlar eklemek.
-
-#### 🔧 Teknik Detay
-- **Açıklama:** `src/abacus/math/index.ts:13-25` `add`/`sub`/`mul` yalnızca `new D(String(a)).plus(...).toNumber()` yapıyor; `Number.isFinite`/`isSafeInteger` denetimi yok (aynı dosyada `div` ve `money/index.ts:107` denetliyor). **Ölçüm (2026-09-15, tsx):** `add(NaN,1)` → `NaN`; `add(1e308,1e308)` → `Infinity`; `div(1,0)` → `null`. Keşifte öne sürülen "`mul(9007199254740993,3)` sessizce saptı" örneği **yanlış**: girdi fonksiyona girmeden JavaScript tarafından `9007199254740992`'ye yuvarlanıyor; çarpma kendi başına doğru. Bu yüzden öncelik P1 değil P2. `add/sub/mul` için NaN/sınır testi yok.
-- **Etki:** Tüm tüketici projeler; `trading-math/position.ts:14` (`volumeFromQty`) gibi `mul` zincirleri.
-- **Çözüm yönü:** (1) Tüketicilerde `add/sub/mul` dönüşünün doğrudan kullanıldığı yerleri say. (2) NaN/Infinity için kırmızı test yaz. (3) Ya `addSafe/subSafe/mulSafe` ekle (küçük sürüm) ya da v4'te dönüş tipini `number | null` yap.
-- **Neden Şimdi Çözülmüyor:** Kırıcı değişiklik gerektirebilir; karar bekliyor.
-
 ---
 
+## 🟢 P3 — Fırsatta
 
-
-### TB-004 — 2016 öncesi tarihlerde saat bir saat kayıyor
-- **Tespit Tarihi:** 2026-09-15 (keşif turu: salt okunur inceleme + bağımsız ölçüm)
-- **Öncelik:** P2 (Planlı)
-
-#### 🟢 Sade Anlatım
-- **Sorun ne?** Türkiye 2016'dan önce kışın saati bir saat geri alıyordu. Kütüphane her tarihe bugünkü sabit saat farkını uyguluyor, bu yüzden eski kayıtlarda saat bir saat yanlış görünüyor.
-- **Benzetme:** Eski fotoğraflara bugünkü saat ayarıyla tarih basan bir fotoğraf makinesi.
-- **Çözülmezse ne olur?** Eski işlem ya da fiyat kayıtlarında saat yanlış görünür; gece yarısına yakın kayıtlarda gün de kayabilir (hipotez).
-- **Senden beklenen karar:** Bu sınır kalıcı olarak kabul mü, yoksa 2016 öncesi için küçük bir düzeltme tablosu mu eklensin?
-
-#### 🔧 Teknik Detay
-- **Açıklama:** `src/abacus/date/index.ts:85` sabit UTC+3 kullanıyor. `GERI-BILDIRIM-KAYDI.md:351-356` örneği: `2015-01-15T12:00:00Z` çekirdekte `15:00`, doğrusu `14:00`. `Intl` yasağı nedeniyle bilinçli seçilmiş, belgelenmiş bir sınır.
-- **Etki:** 2016 öncesi saat gösteren ekranı olan tüketici projeler (varlığı ölçülmedi).
-- **Çözüm yönü:** Önce tüketicilerde 2016 öncesi saat gösteren ekran var mı ölç; varsa küçük sabit kural tablosu ekle ve testle sabitle.
-- **Neden Şimdi Çözülmüyor:** Bilinçli kapsam sınırı olarak belgelenmiş.
-
----
-
-
-
-### TB-011 — Ata (Cumhuriyet) altınının saflık ve ağırlığı çekirdekte yok
-- **Tespit Tarihi:** 2026-09-15 (keşif turu: salt okunur inceleme + bağımsız ölçüm)
+### TB-013 — `text.plate` çıktısındaki `yeniKayit` alanı Türkçe
+- **Tespit Tarihi:** 2026-09-19 (TB-012 temizliğinden arta kalan tek ad)
 - **Öncelik:** P3 (Fırsatta)
 
 #### 🟢 Sade Anlatım
-- **Sorun ne?** Ortak hesap kütüphanesi altını yalnızca ayara göre (24, 22, 21, 18) ve çeyrek/yarım/tam ziynet olarak tanıyor. Ata altınının kendine özgü saflığı ve ağırlığı yok; bu yüzden Portföy projesi bu değerleri kendi içinde elle yazmak zorunda kalmış.
-- **Benzetme:** Resmî fiyat listesinde olmayan bir ürünü her dükkânın kendi defterinden satması.
-- **Çözülmezse ne olur?** Bugün Portföy'deki elle yazılmış değerler doğru; ama başka bir proje ata altını hesaplarsa farklı değer kullanabilir.
-- **Senden beklenen karar:** Yok.
+- **Sorun ne?** Plaka okuyucunun döndürdüğü sonuçta bir alanın adı Türkçe: `yeniKayit`. Aile kuralı adların İngilizce olmasını istiyor. Ama bu ad **dışarıya açık**: kütüphaneyi kullanan projeler doğrudan bu adı yazıyor.
+- **Benzetme:** Bir ürünün üstündeki etiketi değiştirmek kolaydır; ama o etiketi kullanan sekiz mağazanın raf düzenini de değiştirmek gerekir.
+- **Çözülmezse ne olur?** Tek bir ad Türkçe kalır. Çalışma zamanı etkilenmez.
+- **Senden beklenen karar:** Yok — bir sonraki kırıcı sürümle birlikte yapılır.
 
 #### 🔧 Teknik Detay
-- **Açıklama:** `src/abacus/gold/index.ts:14-19` `PURITY` yalnız ayar bazlı (`24: 0.995, 22: 0.916, 21: 0.875, 18: 0.750`); `:21-25` `ZIYNET_GRAM` yalnız `quarter 1.754 / half 3.508 / full 7.016`. `src/abacus/gold*` içinde `0.917`, `917`, `ata`, `cumhuriyet`, `7.216` geçişi **0** (2026-09-15, v3.1.0). Tüketici: SNN-Portfoy-Yonetimi `src/config/goldTypes.ts:11, 39-40` 0,917 saflık ve 7,216 gr elle yazılı (o projenin kütüğünde TB-026).
-- **Etki:** Ata altını değerleyen tüketici projeler (bugün SNN-Portfoy-Yonetimi).
-- **Çözüm yönü:** Ata altınının resmî saflık (0,917) ve ağırlık (7,216 gr) değerlerini kaynağıyla doğrula; `gold` modülüne ayar dışı bir tür (ör. `ZIYNET_GRAM.ata` + ayrı saflık) olarak ekle; test + `api-surface.test.ts` + CHANGELOG; tüketiciye sürüm notu.
-- **2026-09-19 araştırması — kapatılamadı, engel kaydedildi.** Çözüm yönü resmî kaynakla doğrulama istiyor (defterin kuralı: *"ikincil kaynaklar mevzuatın yerine geçmez"*, `text.plate` dersi). `darphane.gov.tr` **site izinlerince engelli**, açılamadı; zorlanmadı.
-  Ölçülen iki çelişki, değer yazılmadan önce çözülmeli:
-  1. **Saflık 0,916 mı 0,917 mi?** Çekirdek `PURITY[22] = 0.916`; tüketici `ATA_SAFLIK = 0.917` ve kendi yorumunda ikisini ayrı satırda gösteriyor (*"22 Ayar = 0.916 (Darphane Ziynet)"* / *"Ata (Cumhuriyet) = 0.917"*). Hangisinin doğru olduğu **ölçülmedi**.
-  2. **Tüketicinin yorumu kaynak sayılamaz.** Aynı yorum *"24 Ayar = 1.000 saflık (Has)"* diyor; çekirdek ise `PURITY[24] = 0.995` kullanıyor ve bunu *"fiziki/piyasa altın kuralı"* diye belgeliyor. İki dosya 24 ayarda bile anlaşmıyor — 0,917 rakamının dayanağı da aynı yorumdur.
-- **Neden Şimdi Çözülmüyor:** Resmî kaynak doğrulanamadı (yukarıdaki engel). Değer kaynağıyla sabitlenmeden çekirdeğe yazılmaz: 8 projeye giren yanlış bir sabiti geri almak kırıcı sürüm demektir.
-
----
-
-### TB-012 — Kod dili standardına uyum yok: 43 Türkçe tanımlayıcı var, turnike hiç kurulmamış
-- **Tespit Tarihi:** 2026-09-19 (abacus-talep yolu kurulurken kanca uyarısı; ardından bağımsız ölçüm)
-- **Öncelik:** P2 (Planlı)
-
-#### 🟢 Sade Anlatım
-- **Sorun ne?** Aile kuralı şunu diyor: kodun içinde şeylere verilen adlar İngilizce olur; açıklamalar, belgeler ve kullanıcının gördüğü yazılar Türkçe kalır. Bu depoda 43 ad bu kurala uymuyor. Asıl sorun sayı değil: **kuralı kontrol eden kapı hiç kurulmamış**, bu yüzden her yeni iş sessizce birkaç tane daha ekliyor.
-- **Benzetme:** Depoda "girişte kask takılır" yazısı asılı ama kapıda kimse yok. Kask takmayan giriyor, kimse saymıyor; yazı kendi kendine çalışmıyor.
-- **Çözülmezse ne olur?** Sayı büyümeye devam eder ve bir gün topluca düzeltmek pahalı hâle gelir. Ayrıca bu kütüphaneyi kullanan 8 projeye "kurala uyun" demek zorlaşır; çekirdek kendisi uymuyorsa kural gevşer.
-- **Senden beklenen karar:** Yok — ikisi de 2026-09-19'da karara bağlandı. Kapı kuruldu, plaka adları istisna yazıldı. Geriye kalan 38 adın çevrilmesi planlı iş.
-
-#### 🔧 Teknik Detay
-- **Açıklama:** `node <ev>/.claude/standartlar-canli/quality/code-language-scan.js --tumu` (2026-09-19, v3.3.0) **43 farklı tanımlayıcı / 103 satır atfı** buluyordu. **Güncel: 37 ayrı ad / 163 geçiş, 15 dosya** (2026-09-19 akşam ölçümü). Sayı iki kez değişti: plaka istisnası 5 düşürdü (43→38), sonra ortak tarayıcının kök listesi genişledi (38→37 ad ama geçiş sayısı arttı). **Kütüğe yazılan sayı ortak tarayıcıya bağlıdır ve kendiliğinden değişir.**
-- **Kapsam ölçüldü ve kayıttakinden BÜYÜK.** Tarayıcının kök listesi her Türkçe adı görmüyor: yalnız `math/index.ts`'te tarayıcı 6 ad işaretliyor ama dosyada **28** Türkçe tanımlayıcı var (`fark`, `paylar`, `artik`, `akis`, `aday`, `olcek`, `kesir`… listede yok). İşaretlileri çevirip ötekileri bırakmak dosyayı yarı Türkçe bırakır — iki uçtan da kötü.
-- **Metin tabanlı toplu değiştirme ÇALIŞMAZ; denendi ve geri alındı (2026-09-19).** `math/index.ts` sözcük sınırlı `sed` ile çevrildi, 1037 test geçti, ama **Türkçe yorumlar bozuldu**: *"toplam 1–2 birim sapar"* → *"sum 1–2 birim sapar"*, *"alt birim: kuruş"* → *"low birim: kuruş"*. Aile standardı yorumların Türkçe kalmasını şart koşuyor. Ölçüm: tek dosyada **43 kod + 10 yorum** satırı el denetimi ister; 15 dosyada ~150 + ~150. Oturum kancası "129 bulgu" diyor; bu sayı tarayıcının kendi çıktısıyla **tutmuyor**, aradaki farkın nereden geldiği ölçülmedi. Dosya dağılımı: `scripts/beceri-dogrula.mjs` 8, `src/abacus/text/index.ts` 6, `src/abacus/math/index.ts` 6, `src/abacus/kilavuz.test.ts` 4, `src/abacus/spec-surface.test.ts` 3, `src/abacus/money/index.ts` 3, `src/abacus/math/allocate.test.ts` 3, `src/abacus/date/index.ts` 2, kalanlar 1'er. Eksik olan iki altyapı: `.github/workflows/kod-dili.yml` **yok** (aile standardı `ornek/kod-dili.yml` şablonu sunuyor) ve `.snn-kod-dili.json` istisna dosyası **yok**.
-- **Etki:** Kod okunabilirliği ve aile standardı uyumu. Çalışma zamanı davranışı etkilenmiyor — hiçbiri hata üretmiyor.
-- **Çözüm yönü:** (1) ~~Turnikeyi kur~~ **YAPILDI (2026-09-19):** `.github/workflows/kod-dili.yml` kuruldu. Turnike yalnız **eklenen satırları** tarıyor, bu yüzden mevcut 43 ad için geçiş istisnası yazmak gerekmedi — yenilerin girişi kapandı, geçmiş açık kaldı. (2) ~~Plaka adlarına istisna yaz~~ **YAPILDI (2026-09-19):** `.snn-kod-dili.json` içinde `plaka` kökü, dayanağı GERI-BILDIRIM-KAYDI.md talep #4. **Not:** standardın tablosu `plaka → plate` çevirisini öneriyor, örnek JSON'u ise `plaka`yı istisna gösteriyor; ikisi çelişiyor. Sahip kararı istisna yönünde. Çelişki SNN-Standartlar'a bildirilmedi — bildirilirse bu satır güncellenir. (3) Kalanları dosya dosya çevir; test dosyası adları (`giris-suzme.test.ts`, `suffix-sayi.test.ts`) yeniden adlandırılırken `vitest.config.ts` include deseni ve kapsam eşikleri kontrol edilsin.
-- **Neden Şimdi Çözülmüyor:** Kapı ve istisna 2026-09-19'da kapandı; **geriye kalan 38 adın çevrilmesi** açık. Toplu değiştirme kuralı gereği dosya dosya yapılır ve turnike yenileri zaten engellediği için aceleye gerek yok.
-
----
+- **Açıklama:** `src/abacus/text/index.ts:287` `PlateResult.yeniKayit: boolean`. Tarayıcı 19 geçiş sayıyor; hepsi bu tek alanın kullanımları (`docs-claims.test.ts`, `plate.test.ts`, `text/index.ts`). TB-012 temizliğinde 163 geçişin 144'ü kapatıldı, kalan yalnız bu.
+- **Neden ayrı kayıt:** Yeniden adlandırma **genel API yüzeyini** değiştirir. `api-surface.test.ts` yalnız fonksiyon adlarını çiviler, dönüş tipi alanlarını değil — yani bu değişiklik testlerle yakalanmaz ama tüketicide derleme hatası verir. `AI-RULES §4.0`: kırıcı değişiklik daima MAJOR'dır.
+- **Etki:** `text.plate` kullanan tüketiciler. Bugün ölçülmedi.
+- **Çözüm yönü:** Bir sonraki MAJOR sürüme iliştir: `yeniKayit` → `newRegistration`, `MIGRATION-v5.md`'ye satır, `api-surface.test.ts`'e dönüş tipi alanlarını da çivileyen bir kontrol ekle (bu boşluk bu kayıtla ortaya çıktı).
+- **Geçici istisna yazıldı (2026-09-19).** `.snn-kod-dili.json` içine `yeniKayit` için **geçiş istisnası** kondu; yoksa bu alanın bulunduğu satıra başka bir sebeple dokunmak bile kod dili kapısını kırıyor (ölçüldü: PR #43'te `text/index.ts:394`). İstisnanın gerekçesinde **kalıcı olmadığı** ve bu kayıtla birlikte silineceği yazılı. Tarayıcı artık eşleşmeyen istisnayı uyarıyor, yani gereksizleştiğinde görünür olacak.
+- **Neden Şimdi Çözülmüyor:** Tek bir ad için ayrı bir major sürüm çıkarmak, 8 tüketiciyi yeni bir göçe zorlamak demektir; v4.0.0 ve v4.1.0 daha yeni yayıldı ve güncelleme PR'ları açık. Değer/maliyet oranı bir sonraki kırıcı sürümle birleştirmeyi gerektiriyor.
