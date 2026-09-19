@@ -344,9 +344,29 @@ export interface GroupedInputOptions {
   readonly dotAsDecimal?: boolean;
 }
 
+/**
+ * `dotAsDecimal` acikken noktayi ondalik ayracina cevirir — AMA yalniz anlamliysa.
+ *
+ * HATA DUZELTMESI (v4.1.1, talep #42): v4.1.0 TUM noktalari virgule ceviriyordu ve
+ * karisik bicimi bozuyordu: `'1.234,56'` -> `'1,23456'`, **1000 kat** sapma. Ustelik
+ * bu, kutuphanenin KENDI cikti bicimidir (`fmtDecimalGrouped(1234.56, 2)`), yani
+ * kullanicinin ekrandan kopyalayip yapistirdigi metin.
+ *
+ * Kural iki kosulludur; ikisi de "kullanici ondalik yaziyor olabilir mi" sorusunu sorar:
+ *   1. Girdide VIRGUL varsa ondalik zaten yazilmis; noktalar binlik ayracidir.
+ *   2. BIRDEN COK nokta varsa binlik ayracidir; bir sayinin tek ondalik ayraci olur.
+ *
+ * Geriye tek durum kalir — tek nokta, virgul yok — ve secenegin amaci tam odur.
+ */
+function dotToDecimal(raw: string): string {
+  if (raw.includes(',')) return raw;
+  if ((raw.match(/\./g) ?? []).length > 1) return raw;
+  return raw.replace('.', ',');
+}
+
 export function formatGroupedInput(raw: string, opts?: GroupedInputOptions): string {
   if (!raw) return '';
-  const source = opts?.dotAsDecimal === true ? raw.replace(/\./g, ',') : raw;
+  const source = opts?.dotAsDecimal === true ? dotToDecimal(raw) : raw;
   const clean = source.replace(/[^0-9,]/g, '');
   const firstComma = clean.indexOf(',');
   const intPartRaw = firstComma === -1 ? clean : clean.slice(0, firstComma);

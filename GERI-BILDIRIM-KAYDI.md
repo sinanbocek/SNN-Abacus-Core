@@ -117,6 +117,7 @@ birleştirir. Sabit etikete bağlı tüketicilere (`#vX.Y.Z`) hiç gelmez, elle 
 | 37A | `formatGroupedInput` nokta ile ondalığı **seçmeli** okusun | Talep #9 (issue #40) | ✅ Kabul | 4.1.0 |
 | 37B | Nokta→ondalık **varsayılan** olsun | Talep #9 (elenen aday) | ❌ **Red** — binlik yazan kullanıcıyı bozar; tahmine dayalı |  |
 | 37C | Eksi işaretinin silinmesi düzeltilsin | Talep #9 (bilgi notu) | ❌ **Red** (ertelendi) — gerçek ekran ihtiyacı bildirilmedi | — |
+| 38 | `dotAsDecimal` karışık biçimi bozuyor (`1.234,56` → `1,23456`) | Talep #10 (issue #42) | ✅ Kabul — **hata düzeltmesi** | 4.1.1 |
 
 ---
 
@@ -565,6 +566,26 @@ bildirir:
 
 ---
 
+### Talep #10 — `dotAsDecimal` karışık biçimi bozuyor (madde 38)
+
+**Kabul; bu bir hata ve çekirdeğin kendi kusuru.** 37A değerlendirilirken **karışık biçim
+(nokta ve virgül birlikte) hiç ölçülmedi.** Çekirdeğin kendi testleri `'1.234,56'`
+vakasını `dotAsDecimal` altında denemiyordu; eklenen 22 testin hiçbiri bu yolu geçmiyordu.
+
+**Sapma 1000 kat ve girdi kütüphanenin KENDİ çıktısı.** `fmtDecimalGrouped(1234.56, 2)`
+zaten `'1.234,56'` üretiyor. Kullanıcı ekrandaki tutarı kopyalayıp kutuya yapıştırınca
+değer bozuluyordu — yani çıktı kendi girdisini bozuyordu.
+
+**Ders — bir seçenek eklerken, o seçeneğin AÇIK olduğu yolda mevcut geçerli girdilerin
+hepsi yeniden sınanır.** 37A'da varsayılan yolun bozulmadığını titizlikle ölçtüm
+(9 vaka, hepsi yeşildi) ama **yeni yolun** eski girdilerle ne yaptığını ölçmedim.
+Kırıcı olmamak yetmiyor; yeni kolun kendi içinde doğru olması da gerekiyor.
+
+**Tüketici doğru yaptı:** seçeneği açarken kırmızı-önce testi yazdı, kırıldığını gördü,
+**seçeneği açmadı** ve bildirdi. Açsaydı canlıda 1000 katlık bir risk sapması olacaktı.
+
+---
+
 ### Talep #9 — nokta ile ondalık yazımı (madde 37)
 
 **Neden kabul edildi.** İmza yalnız metin biliyor (§4.1). Varsayılan değişmediği için
@@ -638,3 +659,4 @@ yazılmıştır.
 | #7 | 18 Eylül 2026 | Giriş süzme katmanı (SNN-Standartlar/giris-alanlari-standardi.md; GHS-Panel araç formu + SNN-İhale gün kutusu) | 3.2.0 → 3.3.0 |
 | #8 | 19 Eylül 2026 | GHS-Panel: özel adlara hâl eki (issue #23; ikinci tüketici olarak Gunum-Var ölçüldü) | 3.4.0 → 3.5.0 |
 | #9 | 19 Eylül 2026 | trade-kasa: `formatGroupedInput` nokta ile ondalık (issue #40) | 4.0.0 → 4.1.0 |
+| #10 | 19 Eylül 2026 | trade-kasa: `dotAsDecimal` karışık biçim hatası (issue #42) | 4.1.0 → 4.1.1 |
