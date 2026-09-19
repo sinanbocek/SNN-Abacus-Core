@@ -1,0 +1,9 @@
+{
+  "exceptions": [
+    { "name": "PLAKA_HARFLERI", "reason": "Türkiye tescil plakası harf grupları; kavram Türkiye'ye özgü. Dayanak: GERI-BILDIRIM-KAYDI.md talep #4 (madde 16-21). Sahip kararı 2026-09-19 (TB-012)." },
+    { "name": "PLAKA_AYRACLARI", "reason": "Türkiye tescil plakası ayraçları. Aynı dayanak (TB-012)." },
+    { "name": "PLAKA_RAKAM_EN_AZ", "reason": "Türkiye tescil plakası rakam grubu alt sınırı. Aynı dayanak (TB-012)." },
+    { "name": "PLAKA_RAKAM_EN_COK", "reason": "Türkiye tescil plakası rakam grubu üst sınırı. Aynı dayanak (TB-012)." },
+    { "name": "YENI_KAYIT_HARFLERI", "reason": "Türkiye tescil plakasında yeni kayıt teamülü harfleri; 'yeni kayıt' resmî teamül adı. Dayanak: GERI-BILDIRIM-KAYDI.md madde 17 (sahip kararıyla istisna). TB-012." }
+  ]
+}
