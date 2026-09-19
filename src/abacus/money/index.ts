@@ -327,9 +327,27 @@ export function fmtDecimalGrouped(value: number | null | undefined, digits = 0):
 }
 
 /** Serbest ondalık giriş kutuları için CANLI biçimlendirme */
-export function formatGroupedInput(raw: string): string {
+export interface GroupedInputOptions {
+  /**
+   * `true` ise nokta tuşu **ondalık ayracı** sayılır: `'98.50'` -> `'98,50'`.
+   *
+   * Varsayılan `false`'ta nokta **silinir** ve kalan rakamlar yeniden gruplanır
+   * (`'98.50'` -> `'9.850'`) — v2'den beri süren davranış, değişmedi.
+   *
+   * ⚠️ TAKAS: bu kutuda binlik ayracı olarak nokta **yazılamaz**. `'1.234'`
+   * bin iki yüz otuz dört değil, **1,234** olur. İki niyet tek girdide ayırt
+   * edilemez; çekirdek tahmin etmez, kararı size sorar.
+   *
+   * Serbest ondalık kutularında (fiyat, oran, stop) açın; binlik ayracını elle
+   * yazdıran kutularda kapalı bırakın.
+   */
+  readonly dotAsDecimal?: boolean;
+}
+
+export function formatGroupedInput(raw: string, opts?: GroupedInputOptions): string {
   if (!raw) return '';
-  const clean = raw.replace(/[^0-9,]/g, '');
+  const source = opts?.dotAsDecimal === true ? raw.replace(/\./g, ',') : raw;
+  const clean = source.replace(/[^0-9,]/g, '');
   const firstComma = clean.indexOf(',');
   const intPartRaw = firstComma === -1 ? clean : clean.slice(0, firstComma);
   const decPart = firstComma === -1 ? '' : clean.slice(firstComma + 1).replace(/,/g, '');

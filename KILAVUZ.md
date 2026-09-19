@@ -546,6 +546,8 @@ text.digits('2o0a7')                  // → '207'
 text.digits('20267', 4)               // → '2026'
 money.formatGroupedInput('121212scca')  // → '121.212'
 money.parseNumber('1.250.000')          // → 1250000
+money.formatGroupedInput('98.50')                         // → '9.850'
+money.formatGroupedInput('98.50', { dotAsDecimal: true })  // → '98,50'
 ```
 
 ⚠️ **Para kutusu için yeni bir fonksiyon aramayın.** Canlı biçim

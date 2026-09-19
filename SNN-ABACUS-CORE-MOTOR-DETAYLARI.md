@@ -8,7 +8,7 @@
 > **karar vermek** için önce [KILAVUZ.md](KILAVUZ.md). Kenar durumları, sürüm geçmişi ve
 > tasarım gerekçeleri için bu belge. Bağlayıcı kurallar için [ABACUS-SPEC.md](ABACUS-SPEC.md).
 >
-> **Sürüm:** v4.0 serisi · **Kod dili:** İngilizce · **Bağımlılık:** yalnız `decimal.js` (yalnız `math` içinde)
+> **Sürüm:** v4.1 serisi · **Kod dili:** İngilizce · **Bağımlılık:** yalnız `decimal.js` (yalnız `math` içinde)
 
 ---
 
