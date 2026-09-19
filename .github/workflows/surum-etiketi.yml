@@ -1,0 +1,102 @@
+# YALNIZ çekirdek deposuna konacak dosya: .github/workflows/surum-etiketi.yml
+#
+# NEDEN VAR: sürüm yükseltmesi ile yayılım arasındaki bağ 2026-09-19'a kadar
+# İNSAN HAFIZASINA bağlıydı. `package.json` 3.3.0 -> 3.4.0 -> 3.5.0 oldu, etiket
+# atılmadı ve HİÇBİR tüketici haberdar olmadı; üstelik `#semver:^3.x` aralığı
+# etiketlere göre çözüldüğü için main'deki sürüm yükseltmesi görünmez bile kaldı.
+#
+# Bu akış o bağı makineye bağlar: main'de `package.json` sürümü değişirse etiket
+# OTOMATİK atılır. Etiket `cekirdek-yayilim.yml`'yi tetikler, o da tüketicilerde
+# güncelleme PR'ı açar. Kimsenin bir şey hatırlaması gerekmez.
+#
+# Etiket PROJECT_TOKEN ile gönderilir — GITHUB_TOKEN ile gönderilen etiket başka
+# iş akışlarını TETİKLEMEZ (GitHub'ın döngü koruması) ve yayılım sessizce durur.
+name: surum-etiketi
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - package.json
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: surum-etiketi
+  cancel-in-progress: false
+
+jobs:
+  etiketle:
+    name: Sürüm etiketi at (yayılımı tetikler)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Depoyu al
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          # PROJECT_TOKEN şart: GITHUB_TOKEN ile atılan etiket yayılımı tetiklemez.
+          token: ${{ secrets.PROJECT_TOKEN }}
+
+      - name: Sürümü oku
+        id: surum
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+          echo "package.json sürümü: $VERSION"
+
+      - name: Etiket zaten var mı
+        id: kontrol
+        run: |
+          TAG="${{ steps.surum.outputs.tag }}"
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            echo "var=evet" >> "$GITHUB_OUTPUT"
+            echo "$TAG zaten var — yapılacak bir şey yok."
+          else
+            echo "var=hayir" >> "$GITHUB_OUTPUT"
+            echo "$TAG yok — atılacak."
+          fi
+
+      # Etiketlenmemiş bir sürümün CHANGELOG'u olmadan çıkması, tüketicinin neyin
+      # değiştiğini okuyamaması demektir. Yayılmadan önce durdurulur.
+      - name: CHANGELOG kaydı var mı
+        if: steps.kontrol.outputs.var == 'hayir'
+        run: |
+          VERSION="${{ steps.surum.outputs.version }}"
+          if ! grep -qF "## [$VERSION]" CHANGELOG.md; then
+            echo "::error::CHANGELOG.md içinde '## [$VERSION]' başlığı yok. Sürüm etiketlenmedi."
+            exit 1
+          fi
+          echo "CHANGELOG kaydı bulundu: ## [$VERSION]"
+
+      - name: Etiketi at ve gönder
+        if: steps.kontrol.outputs.var == 'hayir'
+        run: |
+          TAG="${{ steps.surum.outputs.tag }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" -m "$TAG — surum-etiketi akisi tarafindan otomatik atildi"
+          git push origin "$TAG"
+          echo "$TAG gönderildi; cekirdek-yayilim akışı tetiklenecek."
+
+      - name: Etiket gerçekten uzakta mı (push beyanı != push gerçeği)
+        if: steps.kontrol.outputs.var == 'hayir'
+        run: |
+          TAG="${{ steps.surum.outputs.tag }}"
+          if ! git ls-remote --tags origin "refs/tags/$TAG" | grep -q "$TAG"; then
+            echo "::error::$TAG uzakta bulunamadı. Yayılım tetiklenmeyecek."
+            exit 1
+          fi
+          echo "Doğrulandı: $TAG uzakta."
+
+      - name: Özet
+        run: |
+          {
+            echo "### Sürüm etiketi"
+            echo ""
+            echo "- package.json: \`${{ steps.surum.outputs.version }}\`"
+            echo "- etiket: \`${{ steps.surum.outputs.tag }}\`"
+            echo "- durum: ${{ steps.kontrol.outputs.var == 'evet' && 'zaten vardı, dokunulmadı' || 'atıldı, yayılım tetiklendi' }}"
+          } >> "$GITHUB_STEP_SUMMARY"
