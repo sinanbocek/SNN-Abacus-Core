@@ -93,6 +93,29 @@ Kapanan kayıtlar: `docs/teknik-borc-arsiv.md`
 
 #### 🔧 Teknik Detay
 - **Açıklama:** `src/abacus/money/index.ts:275-281`: JSDoc "Türkçe biçimli sayı metnini sayıya çevirir… Çözümlenemeyen girdide `null` döner (ABACUS-SPEC §2.1)". Kod `:277` `val.replace(/\./g, '').replace(',', '.').replace(/[^0-9.\-]/g, '')` → tüm noktaları ve rakam dışı karakterleri siliyor. **Ölçüm (2026-09-15, v3.1.0, tsx; 2026-09-19 v3.3.0'te yeniden ölçüldü, sonuç aynı):** `"1234.56"` → `123456`, `"1e3"` → `13`, `"(1.210,50)"` → `1210.5` (işaret kayboluyor), `"1.234,56"` → `1234.56` (doğru), `"abc"` → `null`. Sözleşme (çözümlenemeyende `null`) ile davranış çelişiyor.
+- **TÜKETİCİ ETKİSİ ÖLÇÜLDÜ (2026-09-19, salt okuma).** 8 tüketicinin **4'ü** çağırıyor,
+  toplam **40 çağrı**: trade-kasa 19 · SNN-Ihale-Maliyet 9 · GHS-Panel 8 · SNN-Yonetici-Ozeti 4.
+  Çağırmayanlar: Gunum-Var, SNN-Piyasa-Core, SNN-Portfoy, SNN-Proje-ve-Nakit-Akis (0).
+
+  **Düzeltme KIRICIDIR — kanıt:** `SNN-Ihale-Maliyet` bugünkü yanlış davranışı bir teste
+  yazmış ve etrafına koruma (`readDecimalCell`) örmüş
+  (`src/infrastructure/excel/decimalCell.test.ts:1-7`):
+
+  > *"Çekirdeğin ölçülmüş davranışı (2026-09-14): `parseNumber("1234.56") = 123456`,
+  > `parseNumber("1.5") = 15`, `parseNumber("1e3") = 13`…"*
+
+  Yani bir tüketici bu davranışa **bilerek dayanıyor**. `AI-RULES §4.0`: *"Ölçüt niyet
+  değil, tüketicinin gördüğü çıktıdır… Şüphe varsa MAJOR seçilir."* Şüphe yok: MAJOR.
+
+  **İkinci bulgu — `?? 0` zinciri.** trade-kasa (`format.ts:15`) ve SNN-Yonetici-Ozeti
+  (`mizanParser.ts:36`) sonucu `?? 0` ile sarıyor. Düzeltmeden sonra bugün *yanlış ama
+  sıfırdan farklı* dönen girdiler **0** dönecek — mizan toplamında sessiz sapma demek.
+  Bu iki satır sürüm notunda ayrıca uyarılmalı.
+
+  **Üçüncü bulgu — açık risk.** GHS-Panel `besService.ts:189-228` ve SNN-Yonetici
+  `mizanParser.ts` **Excel sütunlarını** ayrıştırıyor. Dış kaynaklı bir hücre `1234.56`
+  yazımıyla gelirse bugün sessizce **100 kat** yanlış okunuyor. Bunun canlıda gerçekleşip
+  gerçekleşmediğini **ölçmedim** — o iki projenin işi.
 - **Etki:** Tüketiciler: SNN-Ihale `src/infrastructure/excel/decimalCell.ts:25` (önüne kendi biçim kapısını koyarak korunuyor — o projenin kütüğünde TB-005); diğer tüketicilerdeki kullanım sayılmadı.
 - **Çözüm yönü:** (1) Tüketicilerde `parseNumber` çağrılarını say. (2) Yukarıdaki beş girdiyle kırmızı test yaz. (3) Katı biçim doğrulaması ekle (Türkçe dışı → `null`, parantezli eksi ya reddedilir ya işaretli okunur) veya hane sınırsız ayrı `parseDecimal` yayımla; `GERI-BILDIRIM-KAYDI.md` sürecine göre sürüm ve CHANGELOG.
 - **Neden Şimdi Çözülmüyor:** SNN-Ihale kütüğünden taşınan "çekirdek talep adayı" (2026-09-14); proje ayrımı gereği hatanın kendisi burada kayıtlı.
