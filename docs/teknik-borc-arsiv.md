@@ -6,11 +6,20 @@
 > Buradaki kayıtlar yalnızca tarihçe değildir; bir sonraki benzer işte okunması
 > gereken **ders** içerir. Kapanış biçimi: `~/.claude/standartlar/teknik-borc-standardi.md` → Kapanış.
 >
-> **Kayıt sayısı:** 11 · **Oluşturulma:** 2026-09-15
+> **Kayıt sayısı:** 12 · **Oluşturulma:** 2026-09-15
 
 ---
 
 ## Kapanan Kalemler
+
+- **Kapanış:** 2026-09-19 — **TB-012: Kod dili standardına uyum yok: Türkçe tanımlayıcılar, turnike kurulmamış.**
+  - **Ne yapıldı (sade):** Kapı kuruldu (yenilerin girişi kapandı) ve geçmiş temizlendi: kodda Türkçe adlar İngilizceye çevrildi, **yorumlar ve kullanıcıya giden yazılar Türkçe bırakıldı**. Geriye tek bir ad kaldı; o dışarıya açık olduğu için ayrı kayda alındı (TB-013).
+  - **Ölçülen sonuç:** **163 geçiş / 37 ad → 19 geçiş / 1 ad** (%88 geçiş, %97 ad). Dosya adları da çevrildi (`giris-suzme.test.ts` → `input-filter.test.ts`, `suffix-sayi.test.ts` → `suffix-number.test.ts`). Her adımda `tsc` 0, `lint` 0, **1100 test** yeşil; kapsam 93,65/90,32/100/98,43.
+  - **Ders (üç tane, üçü de ölçümle geldi):**
+    1. **Düz metin toplu değiştirme bu işi yapamaz.** İlk deneme `sed` ile yapıldı, 1037 test geçti — ama Türkçe yorumlar bozuldu (*"toplam 1–2 birim sapar"* → *"sum 1–2 birim sapar"*). Testler bunu yakalamaz; yakalayan şey `git diff`'te yorum satırlarına bakmaktır. Yorum ve dizgileri koruyan bir araç yazıldı ve her koşumda "yorum satırı değişti mi" ölçüldü.
+    2. **Araç iki kez sessizce yanlış yaptı, ikisini de ölçüm yakaladı.** (a) Şablon dizgisindeki `${...}` kod bölgesi atlandı → bildirim değişti, kullanım değişmedi, `tsc` kırıldı. (b) Düzeltildikten sonra `${kisa ? 'dk' : 'dakika'}` içindeki **kullanıcıya giden** `'dakika'` dizgisi değişti → `5 minuteWord önce`. İkincisini yalnız testler yakaladı. Kod dönüştüren bir araç yazarken "derleniyor" yeterli değildir.
+    3. **Tarayıcının listesi kapsamı belirlemez.** Tarayıcı `math/index.ts`'te 6 ad işaretliyordu; dosyada 28 vardı (`fark`, `paylar`, `artik`, `akis`, `aday`…). İşaretlileri çevirip ötekileri bırakmak dosyayı yarı Türkçe bırakırdı. Kapsam dosyadan okunur, kapıdan değil.
+
 
 - **Kapanış:** 2026-09-19 — **TB-001: Toplama, çıkarma ve çarpma bozuk sayıyı sessizce geçiriyor.** — ❌ **KAYIT GEÇERSİZ, borç değil**
   - **Ne yapıldı (sade):** Hiçbir şey; çünkü ortada bir eksiklik yokmuş. Bu davranış şartnamede **bilinçli bir karar** olarak zaten yazılıydı ve bir test onu zaten çiviliyordu. Kayıt, şartname okunmadan açılmış.

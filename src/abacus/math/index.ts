@@ -172,10 +172,10 @@ export function percentChange(current: number, previous: number): number | null 
   if (!Number.isFinite(current) || !Number.isFinite(previous)) return null;
   if (previous <= 0) return null;
 
-  const fark = sub(current, previous);
-  const oran = div(fark, previous);
-  if (oran === null) return null;
-  return mul(oran, 100);
+  const delta = sub(current, previous);
+  const changeRatio = div(delta, previous);
+  if (changeRatio === null) return null;
+  return mul(changeRatio, 100);
 }
 
 /**
@@ -197,17 +197,17 @@ export interface AllocateOptions {
  * olarak ayrıştırır. `String(n)` JS'in en kısa gidiş-dönüş yazımıdır: `0.1`
  * ikili yaklaşığıyla değil `"0.1"` olarak, `1e-7` ise `"1e-7"` olarak gelir.
  */
-function ondalikParcala(n: number): { mantissa: bigint; olcek: number } {
+function splitDecimal(n: number): { mantissa: bigint; scale: number } {
   const m = /^(\d+)(?:\.(\d+))?(?:e([+-]\d+))?$/.exec(String(n));
   // Çağıran yalnız sonlu ve >= 0 değer verir; bu biçimin dışı oluşmaz.
   if (m === null) throw new Error(`ondalikParcala: beklenmeyen yazım ${String(n)}`);
-  const kesir = m[2] ?? '';
-  const us = m[3] === undefined ? 0 : Number(m[3]);
-  const olcek = kesir.length - us;
-  const mantissa = BigInt((m[1] as string) + kesir);
-  return olcek >= 0
-    ? { mantissa, olcek }
-    : { mantissa: mantissa * 10n ** BigInt(-olcek), olcek: 0 };
+  const fraction = m[2] ?? '';
+  const exponent = m[3] === undefined ? 0 : Number(m[3]);
+  const scale = fraction.length - exponent;
+  const mantissa = BigInt((m[1] as string) + fraction);
+  return scale >= 0
+    ? { mantissa, scale }
+    : { mantissa: mantissa * 10n ** BigInt(-scale), scale: 0 };
 }
 
 /**
@@ -253,9 +253,9 @@ export function allocate(
   if (!Number.isSafeInteger(total)) return null;
   if (!weights.every((w) => Number.isFinite(w) && w >= 0)) return null;
 
-  const parcalar = weights.map(ondalikParcala);
-  const k = parcalar.reduce((enBuyuk, p) => (p.olcek > enBuyuk ? p.olcek : enBuyuk), 0);
-  const W = parcalar.map((p) => p.mantissa * 10n ** BigInt(k - p.olcek));
+  const parts = weights.map(splitDecimal);
+  const k = parts.reduce((largest, p) => (p.scale > largest ? p.scale : largest), 0);
+  const W = parts.map((p) => p.mantissa * 10n ** BigInt(k - p.scale));
   const S = W.reduce((a, b) => a + b, 0n);
   /*
    * TEK KAPI: boş dizi ve tümü sıfır ağırlık. Ayrı bir `weights.length === 0`
@@ -265,25 +265,25 @@ export function allocate(
   if (S === 0n) return null;
 
   const T = BigInt(total < 0 ? -total : total);
-  const paylar = W.map((w) => (T * w) / S);
-  const kalanlar = W.map((w) => (T * w) % S);
-  const artik = Number(T - paylar.reduce((a, b) => a + b, 0n));
+  const shares = W.map((w) => (T * w) / S);
+  const remainders = W.map((w) => (T * w) % S);
+  const leftover = Number(T - shares.reduce((a, b) => a + b, 0n));
 
   /*
    * Artık < kalem sayısıdır (her kalan < S). Sıfır ağırlıklı kalemin kalanı 0'dır
    * ve pozitif kalanı olan kalemlerin sayısı artıktan az olamaz; dolayısıyla
    * sıfır ağırlık yapısal olarak artık almaz — ayrı bir koruma gerekmez.
    */
-  const sira = kalanlar
-    .map((kalan, i) => ({ kalan, i }))
-    .sort((a, b) => (a.kalan === b.kalan ? a.i - b.i : a.kalan > b.kalan ? -1 : 1));
-  for (let j = 0; j < artik; j++) {
-    const hedef = (sira[j] as { i: number }).i;
-    paylar[hedef] = (paylar[hedef] as bigint) + 1n;
+  const ranking = remainders
+    .map((remainder, i) => ({ remainder, i }))
+    .sort((a, b) => (a.remainder === b.remainder ? a.i - b.i : a.remainder > b.remainder ? -1 : 1));
+  for (let j = 0; j < leftover; j++) {
+    const targetIndex = (ranking[j] as { i: number }).i;
+    shares[targetIndex] = (shares[targetIndex] as bigint) + 1n;
   }
 
   // `0 - v`: negatif havuzda sıfır pay `-0` olarak dönmesin.
-  return paylar.map((p) => (total < 0 ? 0 - Number(p) : Number(p)));
+  return shares.map((p) => (total < 0 ? 0 - Number(p) : Number(p)));
 }
 
 /**
@@ -303,16 +303,16 @@ export function allocate(
  * kırmızı vermeyen koruma ölü koddur). Önkoşul değişirse bu not da değişmeli.
  */
 function npvInternal(rate: number, cashFlows: readonly number[]): number | null {
-  let toplam = new D(0);
+  let sum = new D(0);
   for (let t = 0; t < cashFlows.length; t++) {
-    const akis = cashFlows[t];
+    const flow = cashFlows[t];
     // noUncheckedIndexedAccess gereği tip düzeyinde zorunlu; döngü sınırları
     // dizinin kendi uzunluğundan geldiği için çalışma zamanında oluşmaz.
-    if (akis === undefined) return null;
-    toplam = toplam.plus(new D(String(akis)).dividedBy(new D(String(1 + rate)).pow(t)));
+    if (flow === undefined) return null;
+    sum = sum.plus(new D(String(flow)).dividedBy(new D(String(1 + rate)).pow(t)));
   }
-  const sonuc = toplam.toNumber();
-  return Number.isFinite(sonuc) ? sonuc : null;
+  const result = sum.toNumber();
+  return Number.isFinite(result) ? result : null;
 }
 
 /** `irr` yakınsama eşiği: NPV bu değerin altına inince kök kabul edilir. */
@@ -367,11 +367,11 @@ const IRR_MAX_RATE = 1000;
  * @example math.irr([1000, 500])          // null (işaret değişimi yok)
  */
 export function irr(cashFlows: readonly number[], guess?: number): number | null {
-  let pozitifVar = false;
-  let negatifVar = false;
-  for (const akis of cashFlows) {
-    if (akis > 0) pozitifVar = true;
-    if (akis < 0) negatifVar = true;
+  let hasPositive = false;
+  let hasNegative = false;
+  for (const flow of cashFlows) {
+    if (flow > 0) hasPositive = true;
+    if (flow < 0) hasNegative = true;
   }
 
   /*
@@ -391,38 +391,38 @@ export function irr(cashFlows: readonly number[], guess?: number): number | null
    * verilmişti. Davranış sözleşmesi testlerle çivilidir; buraya bir koruma
    * eklemeden önce onu KIRMIZI yapan bir test yazın.
    */
-  if (!pozitifVar || !negatifVar) return null;
+  if (!hasPositive || !hasNegative) return null;
 
   // `guess` bir başlangıç ipucudur; geçerliyse önce onun etrafına bakılır.
-  const ipucu = guess !== undefined && Number.isFinite(guess) && guess > -1 ? guess : 0.1;
+  const hint = guess !== undefined && Number.isFinite(guess) && guess > -1 ? guess : 0.1;
 
   // Kökü içine alan bir aralık aranır. Alt sınır -1'e yaklaşır ama ona
   // DEĞMEZ: r = -1'de (1+r)^t sıfırdır ve NPV tanımsız olur.
-  const aday = [ipucu, 0, 0.1, -0.5, -0.9, -0.99, 1, 10, 100, IRR_MAX_RATE];
-  let alt: number | null = null;
-  let ust: number | null = null;
-  let altNpv = 0;
-  let ustNpv = 0;
+  const candidates = [hint, 0, 0.1, -0.5, -0.9, -0.99, 1, 10, 100, IRR_MAX_RATE];
+  let low: number | null = null;
+  let high: number | null = null;
+  let lowNpv = 0;
+  let highNpv = 0;
 
-  for (const r of aday) {
-    const deger = npvInternal(r, cashFlows);
-    if (deger === null) continue;
-    if (deger === 0) return r;
+  for (const r of candidates) {
+    const value = npvInternal(r, cashFlows);
+    if (value === null) continue;
+    if (value === 0) return r;
 
-    if (deger > 0) {
-      if (ust === null || r < ust) {
-        ust = r;
-        ustNpv = deger;
+    if (value > 0) {
+      if (high === null || r < high) {
+        high = r;
+        highNpv = value;
       }
-    } else if (alt === null || r < alt) {
-      alt = r;
-      altNpv = deger;
+    } else if (low === null || r < low) {
+      low = r;
+      lowNpv = value;
     }
   }
 
   // Kök tarama aralığında kuşatılamadıysa (ör. dönemsel %100.000'in üstündeki
   // bir kök) yanlış bir sayı yerine null döner.
-  if (alt === null || ust === null) return null;
+  if (low === null || high === null) return null;
 
   /*
    * Burada ayrıca bir "uçların işaretleri zıt mı" kontrolü YOKTUR: `alt` yalnız
@@ -431,24 +431,24 @@ export function irr(cashFlows: readonly number[], guess?: number): number | null
    * Mutasyon testi de o kontrolün hiçbir testi kırmadığını gösterdi
    * (AI-RULES §2.4 — kırmızı vermeyen koruma ölü koddur).
    */
-  let dusuk = alt < ust ? alt : ust;
-  let yuksek = alt < ust ? ust : alt;
-  let dusukNpv = alt < ust ? altNpv : ustNpv;
+  let dusuk = low < high ? low : high;
+  let yuksek = low < high ? high : low;
+  let dusukNpv = low < high ? lowNpv : highNpv;
 
   for (let i = 0; i < IRR_MAX_ITER; i++) {
-    const orta = add(dusuk, yuksek) / 2;
-    const ortaNpv = npvInternal(orta, cashFlows);
-    if (ortaNpv === null) return null;
+    const mid = add(dusuk, yuksek) / 2;
+    const midNpv = npvInternal(mid, cashFlows);
+    if (midNpv === null) return null;
 
-    if (abs(ortaNpv) <= IRR_NPV_EPSILON || sub(yuksek, dusuk) <= IRR_RATE_EPSILON) {
-      return orta;
+    if (abs(midNpv) <= IRR_NPV_EPSILON || sub(yuksek, dusuk) <= IRR_RATE_EPSILON) {
+      return mid;
     }
 
-    if (ortaNpv * dusukNpv > 0) {
-      dusuk = orta;
-      dusukNpv = ortaNpv;
+    if (midNpv * dusukNpv > 0) {
+      dusuk = mid;
+      dusukNpv = midNpv;
     } else {
-      yuksek = orta;
+      yuksek = mid;
     }
   }
 

@@ -36,7 +36,7 @@ function calistir(ifade: string): unknown {
 }
 
 interface Ornek {
-  satirNo: number;
+  lineNo: number;
   ifade: string;
   beklenen: string;
 }
@@ -45,30 +45,30 @@ interface Ornek {
 function ornekleriTopla(): { ornekler: Ornek[]; tanimsiz: string[] } {
   const ornekler: Ornek[] = [];
   const tanimsiz: string[] = [];
-  const satirlar = KILAVUZ.split(/\r?\n/);
+  const lines = KILAVUZ.split(/\r?\n/);
   let blokta = false;
 
-  satirlar.forEach((ham: string, i: number) => {
-    const satir = ham.trim();
+  lines.forEach((ham: string, i: number) => {
+    const line = ham.trim();
     if (!blokta) {
-      if (satir === '```js') blokta = true;
+      if (line === '```js') blokta = true;
       return;
     }
-    if (satir.startsWith('```')) {
+    if (line.startsWith('```')) {
       blokta = false;
       return;
     }
-    if (satir === '' || (satir.startsWith('//') && !satir.includes('// →'))) return;
+    if (line === '' || (line.startsWith('//') && !line.includes('// →'))) return;
 
-    const ayrac = satir.lastIndexOf('// →');
+    const ayrac = line.lastIndexOf('// →');
     if (ayrac <= 0) {
-      tanimsiz.push(`satır ${i + 1}: ${satir}`);
+      tanimsiz.push(`satır ${i + 1}: ${line}`);
       return;
     }
     ornekler.push({
-      satirNo: i + 1,
-      ifade: satir.slice(0, ayrac).trim(),
-      beklenen: satir.slice(ayrac + '// →'.length).trim(),
+      lineNo: i + 1,
+      ifade: line.slice(0, ayrac).trim(),
+      beklenen: line.slice(ayrac + '// →'.length).trim(),
     });
   });
 
@@ -87,19 +87,19 @@ describe('KILAVUZ.md — yapı', () => {
   });
 
   it('dışa açılan her ad kılavuzda geçer', () => {
-    const eksik: string[] = [];
+    const missing: string[] = [];
     for (const [motor, mod] of Object.entries(abacus)) {
       for (const ad of Object.keys(mod as Record<string, unknown>)) {
-        if (!KILAVUZ.includes(`${motor}.${ad}`)) eksik.push(`${motor}.${ad}`);
+        if (!KILAVUZ.includes(`${motor}.${ad}`)) missing.push(`${motor}.${ad}`);
       }
     }
-    expect(eksik).toEqual([]);
+    expect(missing).toEqual([]);
   });
 });
 
 describe('KILAVUZ.md — her örnek çalışır', () => {
   for (const o of ornekler) {
-    it(`satır ${o.satirNo}: ${o.ifade}`, () => {
+    it(`satır ${o.lineNo}: ${o.ifade}`, () => {
       expect(calistir(o.ifade)).toEqual(calistir(o.beklenen));
     });
   }

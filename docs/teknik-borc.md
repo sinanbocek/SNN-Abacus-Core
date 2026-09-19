@@ -12,7 +12,7 @@ Kapanan kayıtlar: `docs/teknik-borc-arsiv.md`
 
 ## İçindekiler
 
-- **🟡 P2 — Planlı:** TB-012
+- **🟢 P3 — Fırsatta:** TB-013
 
 ## Öncelikler
 
@@ -37,27 +37,23 @@ Kapanan kayıtlar: `docs/teknik-borc-arsiv.md`
 
 ---
 
-## 🟡 P2 — Planlı
+---
 
+## 🟢 P3 — Fırsatta
 
-
-
-### TB-012 — Kod dili standardına uyum yok: 43 Türkçe tanımlayıcı var, turnike hiç kurulmamış
-- **Tespit Tarihi:** 2026-09-19 (abacus-talep yolu kurulurken kanca uyarısı; ardından bağımsız ölçüm)
-- **Öncelik:** P2 (Planlı)
+### TB-013 — `text.plate` çıktısındaki `yeniKayit` alanı Türkçe
+- **Tespit Tarihi:** 2026-09-19 (TB-012 temizliğinden arta kalan tek ad)
+- **Öncelik:** P3 (Fırsatta)
 
 #### 🟢 Sade Anlatım
-- **Sorun ne?** Aile kuralı şunu diyor: kodun içinde şeylere verilen adlar İngilizce olur; açıklamalar, belgeler ve kullanıcının gördüğü yazılar Türkçe kalır. Bu depoda 43 ad bu kurala uymuyor. Asıl sorun sayı değil: **kuralı kontrol eden kapı hiç kurulmamış**, bu yüzden her yeni iş sessizce birkaç tane daha ekliyor.
-- **Benzetme:** Depoda "girişte kask takılır" yazısı asılı ama kapıda kimse yok. Kask takmayan giriyor, kimse saymıyor; yazı kendi kendine çalışmıyor.
-- **Çözülmezse ne olur?** Sayı büyümeye devam eder ve bir gün topluca düzeltmek pahalı hâle gelir. Ayrıca bu kütüphaneyi kullanan 8 projeye "kurala uyun" demek zorlaşır; çekirdek kendisi uymuyorsa kural gevşer.
-- **Senden beklenen karar:** Yok — ikisi de 2026-09-19'da karara bağlandı. Kapı kuruldu, plaka adları istisna yazıldı. Geriye kalan 38 adın çevrilmesi planlı iş.
+- **Sorun ne?** Plaka okuyucunun döndürdüğü sonuçta bir alanın adı Türkçe: `yeniKayit`. Aile kuralı adların İngilizce olmasını istiyor. Ama bu ad **dışarıya açık**: kütüphaneyi kullanan projeler doğrudan bu adı yazıyor.
+- **Benzetme:** Bir ürünün üstündeki etiketi değiştirmek kolaydır; ama o etiketi kullanan sekiz mağazanın raf düzenini de değiştirmek gerekir.
+- **Çözülmezse ne olur?** Tek bir ad Türkçe kalır. Çalışma zamanı etkilenmez.
+- **Senden beklenen karar:** Yok — bir sonraki kırıcı sürümle birlikte yapılır.
 
 #### 🔧 Teknik Detay
-- **Açıklama:** `node <ev>/.claude/standartlar-canli/quality/code-language-scan.js --tumu` (2026-09-19, v3.3.0) **43 farklı tanımlayıcı / 103 satır atfı** buluyordu. **Güncel: 37 ayrı ad / 163 geçiş, 15 dosya** (2026-09-19 akşam ölçümü). Sayı iki kez değişti: plaka istisnası 5 düşürdü (43→38), sonra ortak tarayıcının kök listesi genişledi (38→37 ad ama geçiş sayısı arttı). **Kütüğe yazılan sayı ortak tarayıcıya bağlıdır ve kendiliğinden değişir.**
-- **Kapsam ölçüldü ve kayıttakinden BÜYÜK.** Tarayıcının kök listesi her Türkçe adı görmüyor: yalnız `math/index.ts`'te tarayıcı 6 ad işaretliyor ama dosyada **28** Türkçe tanımlayıcı var (`fark`, `paylar`, `artik`, `akis`, `aday`, `olcek`, `kesir`… listede yok). İşaretlileri çevirip ötekileri bırakmak dosyayı yarı Türkçe bırakır — iki uçtan da kötü.
-- **Metin tabanlı toplu değiştirme ÇALIŞMAZ; denendi ve geri alındı (2026-09-19).** `math/index.ts` sözcük sınırlı `sed` ile çevrildi, 1037 test geçti, ama **Türkçe yorumlar bozuldu**: *"toplam 1–2 birim sapar"* → *"sum 1–2 birim sapar"*, *"alt birim: kuruş"* → *"low birim: kuruş"*. Aile standardı yorumların Türkçe kalmasını şart koşuyor. Ölçüm: tek dosyada **43 kod + 10 yorum** satırı el denetimi ister; 15 dosyada ~150 + ~150. Oturum kancası "129 bulgu" diyor; bu sayı tarayıcının kendi çıktısıyla **tutmuyor**, aradaki farkın nereden geldiği ölçülmedi. Dosya dağılımı: `scripts/beceri-dogrula.mjs` 8, `src/abacus/text/index.ts` 6, `src/abacus/math/index.ts` 6, `src/abacus/kilavuz.test.ts` 4, `src/abacus/spec-surface.test.ts` 3, `src/abacus/money/index.ts` 3, `src/abacus/math/allocate.test.ts` 3, `src/abacus/date/index.ts` 2, kalanlar 1'er. Eksik olan iki altyapı: `.github/workflows/kod-dili.yml` **yok** (aile standardı `ornek/kod-dili.yml` şablonu sunuyor) ve `.snn-kod-dili.json` istisna dosyası **yok**.
-- **Etki:** Kod okunabilirliği ve aile standardı uyumu. Çalışma zamanı davranışı etkilenmiyor — hiçbiri hata üretmiyor.
-- **Çözüm yönü:** (1) ~~Turnikeyi kur~~ **YAPILDI (2026-09-19):** `.github/workflows/kod-dili.yml` kuruldu. Turnike yalnız **eklenen satırları** tarıyor, bu yüzden mevcut 43 ad için geçiş istisnası yazmak gerekmedi — yenilerin girişi kapandı, geçmiş açık kaldı. (2) ~~Plaka adlarına istisna yaz~~ **YAPILDI (2026-09-19):** `.snn-kod-dili.json` içinde `plaka` kökü, dayanağı GERI-BILDIRIM-KAYDI.md talep #4. **Not:** standardın tablosu `plaka → plate` çevirisini öneriyor, örnek JSON'u ise `plaka`yı istisna gösteriyor; ikisi çelişiyor. Sahip kararı istisna yönünde. Çelişki SNN-Standartlar'a bildirilmedi — bildirilirse bu satır güncellenir. (3) Kalanları dosya dosya çevir; test dosyası adları (`giris-suzme.test.ts`, `suffix-sayi.test.ts`) yeniden adlandırılırken `vitest.config.ts` include deseni ve kapsam eşikleri kontrol edilsin.
-- **Neden Şimdi Çözülmüyor:** Kapı ve istisna 2026-09-19'da kapandı; **geriye kalan 38 adın çevrilmesi** açık. Toplu değiştirme kuralı gereği dosya dosya yapılır ve turnike yenileri zaten engellediği için aceleye gerek yok.
-
----
+- **Açıklama:** `src/abacus/text/index.ts:287` `PlateResult.yeniKayit: boolean`. Tarayıcı 19 geçiş sayıyor; hepsi bu tek alanın kullanımları (`docs-claims.test.ts`, `plate.test.ts`, `text/index.ts`). TB-012 temizliğinde 163 geçişin 144'ü kapatıldı, kalan yalnız bu.
+- **Neden ayrı kayıt:** Yeniden adlandırma **genel API yüzeyini** değiştirir. `api-surface.test.ts` yalnız fonksiyon adlarını çiviler, dönüş tipi alanlarını değil — yani bu değişiklik testlerle yakalanmaz ama tüketicide derleme hatası verir. `AI-RULES §4.0`: kırıcı değişiklik daima MAJOR'dır.
+- **Etki:** `text.plate` kullanan tüketiciler. Bugün ölçülmedi.
+- **Çözüm yönü:** Bir sonraki MAJOR sürüme iliştir: `yeniKayit` → `newRegistration`, `MIGRATION-v5.md`'ye satır, `api-surface.test.ts`'e dönüş tipi alanlarını da çivileyen bir kontrol ekle (bu boşluk bu kayıtla ortaya çıktı).
+- **Neden Şimdi Çözülmüyor:** Tek bir ad için ayrı bir major sürüm çıkarmak, 8 tüketiciyi yeni bir göçe zorlamak demektir; v4.0.0 ve v4.1.0 daha yeni yayıldı ve güncelleme PR'ları açık. Değer/maliyet oranı bir sonraki kırıcı sürümle birleştirmeyi gerektiriyor.

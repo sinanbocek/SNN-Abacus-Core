@@ -20,6 +20,6 @@
 export const EN_COK_HANE = 20;
 
 /** `digits` 0 ile EN_COK_HANE arasında (dâhil) bir tam sayı mı? */
-export function gecerliHane(digits: number): boolean {
+export function isValidDigits(digits: number): boolean {
   return Number.isInteger(digits) && digits >= 0 && digits <= EN_COK_HANE;
 }

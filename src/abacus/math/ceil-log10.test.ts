@@ -81,15 +81,15 @@ describe('math.log10 — onluk logaritma (rapor #3 §3)', () => {
 
   it('raporun eksen adımı formülü artık doğru sonuç verir', () => {
     // taban = 10 ^ (floor(log10(max)) - 1)
-    const eksenAdimi = (max: number): number | null => {
+    const axisStep = (max: number): number | null => {
       const mertebe = log10(max);
       if (mertebe === null) return null;
       return pow(10, floor(mertebe) - 1);
     };
-    expect(eksenAdimi(1700000)).toBe(100000);
-    expect(eksenAdimi(170000)).toBe(10000);
-    expect(eksenAdimi(1000000)).toBe(100000); // ← taklitte 10.000 çıkıyordu
-    expect(eksenAdimi(1000)).toBe(100); // ← taklitte 10 çıkıyordu
+    expect(axisStep(1700000)).toBe(100000);
+    expect(axisStep(170000)).toBe(10000);
+    expect(axisStep(1000000)).toBe(100000); // ← taklitte 10.000 çıkıyordu
+    expect(axisStep(1000)).toBe(100); // ← taklitte 10 çıkıyordu
   });
 
   it('ara değerler', () => {
