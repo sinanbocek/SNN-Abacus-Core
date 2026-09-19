@@ -34,7 +34,8 @@ for (const ad of beceriler) {
   if (!fs.existsSync(dosya)) { hata(`${ad}: SKILL.md yok.`); continue; }
   const metin = fs.readFileSync(dosya, 'utf8');
 
-  const on = /^---\n([\s\S]*?)\n---\n/.exec(metin);
+  // \r?\n: dosya Windows'ta düzenlenince CRLF'e döner; kontrol satır sonuna duyarsız olmalı.
+  const on = /^---\r?\n([\s\S]*?)\r?\n---\r?\n/.exec(metin);
   if (!on) { hata(`${ad}: YAML frontmatter yok ya da dosyanın başında değil.`); continue; }
   const alanlar = Object.fromEntries(
     on[1].split('\n').map((s) => { const i = s.indexOf(':'); return i < 0 ? null : [s.slice(0, i).trim(), s.slice(i + 1).trim()]; }).filter(Boolean),
@@ -77,8 +78,31 @@ if (!fs.existsSync(sablon)) {
 
   // Beceri ile şablon aynı etiketi kullanmalı.
   const beceri = path.join(beceriKok, 'abacus-talep/SKILL.md');
-  if (fs.existsSync(beceri) && !/--label talep\b/.test(fs.readFileSync(beceri, 'utf8'))) {
-    hata('abacus-talep becerisi şablonla aynı etiketi (talep) kullanmıyor.');
+  if (fs.existsSync(beceri)) {
+    const beceriMetni = fs.readFileSync(beceri, 'utf8');
+    if (!/--label talep\b/.test(beceriMetni)) {
+      hata('abacus-talep becerisi şablonla aynı etiketi (talep) kullanmıyor.');
+    }
+
+    // Becerideki eşleme tablosu şablonun alanlarını BİREBİR karşılamalı.
+    // `--body-file` ile gönderilen taslak web formundan geçmez, yani şablonun
+    // `required: true` alanları göndereni durdurmaz; tek koruma bu eşlemedir.
+    // Şablonda bir alan adı değişip beceri güncellenmezse burada kırılır.
+    const esleme = new Map();
+    for (const [, id, baslik] of beceriMetni.matchAll(/^\|\s*`([\w-]+)`\s*\|\s*`(##[^`]+)`\s*\|/gm)) {
+      esleme.set(id, baslik.trim());
+    }
+    if (esleme.size === 0) {
+      hata('abacus-talep: şablon alanı → taslak başlığı eşleme tablosu bulunamadı.');
+    } else {
+      for (const id of zorunlu) {
+        if (!esleme.has(id)) hata(`abacus-talep: eşleme tablosunda "${id}" alanı yok.`);
+      }
+      for (const id of esleme.keys()) {
+        if (!zorunlu.includes(id)) hata(`abacus-talep: eşleme tablosunda şablonda olmayan alan var: "${id}".`);
+      }
+      olculen.push(`beceri↔şablon eşlemesi: ${esleme.size} alan karşılandı`);
+    }
   }
 }
 

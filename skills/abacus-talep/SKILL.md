@@ -125,9 +125,27 @@ gh issue create -R sinanbocek/SNN-Abacus-Core \
   --body-file <taslak-dosyası>
 ```
 
-Gövde, issue şablonundaki başlıkları taşır: **Tür · Tüketici proje · Kullanılan çekirdek
-sürümü · 1. Gerçek olay · 2. Ölçülmüş çıktı · 3. Denenen alternatif · 4. Kaç tüketiciyi
-etkiliyor · 5. §4.1 sınavı · Beklenen sonuç**.
+`--body-file` ile gönderilen taslak, web formundan geçmez — yani **şablonun zorunlu alanları
+seni durdurmaz.** Bu yüzden başlıkları elle eşlemen gerekir. Taslak şu dokuz başlığı,
+**bu sırayla** ve `##` düzeyinde taşır:
+
+| Şablon alanı | Taslaktaki başlık |
+|---|---|
+| `tur` | `## Tür` |
+| `tuketici` | `## Tüketici proje` |
+| `surum` | `## Kullanılan çekirdek sürümü` |
+| `gercek-olay` | `## 1. Gerçek olay` |
+| `olculmus-cikti` | `## 2. Ölçülmüş çıktı` |
+| `alternatif` | `## 3. Denenen alternatif` |
+| `etki` | `## 4. Kaç tüketiciyi etkiliyor` |
+| `yerlestirme-sinavi` | `## 5. AI-RULES §4.1 yerleştirme sınavı` |
+| `beklenen` | `## Beklenen sonuç` |
+
+Dokuzu da dolu olmalı. Bir başlığı atlamak, web formunda boş bırakamayacağın bir alanı
+sessizce boş göndermek demektir.
+
+Bu tablo `scripts/beceri-dogrula.mjs` tarafından şablonla karşılaştırılır; şablonda bir alan
+adı değişirse CI kırılır. Tabloyu elle bozma.
 
 Etiket yoksa `gh` hata verir; bir kez açılır:
 
