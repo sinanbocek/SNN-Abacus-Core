@@ -114,13 +114,54 @@ const INTL_GATE = {
     'giriş kutusu için money.formatGroupedInput + money.parseNumber kullanın.',
 };
 
+/**
+ * Sessiz sayısal varsayılan yasağı (ABACUS-SPEC §2.1).
+ *
+ * `null` bir cevaptır: "hesaplanamadı". Onu uydurma bir sayıyla değiştirmek hatayı
+ * sessizce akıtır.
+ *
+ * TB-005: kural bugüne dek YALNIZ `INSTALL §6.2` ev kuralı şablonundaydı, yayımlanan
+ * pakette yoktu; üstelik yalnız `0` literaline bakıyordu. Tüketicinin kırılgan bulduğu
+ * `GERI_GUN[kod] ?? 1` satırı tam bu yüzden hiçbir kapıya takılmamıştı.
+ *
+ * İKİ AYRI KOL — ölçülerek belirlendi:
+ *   1. `?? 0` / `|| 0` her yerde yasak (eski davranış, aynen korunuyor).
+ *   2. ARANMIŞ ya da HESAPLANMIŞ bir değere HERHANGİ bir sayı varsayılanı yasak:
+ *      çağrı sonucu (`toMinor(v) ?? 0`) veya tablo araması (`GERI_GUN[kod] ?? 1`).
+ *
+ * Neden ikinci kol dar tutuldu: "her sayıyı yakala" denendi ve çekirdeğin KENDİ
+ * kodunda yanlış alarm verdi — `opts?.digits ?? 1` (unit/index.ts:112) meşru bir
+ * seçenek varsayılanıdır, hata gizlemez. Aranmış değer ile çağıranın atlayabileceği
+ * seçenek arasındaki ayrım budur.
+ *
+ * BİLİNEN SINIR: düz bir değişkene sıfır dışı sayı varsayılanı (`deger ?? 1`)
+ * yakalanmaz. Sözdiziminden o değişkenin aranmış bir sonuç mu yoksa seçenek mi
+ * olduğu anlaşılmıyor; yanlış alarm üretmemek için kapsam dışı bırakıldı.
+ */
+const NUMERIC_DEFAULT =
+  '([right.type="Literal"][right.raw=/^[0-9]/], ' +
+  '[right.type="UnaryExpression"][right.argument.type="Literal"][right.argument.raw=/^[0-9]/])';
+
+const silentNumericDefault = (operator) => ({
+  selector: [
+    `LogicalExpression[operator="${operator}"][right.type="Literal"][right.value=0]`,
+    `LogicalExpression[operator="${operator}"][left.type="CallExpression"]:matches${NUMERIC_DEFAULT}`,
+    `LogicalExpression[operator="${operator}"][left.type="MemberExpression"][left.computed=true]:matches${NUMERIC_DEFAULT}`,
+  ].join(', '),
+  message:
+    `Sessiz \`${operator} <sayı>\` varsayılanı yasaktır (ABACUS-SPEC §2.1). ` +
+    'null durumunu açıkça ele alın; sayı uydurmak hatayı gizler.',
+});
+
+const SILENT_DEFAULT_GATES = [silentNumericDefault('||'), silentNumericDefault('??')];
+
 /** ABACUS'un tüketiciye önerdiği kural kümesi. */
 const recommended = [
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     rules: {
       'no-restricted-properties': ['error', ...MINOR_UNIT_GATES, ...FORMAT_GATES],
-      'no-restricted-syntax': ['error', INTL_GATE],
+      'no-restricted-syntax': ['error', INTL_GATE, ...SILENT_DEFAULT_GATES],
     },
   },
 ];
@@ -131,6 +172,7 @@ export default {
   minorUnitGates: MINOR_UNIT_GATES,
   formatGates: FORMAT_GATES,
   intlGate: INTL_GATE,
+  silentDefaultGates: SILENT_DEFAULT_GATES,
 };
 
-export { recommended, MINOR_UNIT_GATES, FORMAT_GATES, INTL_GATE };
+export { recommended, MINOR_UNIT_GATES, FORMAT_GATES, INTL_GATE, SILENT_DEFAULT_GATES };

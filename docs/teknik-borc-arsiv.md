@@ -6,11 +6,27 @@
 > Buradaki kayıtlar yalnızca tarihçe değildir; bir sonraki benzer işte okunması
 > gereken **ders** içerir. Kapanış biçimi: `~/.claude/standartlar/teknik-borc-standardi.md` → Kapanış.
 >
-> **Kayıt sayısı:** 4 · **Oluşturulma:** 2026-09-15
+> **Kayıt sayısı:** 7 · **Oluşturulma:** 2026-09-15
 
 ---
 
 ## Kapanan Kalemler
+
+- **Kapanış:** 2026-09-19 — **TB-005: Dağıtılan lint kuralı "eksik değere sessizce sayı koyma" hatasını kaçırıyor.**
+  - **Ne yapıldı (sade):** "Hesaplanamadı" cevabını uydurma bir sayıyla değiştirmeyi yasaklayan kural, artık kütüphaneyle birlikte dağıtılıyor ve yalnız sıfırı değil aranmış bir değere konan **her** sayıyı yakalıyor.
+  - **Ölçülen sonuç:** Kural `eslint/index.js`'e taşındı (`SILENT_DEFAULT_GATES`), `configs.recommended` içine girdi; `INSTALL §6.2`'deki kopya kaldırılıp pakete yönlendirildi. Yakaladıkları ve **yakalamadıkları** programatik ESLint koşumuyla çivilendi (11 test): `GERI_GUN[kod] ?? 1`, `toMinor(v) ?? 0`, `liste[0] ?? -1`, `deger ?? 0` yakalanıyor; `opts?.digits ?? 1`, `options.digits ?? 2`, `deger ?? 'yok'` geçiyor. Sürüm 3.4.0.
+  - **Ders:** İlk yazdığım geniş kural ("her sayısal literali yakala") **çekirdeğin kendi kodunda** yanlış alarm verdi: `opts?.digits ?? 1` (`unit/index.ts:112`) meşru bir seçenek varsayılanıdır. Kapıyı yazarken önce **kendi kodunda** koştur; yanlış alarm veren kapı tüketicide susturulur ve gerçek hatayı da kör eder. Ayrım şu çıktı: *aranmış/hesaplanmış değer* (çağrı sonucu, tablo araması) ile *çağıranın atlayabileceği seçenek* farklı şeylerdir. Kaydın yanlış bir iddiası da düzeltildi: kural `eslint/index.js`'te değil, `INSTALL` şablonundaydı.
+
+- **Kapanış:** 2026-09-19 — **TB-008: Oturum günlüğü bir aydır güncellenmemiş.**
+  - **Ne yapıldı (sade):** Dosya silindi. Kayıt tutma işini fiilen `GERI-BILDIRIM-KAYDI.md` (neden) ve `CHANGELOG.md` (ne) üstlenmişti; üçüncü ve eskiyen bir anlatı gereksizdi. Sahip kararı.
+  - **Ölçülen sonuç:** `.agent/session_log.md` 18 Ağustos'tan beri değişmemişti ve "v1.1.0" diyordu. **Kayıtta yazmayan bir olgu ölçüldü: dosya git tarafından hiç izlenmiyordu** (`git ls-files .agent` → 0); `.agent` zaten `.gitignore`'daydı. Yani kayıt boyunca "depoda eski bir günlük var" sanılan şey, aslında yalnız yerel bir dosyaydı. Silme işlemi bu yüzden commit'te görünmez.
+  - **Ders:** "Depoda şu dosya var" demeden önce `git ls-files` ile bak. Çalışma klasöründe durmak ile depoda durmak aynı şey değil; kayıt bir ay boyunca bu ayrımı yapmadan durdu.
+
+- **Kapanış:** 2026-09-19 — **TB-009: Depoda ilk sürümden kalma eski bir commit mesajı dosyası duruyor.**
+  - **Ne yapıldı (sade):** `commit_msg.txt` depodan silindi ve bir daha girmesin diye yok sayılanlar listesine eklendi. Sahip kararı.
+  - **Ölçülen sonuç:** `git rm commit_msg.txt`; `.gitignore`'a `commit_msg.txt` eklendi. Dosya ilk sürüme ait "7 motor… 163 unit test" diyordu; gerçek **45 dosya / 1021 test**. Depo public olduğu için yanlış bilgi dışarıdan okunabiliyordu.
+  - **Ders:** Geçici dosyayı silmek yetmez, yok sayılanlara da yazılır; yoksa bir sonraki oturumda aynı ad yeniden commit'lenir. Kayıttaki karşılaştırma sayısının kendisi de eskimişti (43/979 yazıyordu) — kayıtlara sayı yazarken ölçüm tarihini de yazmak gerekiyor.
+
 
 - **Kapanış:** 2026-09-19 — **TB-003: İşlem hesaplama bölümünde geçersiz girdi kolları test edilmemiş.**
   - **Ne yapıldı (sade):** Yatırım hesaplarında "girdi bozuksa ne olur" durumlarını sınayan testler yazıldı. İki kol savunma amaçlı sanılıyordu; ölçünce **ulaşılabilir** oldukları çıktı ve gerçek örneklerle çivilendi.

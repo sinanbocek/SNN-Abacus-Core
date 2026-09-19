@@ -4,6 +4,45 @@ Bu projedeki tüm önemli değişiklikler bu dosyada belgelenir.
 Format [Keep a Changelog](https://keepachangelog.com/tr/) temellidir;
 sürümleme [Semantic Versioning](https://semver.org/lang/tr/) kurallarına uyar.
 
+## [3.4.0] - 2026-09-19
+
+> Eklemeli — hiçbir ad ya da davranış değişmedi.
+> **Ama yayınlanan ESLint yapılandırmasına bir kapı eklendi**; tüketicide yeni lint
+> hatası çıkabilir. Karar: [`docs/teknik-borc.md`](docs/teknik-borc.md) TB-005.
+
+### Değişenler — ESLint yapılandırması (tüketiciyi ilgilendirir)
+
+- **Sessiz sayısal varsayılan yasağı artık pakette.** Bugüne dek yalnız `INSTALL §6.2`
+  ev kuralı şablonundaydı; `configs.recommended` kullanan tüketiciler bu korumaya hiç
+  sahip değildi. Ayrıca kural yalnız `0` literaline bakıyordu.
+
+  Kapı iki kollu:
+
+  ```js
+  deger ?? 0            // hata — sıfır varsayılanı her yerde yasak (eski davranış)
+  deger || 0            // hata
+  GERI_GUN[kod] ?? 1    // hata — ARANMIŞ değere sayı varsayılanı (YENİ)
+  toMinor(v) ?? 0       // hata — HESAPLANMIŞ değere sayı varsayılanı (YENİ)
+  liste[0] ?? -1        // hata
+
+  opts?.digits ?? 1     // serbest — meşru seçenek varsayılanı
+  deger ?? 'yok'        // serbest — sayı uydurmuyor
+  ```
+
+  İkinci kolun neden dar tutulduğu ölçülerek belirlendi: "her sayıyı yakala" denendiğinde
+  çekirdeğin **kendi** kodunda yanlış alarm verdi (`opts?.digits ?? 1`, `unit/index.ts:112`).
+
+  **Bilinen sınır:** düz bir değişkene sıfır dışı sayı varsayılanı (`deger ?? 1`)
+  yakalanmaz — sözdiziminden aranmış sonuç mu seçenek mi olduğu anlaşılmıyor.
+  Gizlenmiyor, testle belgeleniyor.
+
+  Yalnız bu kuralı almak isterseniz: `abacusEslint.silentDefaultGates`.
+
+- **`INSTALL §6.2` ev kuralı şablonundan sessiz varsayılan bloğu çıkarıldı.** Aynı kural
+  iki yerde iki farklı biçimde durmasın diye; şablon artık pakete yönlendiriyor.
+
+---
+
 ## [3.3.0] - 2026-09-18
 
 > Eklemeli — mevcut hiçbir ad veya davranış değişmedi.

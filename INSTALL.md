@@ -300,18 +300,10 @@ export default [
           message: 'Ham toUpperCase kullanımı yasaktır. Lütfen ABACUS text (upper) kullanın.',
         },
       ],
-      // Sessiz varsayılan yasağı (ABACUS-SPEC §2.1)
-      'no-restricted-syntax': [
-        'error',
-        {
-          selector: 'LogicalExpression[operator="||"][right.type="Literal"][right.value=0]',
-          message: 'Sessiz `|| 0` varsayılanı yasaktır. null durumunu açıkça ele alın.',
-        },
-        {
-          selector: 'LogicalExpression[operator="??"][right.type="Literal"][right.value=0]',
-          message: 'Sessiz `?? 0` varsayılanı yasaktır. null durumunu açıkça ele alın.',
-        },
-      ],
+      // Sessiz varsayılan yasağı ARTIK BURADA DEĞİL — v3.4.0'dan beri yayınlanan
+      // yapılandırmanın içinde (`configs.recommended`). Elle yazmayın: iki yerde
+      // iki farklı liste durursa hangisinin geçerli olduğu tartışma konusu olur.
+      // Yalnız bu kuralı almak isterseniz: `abacusEslint.silentDefaultGates`.
       'no-restricted-globals': [
         'error',
         {
