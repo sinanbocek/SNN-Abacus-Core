@@ -266,16 +266,44 @@ export function percent(
   return opts?.signPosition === 'inner' ? `%${isaret}${sayi}` : `${isaret}%${sayi}`;
 }
 
+/** Binlik ayraç: nokta, boşluk ya da Excel'in bölünmez boşluğu (U+00A0). */
+const TR_GROUPED = /^-?\d{1,3}(?:[. \u00a0]\d{3})*(?:,\d+)?$/;
+/** Ayraçsız yazım: "1234", "1234,56". */
+const TR_PLAIN = /^-?\d+(?:,\d+)?$/;
+
 /**
  * Türkçe biçimli sayı metnini sayıya çevirir ("1.234,56" -> 1234.56).
  *
- * Çözümlenemeyen girdide `null` döner (ABACUS-SPEC §2.1: hesap işleri `null`
- * ile hata bildirir). Gerçek sıfır ile "değer yok" birbirine karışmaz.
+ * **Yalnız Türkçe biçim okunur.** Kabul edilen: isteğe bağlı eksi · 3'erli nokta,
+ * boşluk ya da U+00A0 binlik grupları · virgülden sonra istenen kadar ondalık.
+ * Başka her yazım `null` döner (ABACUS-SPEC §2.1). Gerçek sıfır ile "değer yok"
+ * birbirine karışmaz.
+ *
+ * ⚠️ v4.0.0 KIRICI DÜZELTME (TB-010). v3 Türkçe olmayan yazımı **sessizce yanlış
+ * sayıya** çeviriyordu — JSDoc `null` vaat ettiği hâlde:
+ *
+ *   v3: parseNumber('1234.56') -> 123456   (100 kat)   · v4: null
+ *   v3: parseNumber('12abc34') -> 1234                 · v4: null
+ *   v3: parseNumber('1e3')     -> 13                   · v4: null
+ *
+ * Nokta ondalık ayracı ("1234.56") ya da muhasebe parantezi ("(1.210,50)") bekleyen
+ * çağıran, girdiyi kendi katmanında Türkçe biçime çevirmelidir; çekirdek tahmin etmez.
+ *
+ * Dilbilgisi SNN-Ihale-Maliyet'in ölçülmüş çözümünden alındı (o proje v3'ün
+ * gevşekliğine karşı kendi kapısını yazmış ve "çekirdeğe talep adayı" diye
+ * işaretlemişti).
+ *
+ * @example parseNumber('1.234,56')  // 1234.56
+ * @example parseNumber('1 234,56')  // 1234.56  (Excel boşluklu binlik)
+ * @example parseNumber('1234.56')   // null     (nokta ondalık değildir)
  */
 export function parseNumber(val: string): number | null {
-  if (!val) return null;
-  const clean = val.replace(/\./g, '').replace(',', '.').replace(/[^0-9.\-]/g, '');
-  if (clean === '' || clean === '-' || clean === '.' || clean === '-.') return null;
+  if (typeof val !== 'string') return null;
+  const trimmed = val.trim();
+  if (trimmed === '') return null;
+  if (!TR_GROUPED.test(trimmed) && !TR_PLAIN.test(trimmed)) return null;
+
+  const clean = trimmed.replace(/[. \u00a0]/g, '').replace(',', '.');
   const n = Number(clean);
   return Number.isFinite(n) ? n : null;
 }

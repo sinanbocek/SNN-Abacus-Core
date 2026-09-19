@@ -12,7 +12,6 @@ Kapanan kayıtlar: `docs/teknik-borc-arsiv.md`
 
 ## İçindekiler
 
-- **🔴 P1 — Acil:** TB-010
 - **🟡 P2 — Planlı:** TB-001, TB-004, TB-012
 - **🟢 P3 — Fırsatta:** TB-011
 
@@ -78,53 +77,6 @@ Kapanan kayıtlar: `docs/teknik-borc-arsiv.md`
 - **Neden Şimdi Çözülmüyor:** Bilinçli kapsam sınırı olarak belgelenmiş.
 
 ---
-
-
-### TB-010 — `money.parseNumber` Türkçe olmayan yazımları hata vermeden yanlış sayıya çeviriyor
-- **Tespit Tarihi:** 2026-09-15 (keşif turu: salt okunur inceleme + bağımsız ölçüm)
-- **Öncelik:** P1 (Acil) — *2026-09-19 denetiminde P2'den yükseltildi.*
-  **Gerekçe:** kütüğün P1 tanımı parayı ve **sessiz hatayı** kapsıyor (bkz. yukarıdaki Öncelikler tablosu). Ölçüm ikisini de veriyor: `parseNumber("1234.56")` → `123456` (**100 kat yanlış para**, hata yok, uyarı yok) ve `parseNumber("12abc34")` → `1234` — oysa JSDoc *"Çözümlenemeyen girdide `null` döner (ABACUS-SPEC §2.1)"* diyor. İkincisi belgelenmiş bir sınır değil, **sözleşme ihlali**: çağıran `null` denetimi yazmışsa o denetim hiç çalışmaz. Çekirdek 8 projede kullanılıyor ve dışarıdan (API, CSV, kopyala-yapıştır) `1234.56` biçimi gelmesi olağan.
-
-#### 🟢 Sade Anlatım
-- **Sorun ne?** Metni sayıya çeviren fonksiyon yalnızca Türkçe yazımı ("1.234,56") doğru okuyor. "1234.56" gibi farklı bir yazım gelince "okuyamadım" demek yerine sessizce yüz kat büyük bir sayı üretiyor; parantezli eksi tutarı da artı okuyor.
-- **Benzetme:** Yabancı dilde yazılmış bir çeki okuyamayan veznedarın "anlamadım" demek yerine rakamları kafasına göre birleştirip ödeme yapması.
-- **Çözülmezse ne olur?** Excel'den ya da başka bir kaynaktan gelen farklı biçimli bir sayı, kullanan projede hesaplara yanlış tutar olarak girer ve hata fark edilmez.
-- **Senden beklenen karar:** Düzeltme `parseNumber`'ın davranışını değiştirir (bugün yanlış sayı dönen girdiler `null` döner) — kullanan projelerde kırıcı olabilir; ayrı katı bir `parseDecimal` mı eklensin, yoksa `parseNumber` mı düzeltilsin?
-
-#### 🔧 Teknik Detay
-- **Açıklama:** `src/abacus/money/index.ts:275-281`: JSDoc "Türkçe biçimli sayı metnini sayıya çevirir… Çözümlenemeyen girdide `null` döner (ABACUS-SPEC §2.1)". Kod `:277` `val.replace(/\./g, '').replace(',', '.').replace(/[^0-9.\-]/g, '')` → tüm noktaları ve rakam dışı karakterleri siliyor. **Ölçüm (2026-09-15, v3.1.0, tsx; 2026-09-19 v3.3.0'te yeniden ölçüldü, sonuç aynı):** `"1234.56"` → `123456`, `"1e3"` → `13`, `"(1.210,50)"` → `1210.5` (işaret kayboluyor), `"1.234,56"` → `1234.56` (doğru), `"abc"` → `null`. Sözleşme (çözümlenemeyende `null`) ile davranış çelişiyor.
-- **TÜKETİCİ ETKİSİ ÖLÇÜLDÜ (2026-09-19, salt okuma).** 8 tüketicinin **4'ü** çağırıyor,
-  toplam **40 çağrı**: trade-kasa 19 · SNN-Ihale-Maliyet 9 · GHS-Panel 8 · SNN-Yonetici-Ozeti 4.
-  Çağırmayanlar: Gunum-Var, SNN-Piyasa-Core, SNN-Portfoy, SNN-Proje-ve-Nakit-Akis (0).
-
-  **Düzeltme KIRICIDIR — kanıt:** `SNN-Ihale-Maliyet` bugünkü yanlış davranışı bir teste
-  yazmış ve etrafına koruma (`readDecimalCell`) örmüş
-  (`src/infrastructure/excel/decimalCell.test.ts:1-7`):
-
-  > *"Çekirdeğin ölçülmüş davranışı (2026-09-14): `parseNumber("1234.56") = 123456`,
-  > `parseNumber("1.5") = 15`, `parseNumber("1e3") = 13`…"*
-
-  Yani bir tüketici bu davranışa **bilerek dayanıyor**. `AI-RULES §4.0`: *"Ölçüt niyet
-  değil, tüketicinin gördüğü çıktıdır… Şüphe varsa MAJOR seçilir."* Şüphe yok: MAJOR.
-
-  **İkinci bulgu — `?? 0` zinciri.** trade-kasa (`format.ts:15`) ve SNN-Yonetici-Ozeti
-  (`mizanParser.ts:36`) sonucu `?? 0` ile sarıyor. Düzeltmeden sonra bugün *yanlış ama
-  sıfırdan farklı* dönen girdiler **0** dönecek — mizan toplamında sessiz sapma demek.
-  Bu iki satır sürüm notunda ayrıca uyarılmalı.
-
-  **Üçüncü bulgu — açık risk.** GHS-Panel `besService.ts:189-228` ve SNN-Yonetici
-  `mizanParser.ts` **Excel sütunlarını** ayrıştırıyor. Dış kaynaklı bir hücre `1234.56`
-  yazımıyla gelirse bugün sessizce **100 kat** yanlış okunuyor. Bunun canlıda gerçekleşip
-  gerçekleşmediğini **ölçmedim** — o iki projenin işi.
-- **Etki:** Tüketiciler: SNN-Ihale `src/infrastructure/excel/decimalCell.ts:25` (önüne kendi biçim kapısını koyarak korunuyor — o projenin kütüğünde TB-005); diğer tüketicilerdeki kullanım sayılmadı.
-- **Çözüm yönü:** (1) Tüketicilerde `parseNumber` çağrılarını say. (2) Yukarıdaki beş girdiyle kırmızı test yaz. (3) Katı biçim doğrulaması ekle (Türkçe dışı → `null`, parantezli eksi ya reddedilir ya işaretli okunur) veya hane sınırsız ayrı `parseDecimal` yayımla; `GERI-BILDIRIM-KAYDI.md` sürecine göre sürüm ve CHANGELOG.
-- **Neden Şimdi Çözülmüyor:** SNN-Ihale kütüğünden taşınan "çekirdek talep adayı" (2026-09-14); proje ayrımı gereği hatanın kendisi burada kayıtlı.
-
----
-
-## 🟢 P3 — Fırsatta
-
-
 
 
 

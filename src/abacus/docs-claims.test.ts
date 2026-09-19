@@ -759,6 +759,39 @@ describe('BELGE İDDİALARI — v3.0.0 geçersiz hane sayısı', () => {
   });
 });
 
+describe('BELGE İDDİALARI — MIGRATION-v4.md tablosu (TB-010)', () => {
+  it('Türkçe biçimli girdiler v3 ile AYNI kalır', () => {
+    expect(money.parseNumber('1.234,56')).toBe(1234.56);
+    expect(money.parseNumber('1 234,56')).toBe(1234.56);
+    expect(money.parseNumber('1 234,56')).toBe(1234.56);
+    expect(money.parseNumber('1.250.000')).toBe(1250000);
+    expect(money.parseNumber('-1.234,56')).toBe(-1234.56);
+  });
+
+  it('v3 sürümünün sessizce yanlış sayı ürettiği yazımlar artık null', () => {
+    expect(money.parseNumber('1234.56')).toBeNull();
+    expect(money.parseNumber('1.5')).toBeNull();
+    expect(money.parseNumber('1e3')).toBeNull();
+    expect(money.parseNumber('12abc34')).toBeNull();
+    expect(money.parseNumber('(1.210,50)')).toBeNull();
+  });
+
+  it('rehberdeki "nokta ondalığı Türkçeye çevir" reçetesi çalışır', () => {
+    const raw = '1234.56';
+    const trFormat = raw.replace(/,/g, '').replace('.', ',');
+    expect(money.parseNumber(trFormat)).toBe(1234.56);
+  });
+
+  it('rehberdeki "muhasebe parantezini soy" reçetesi çalışır', () => {
+    const raw = '(1.210,50)';
+    const negative = /^\(.*\)$/.test(raw);
+    const inner = raw.replace(/^\(|\)$/g, '');
+    const parsed = money.parseNumber(inner);
+    const value = parsed === null ? null : negative ? -parsed : parsed;
+    expect(value).toBe(-1210.5);
+  });
+});
+
 describe('BELGE İDDİALARI — belgedeki sürüm başlığı koddan geri kalmasın (TB-006)', () => {
   // TB-006: MOTOR-DETAYLARI başlığı "v2.8 serisi" derken paket 3.3.0'dı.
   // Başlığı düzeltmek yetmez; bu test olmadan bir sonraki sürümde yine eskir.
