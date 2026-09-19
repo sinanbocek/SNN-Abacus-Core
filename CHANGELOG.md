@@ -4,6 +4,44 @@ Bu projedeki tüm önemli değişiklikler bu dosyada belgelenir.
 Format [Keep a Changelog](https://keepachangelog.com/tr/) temellidir;
 sürümleme [Semantic Versioning](https://semver.org/lang/tr/) kurallarına uyar.
 
+## [4.1.1] - 2026-09-19
+
+> 🔴 **v4.1.0 KULLANMAYIN** — `dotAsDecimal: true` açıkken Türkçe standart biçimi bozuyordu.
+> Karar: [`GERI-BILDIRIM-KAYDI.md`](GERI-BILDIRIM-KAYDI.md) madde 38 (talep #42, trade-kasa).
+
+### Düzeltilen
+
+`formatGroupedInput(raw, { dotAsDecimal: true })` **tüm** noktaları virgüle çeviriyordu:
+
+```
+                      v4.1.0        v4.1.1
+'1.234,56'      ->    '1,23456'     '1.234,56'    <- 1000 KAT sapma düzeldi
+'1.250.000,75'  ->    '1,25000075'  '1.250.000,75'
+'1.250.000'     ->    '1,250000'    '1.250.000'
+'98.50'         ->    '98,50'       '98,50'       (değişmedi, seçeneğin amacı)
+```
+
+`'1.234,56'` bu kütüphanenin **kendi çıktı biçimidir**
+(`fmtDecimalGrouped(1234.56, 2)`). Kullanıcı ekranda gördüğü tutarı kopyalayıp giriş
+kutusuna yapıştırdığında değer 1000 kat küçülüyordu — risk hesabına giren bir kutuda.
+
+**Kural artık iki koşullu.** Nokta ondalık sayılır yalnızca: girdide **virgül yoksa**
+_ve_ **tek nokta varsa**. İkisi de "kullanıcı ondalık yazıyor olabilir mi" sorusunu sorar:
+
+- virgül varsa ondalık zaten yazılmış → noktalar binliktir
+- birden çok nokta varsa binliktir → bir sayının tek ondalık ayracı olur
+
+`'1.234'` (tek nokta, virgül yok) hâlâ `1,234` olur — v4.1.0'da duyurulan takas geçerli.
+
+### Nasıl kaçtı
+
+37A değerlendirilirken **karışık biçim (nokta + virgül birlikte) hiç ölçülmedi**;
+çekirdeğin testleri `'1.234,56'` vakasını `dotAsDecimal` altında denemiyordu. Talebi
+gönderen tüketici seçeneği açarken kendi kırmızı-önce testiyle yakaladı ve seçeneği
+**açmadan** bildirdi. Gerileme testleri eklendi.
+
+---
+
 ## [4.1.0] - 2026-09-19
 
 > Eklemeli — **varsayılan davranış değişmedi**, hiçbir çağrı kırılmaz.

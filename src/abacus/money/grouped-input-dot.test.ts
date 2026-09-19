@@ -39,6 +39,25 @@ describe('formatGroupedInput — dotAsDecimal', () => {
       expect(formatGroupedInput(raw, { dotAsDecimal: true })).toBe(expected);
     });
 
+    // HATA (talep #42, v4.1.0'da geldi): nokta ve virgül BİRLİKTE varsa noktalar
+    // binlik ayracıdır, ondalık değil. v4.1.0 hepsini virgüle çeviriyordu:
+    // '1.234,56' -> '1,23456' (1000 KAT sapma) — üstelik bu, uygulamanın KENDİ
+    // çıktı biçimi (`fmtDecimalGrouped(1234.56, 2)`).
+    it('karışık biçim bozulmaz: virgül varsa noktalar binliktir', () => {
+      expect(formatGroupedInput('1.234,56', { dotAsDecimal: true })).toBe('1.234,56');
+      expect(formatGroupedInput('1.250.000,75', { dotAsDecimal: true })).toBe('1.250.000,75');
+      expect(formatGroupedInput('23.232,50', { dotAsDecimal: true })).toBe('23.232,50');
+      expect(parseNumber(formatGroupedInput('1.234,56', { dotAsDecimal: true }))).toBe(1234.56);
+    });
+
+    it('birden çok nokta, virgül YOKSA binliktir — tek nokta ondalıktır', () => {
+      // Tek nokta: kullanıcı ondalık yazıyor olabilir, seçeneğin amacı bu.
+      expect(formatGroupedInput('98.50', { dotAsDecimal: true })).toBe('98,50');
+      // Birden çok nokta: binlik ayracı yazıyor; ondalık olamaz.
+      expect(formatGroupedInput('1.250.000', { dotAsDecimal: true })).toBe('1.250.000');
+      expect(formatGroupedInput('1.234.567', { dotAsDecimal: true })).toBe('1.234.567');
+    });
+
     it('TAKAS: binlik ayracı olarak nokta artık yazılamaz', () => {
       // Bilinçli ödün. Bu kutuda "1.234" 1,234 demektir — bin iki yüz otuz dört değil.
       expect(formatGroupedInput('1.234', { dotAsDecimal: true })).toBe('1,234');
