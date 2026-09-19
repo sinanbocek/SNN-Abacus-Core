@@ -24,6 +24,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Beceri ve issue sablonu butunluk kontrolu
+        run: npm run beceri:dogrula
+
       - name: Run ESLint
         run: npm run lint
 
