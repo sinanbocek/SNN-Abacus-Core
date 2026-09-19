@@ -862,8 +862,12 @@ const READING_ENDS_WITH_POSSESSIVE = ['a.ş', 'aş', 'şti'];
  * yalnız kurum adı sonları sayılır. Liste bilinçli olarak eksiktir; eksik bir sonu
  * bildirmek için `GERI-BILDIRIM-KAYDI.md` yolu kullanılır.
  */
-const POSSESSIVE_ENDING =
-  /(bankası|şirketi|holdingi|ortaklığı|fabrikası|müdürlüğü|başkanlığı|bakanlığı|kurumu|kurulu|birliği|derneği|vakfı|hastanesi|üniversitesi|belediyesi|müzesi|idaresi|merkezi|enstitüsü|mahallesi)$/;
+const POSSESSIVE_ENDINGS = [
+  'bankası', 'şirketi', 'holdingi', 'ortaklığı', 'fabrikası', 'müdürlüğü',
+  'başkanlığı', 'bakanlığı', 'kurumu', 'kurulu', 'birliği', 'derneği', 'vakfı',
+  'hastanesi', 'üniversitesi', 'belediyesi', 'müzesi', 'idaresi', 'merkezi',
+  'enstitüsü', 'mahallesi',
+];
 
 /** Hâl ekinden önce kaynaştırma 'n'si gerektiren durum. */
 type BufferKind = 'abbreviation' | 'possessive' | null;
@@ -871,7 +875,7 @@ type BufferKind = 'abbreviation' | 'possessive' | null;
 function bufferKindOf(trimmed: string): BufferKind {
   const folded = toTrLower(trimmed).replace(/[\s.]+$/, '');
   if (READING_ENDS_WITH_POSSESSIVE.some((abbr) => folded.endsWith(abbr))) return 'abbreviation';
-  if (POSSESSIVE_ENDING.test(folded)) return 'possessive';
+  if (POSSESSIVE_ENDINGS.some((ending) => folded.endsWith(ending))) return 'possessive';
   return null;
 }
 
