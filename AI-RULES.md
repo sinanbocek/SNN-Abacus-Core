@@ -9,6 +9,29 @@
 >
 > **Sürüm:** 2.0 · **Geçerlilik:** tüm AI asistanları · **Kod dili:** İngilizce
 
+## Aile standardı
+
+Bu proje **SNN aile standardına** tabidir (`sinanbocek/SNN-Standartlar`). Aile standardı
+tüm SNN projeleri için ortak kuralları taşır: kod dili, eş zamanlı çalışma, teknik borç
+kütüğü, gizli anahtar taraması.
+
+**Çelişki halinde hangisi üstün:** aile standardı **taban**tır, bu dosya onun üstüne
+çekirdeğe özgü kural ekler. Bu dosya aile standardını **gevşetemez**; yalnız sıkılaştırır.
+Gerçekten çelişen bir durum varsa kural sessizce esnetilmez — `standart-talep` becerisiyle
+SNN-Standartlar'a bildirilir, karar oranın `GERI-BILDIRIM-KAYDI.md`'sine yazılır.
+
+Bu depoda yürürlükteki aile kuralları:
+
+| Kural | Nerede |
+|---|---|
+| Kod dili (tanımlayıcılar İngilizce) | `.github/workflows/kod-dili.yml` · istisnalar `.snn-kod-dili.json` |
+| Teknik borç kütüğü | `docs/teknik-borc.md` (TB-xxx) |
+| Gizli anahtar taraması | `.github/workflows/anahtar-tarama.yml` |
+| Eş zamanlı çalışma | kendi dalında çalış; ortak dosyadan önce `git log --oneline -5` |
+
+Çekirdeğe gelen talepler bunun dışındadır ve **bu deponun** kendi yolundan yürür:
+`GERI-BILDIRIM-KAYDI.md` + `abacus-talep` becerisi (§4.1 sınavı beşinci şarttır).
+
 ---
 
 ## 0. Önce Oku

@@ -1,0 +1,5 @@
+{
+  "exceptions": [
+    { "name": "plaka", "reason": "Türkiye tescil plakası; harf/rakam grupları ve yeni kayıt teamülü Türkiye'ye özgü. Dayanağı GERI-BILDIRIM-KAYDI.md talep #4 (madde 16-21). Sahip kararı 2026-09-19 (TB-012)." }
+  ]
+}
