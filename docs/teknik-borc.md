@@ -117,7 +117,7 @@ Kapanan kayıtlar: `docs/teknik-borc-arsiv.md`
 ### TB-010 — `money.parseNumber` Türkçe olmayan yazımları hata vermeden yanlış sayıya çeviriyor
 - **Tespit Tarihi:** 2026-09-15 (keşif turu: salt okunur inceleme + bağımsız ölçüm)
 - **Öncelik:** P1 (Acil) — *2026-09-19 denetiminde P2'den yükseltildi.*
-  **Gerekçe:** kütüğün P1 tanımı "veri/para/güvenlik/**sessiz hata**". Ölçüm ikisini de veriyor: `parseNumber("1234.56")` → `123456` (**100 kat yanlış para**, hata yok, uyarı yok) ve `parseNumber("12abc34")` → `1234` — oysa JSDoc *"Çözümlenemeyen girdide `null` döner (ABACUS-SPEC §2.1)"* diyor. İkincisi belgelenmiş bir sınır değil, **sözleşme ihlali**: çağıran `null` denetimi yazmışsa o denetim hiç çalışmaz. Çekirdek 8 projede kullanılıyor ve dışarıdan (API, CSV, kopyala-yapıştır) `1234.56` biçimi gelmesi olağan.
+  **Gerekçe:** kütüğün P1 tanımı parayı ve **sessiz hatayı** kapsıyor (bkz. yukarıdaki Öncelikler tablosu). Ölçüm ikisini de veriyor: `parseNumber("1234.56")` → `123456` (**100 kat yanlış para**, hata yok, uyarı yok) ve `parseNumber("12abc34")` → `1234` — oysa JSDoc *"Çözümlenemeyen girdide `null` döner (ABACUS-SPEC §2.1)"* diyor. İkincisi belgelenmiş bir sınır değil, **sözleşme ihlali**: çağıran `null` denetimi yazmışsa o denetim hiç çalışmaz. Çekirdek 8 projede kullanılıyor ve dışarıdan (API, CSV, kopyala-yapıştır) `1234.56` biçimi gelmesi olağan.
 
 #### 🟢 Sade Anlatım
 - **Sorun ne?** Metni sayıya çeviren fonksiyon yalnızca Türkçe yazımı ("1.234,56") doğru okuyor. "1234.56" gibi farklı bir yazım gelince "okuyamadım" demek yerine sessizce yüz kat büyük bir sayı üretiyor; parantezli eksi tutarı da artı okuyor.
