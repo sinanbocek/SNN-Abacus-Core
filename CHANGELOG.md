@@ -4,6 +4,38 @@ Bu projedeki tüm önemli değişiklikler bu dosyada belgelenir.
 Format [Keep a Changelog](https://keepachangelog.com/tr/) temellidir;
 sürümleme [Semantic Versioning](https://semver.org/lang/tr/) kurallarına uyar.
 
+## [3.5.1] - 2026-09-19
+
+> **Düzeltme: `configs.recommended` eski hâline döndü.** v3.4.0'da oraya eklenen sessiz
+> varsayılan kapısı **geri alındı** ve yeni `configs.strict` altına taşındı.
+
+### Neden
+
+v3.5.0 yayılınca **SNN-Proje-ve-Nakit-Akis-Yonetimi'nin CI'ı 92 hatayla kırmızıya döndü** —
+o proje kendi koduna hiç dokunmamıştı. Sebep: tüketiciler `#semver:^3.x` ile bağlı,
+minor sürüm onlara **otomatik** iniyor ve `recommended`'a yeni kapı eklemek kendiliğinden
+CI kırıyor. `AI-RULES §4.0`: *"Ölçüt niyet değil, tüketicinin gördüğü çıktıdır."*
+
+Kapı doğruydu — yakaladığı satırlar gerçek (`margin = (marginRes.data as number) || 0`).
+Yanlış olan **yeriydi**.
+
+### Kural (yeni)
+
+`recommended` bir **major hat içinde sabit sözleşmedir**. Yeni kapı önce `strict`e girer;
+`recommended`'a ancak MAJOR sürümde taşınır. Testle çivilendi.
+
+### Tüketici için
+
+- Bir şey yapmanız **gerekmez**: `recommended` v3.3.0'daki hâline döndü.
+- Sessiz varsayılan korumasını istiyorsanız, hazır olduğunuzda açın:
+
+  ```js
+  // eslint.config.js
+  ...abacusEslint.configs.strict   // recommended yerine
+  ```
+
+---
+
 ## [3.5.0] - 2026-09-19
 
 > Eklemeli — mevcut hiçbir ad ya da davranış değişmedi.

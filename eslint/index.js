@@ -155,8 +155,40 @@ const silentNumericDefault = (operator) => ({
 
 const SILENT_DEFAULT_GATES = [silentNumericDefault('||'), silentNumericDefault('??')];
 
-/** ABACUS'un tüketiciye önerdiği kural kümesi. */
+/**
+ * `recommended` — MAJOR HAT İÇİNDE SABİT SÖZLEŞME.
+ *
+ * Tüketiciler `#semver:^3.x` ile bağlanır; minor sürümler onlara OTOMATİK iner.
+ * Bu yüzden `recommended`'a minor sürümde YENİ KAPI EKLENMEZ: eklenirse tüketicinin
+ * hiçbir şey yapmadan CI'ı kırmızıya döner — `AI-RULES §4.0`'ın tarif ettiği sessiz
+ * kırılmanın ta kendisi ("ölçüt niyet değil, tüketicinin gördüğü çıktıdır").
+ *
+ * ÖLÇÜLDÜ (2026-09-19): sessiz varsayılan kapısı v3.4.0'da `recommended`'a eklendi.
+ * v3.5.0 yayılınca SNN-Proje-ve-Nakit-Akis'in CI'ı **92 hatayla** kırmızıya döndü —
+ * kendi kodlarına dokunmadıkları hâlde. Kapı doğruydu, yeri yanlıştı.
+ *
+ * KURAL: yeni kapı önce `strict`e girer (tüketici isteyerek açar), `recommended`'a
+ * ancak MAJOR sürümde taşınır.
+ */
 const recommended = [
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    rules: {
+      'no-restricted-properties': ['error', ...MINOR_UNIT_GATES, ...FORMAT_GATES],
+      'no-restricted-syntax': ['error', INTL_GATE],
+    },
+  },
+];
+
+/**
+ * `strict` — `recommended` + henüz major hatta taşınmamış kapılar.
+ *
+ * Tüketici bunu **isteyerek** açar; hazır olmadan CI'ı kırılmaz. Bugün içerdiği
+ * ek kapı: sessiz sayısal varsayılan yasağı (`?? 0`, `GERI_GUN[kod] ?? 1`).
+ *
+ * Kullanımı: `...abacusEslint.configs.strict` (recommended yerine).
+ */
+const strict = [
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     rules: {
@@ -167,7 +199,7 @@ const recommended = [
 ];
 
 export default {
-  configs: { recommended },
+  configs: { recommended, strict },
   /** Kural nesnelerini kendi yapılandırmanızla birleştirmek isterseniz. */
   minorUnitGates: MINOR_UNIT_GATES,
   formatGates: FORMAT_GATES,
@@ -175,4 +207,4 @@ export default {
   silentDefaultGates: SILENT_DEFAULT_GATES,
 };
 
-export { recommended, MINOR_UNIT_GATES, FORMAT_GATES, INTL_GATE, SILENT_DEFAULT_GATES };
+export { recommended, strict, MINOR_UNIT_GATES, FORMAT_GATES, INTL_GATE, SILENT_DEFAULT_GATES };
