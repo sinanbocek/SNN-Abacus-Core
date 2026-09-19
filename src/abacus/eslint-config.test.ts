@@ -79,30 +79,30 @@ describe('yayınlanan ESLint yapılandırması — alt birim kapıları (rapor �
   // TB-005: kural bugüne dek yalnız INSTALL §6.2 şablonundaydı, pakette yoktu;
   // üstelik yalnız `0` literaline bakıyordu, `GERI_GUN[kod] ?? 1` kaçıyordu.
   it('sıfır varsayılanı her yerde yakalanır (eski davranış korunur)', async () => {
-    for (const kaynak of ['const a = deger ?? 0;', 'const b = deger || 0;']) {
-      const messages = await lint(kaynak);
-      expect(messages, kaynak).toHaveLength(1);
-      expect(messages[0]?.message, kaynak).toContain('Sessiz');
+    for (const source of ['const a = deger ?? 0;', 'const b = deger || 0;']) {
+      const messages = await lint(source);
+      expect(messages, source).toHaveLength(1);
+      expect(messages[0]?.message, source).toContain('Sessiz');
     }
   });
 
   it('aranmış/hesaplanmış değere HERHANGİ bir sayı varsayılanı yakalanır', async () => {
-    for (const kaynak of [
+    for (const source of [
       'const a = GERI_GUN[kod] ?? 1;',
       'const b = POW_2_MAP[10 - i] ?? 1;',
       'const c = toMinor(v) ?? 0;',
       'const d = hesapla() || 0;',
       'const e = liste[0] ?? -1;',
     ]) {
-      const messages = await lint(kaynak);
-      expect(messages, kaynak).toHaveLength(1);
+      const messages = await lint(source);
+      expect(messages, source).toHaveLength(1);
     }
   });
 
   it('meşru seçenek varsayılanı yakalanmaz — yanlış alarm üretilmiyor', async () => {
     // Ölçüm: "her sayıyı yakala" denendi ve çekirdeğin KENDİ kodunda patladı
     // (`opts?.digits ?? 1`, unit/index.ts:112). Bu testler o geri gidişi tutar.
-    for (const kaynak of [
+    for (const source of [
       'const a = opts?.digits ?? 1;',
       'const b = options.digits ?? 2;',
       "const c = deger ?? 'yok';",
@@ -110,8 +110,8 @@ describe('yayınlanan ESLint yapılandırması — alt birim kapıları (rapor �
       'const e = deger ?? [];',
       'const f = deger ?? digerDeger;',
     ]) {
-      const messages = await lint(kaynak);
-      expect(messages, kaynak).toHaveLength(0);
+      const messages = await lint(source);
+      expect(messages, source).toHaveLength(0);
     }
   });
 
