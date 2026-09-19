@@ -114,6 +114,9 @@ birleştirir. Sabit etikete bağlı tüketicilere (`#vX.Y.Z`) hiç gelmez, elle 
 | 34E | Sessiz sayısal varsayılan kapısı pakete girsin | TB-005 (iç denetim) | ✅ Kabul | 3.4.0 |
 | 35 | Kapı `configs.recommended`'a minor sürümde eklenmesin | v3.5.0 yayılım ölçümü | ✅ Kabul — **geri alma**; kapı `strict`e taşındı | 3.5.1 |
 | 36 | `money.parseNumber` yalnız Türkçe biçim okusun | TB-010 (iç denetim + tüketici etki ölçümü) | ✅ Kabul — **kırıcı düzeltme** | 4.0.0 |
+| 37A | `formatGroupedInput` nokta ile ondalığı **seçmeli** okusun | Talep #9 (issue #40) | ✅ Kabul | 4.1.0 |
+| 37B | Nokta→ondalık **varsayılan** olsun | Talep #9 (elenen aday) | ❌ **Red** — binlik yazan kullanıcıyı bozar; tahmine dayalı |  |
+| 37C | Eksi işaretinin silinmesi düzeltilsin | Talep #9 (bilgi notu) | ❌ **Red** (ertelendi) — gerçek ekran ihtiyacı bildirilmedi | — |
 
 ---
 
@@ -562,6 +565,36 @@ bildirir:
 
 ---
 
+### Talep #9 — nokta ile ondalık yazımı (madde 37)
+
+**Neden kabul edildi.** İmza yalnız metin biliyor (§4.1). Varsayılan değişmediği için
+kırıcı değil; seçenek **opt-in**. Gerçek ekran: risk hesabı yapan bir stop kutusu, ölçülen
+sapma **100 kat**.
+
+**İddialar bağımsız ölçüldü** (`AI-RULES §4.2`: "talebin iddiaları uygulanmadan önce
+ölçülür"). Talep v3.2.0'da ölçmüştü; **v4.0.0 üzerinde 11 vakanın 11'i birebir aynı**
+çıktı. Talebin mekanizma tarifi bir noktada eksikti ve kayda doğrusu yazılıyor: nokta
+"binlik ayracı sayılmıyor", `/[^0-9,]/g` ile **siliniyor** ve kalan rakamlar yeniden
+gruplanıyor. Sonuç aynı, sebep farklı.
+
+**v4.0.0'ın bu sorunu çözmediği de ölçüldü.** `parseNumber` sıkılaştırıldı ama süzgeç
+kendisinden **önce** geçerli Türkçe biçim ürettiği için (`'98.50'` -> `'9.850'`)
+`parseNumber` reddedeceği bir şey hiç görmüyor. İki kapı ayrı; biri diğerini kurtarmıyor.
+
+**Varsayılan yapmak reddedildi (37B).** `1.234` yazan kullanıcı bin iki yüz otuz dört de
+demiş olabilir, 1,234 de. Çekirdek tahmin etmez; kararı tüketiciye sorar. Varsayılanı
+değiştirmek ayrıca kırıcı olurdu.
+
+**Eksi işareti ertelendi (37C).** Talep bunu *bilgi olarak* bildirdi ve kendi projesinde
+negatif kabul eden alan olmadığını ölçerek gösterdi. §4.1 Sınır durumu 3 gereği gerçek bir
+ekran ihtiyacı görülmeden alınmadı; ihtiyaç duyan tüketici ölçümüyle başvurur.
+
+**Talep iyi geldi.** Beş aday bakılmış, dördü elenmiş ve elemeler defterin kendi
+emsallerine dayandırılmış (33C/33D ikinci kopya, 33E/34C tek ekran). Reddedilirse ne
+yapacağını da yazmış — değerlendirme maliyetini düşüren şey budur.
+
+---
+
 ### Talep #8 — özel ad hâl eki (madde 34)
 
 **Neden kabul edildi.** İmza yalnız **metin** biliyor; işe ait hiçbir kavram geçmiyor
@@ -604,3 +637,4 @@ yazılmıştır.
 | #6 | 15 Eylül 2026 | trade-kasa TB-009 notu + çekirdek taraması (trade-kasa, GHS-Panel, Gunum-Var): dakika/saat göreli süre | 3.1.0 → 3.2.0 |
 | #7 | 18 Eylül 2026 | Giriş süzme katmanı (SNN-Standartlar/giris-alanlari-standardi.md; GHS-Panel araç formu + SNN-İhale gün kutusu) | 3.2.0 → 3.3.0 |
 | #8 | 19 Eylül 2026 | GHS-Panel: özel adlara hâl eki (issue #23; ikinci tüketici olarak Gunum-Var ölçüldü) | 3.4.0 → 3.5.0 |
+| #9 | 19 Eylül 2026 | trade-kasa: `formatGroupedInput` nokta ile ondalık (issue #40) | 4.0.0 → 4.1.0 |

@@ -4,6 +4,41 @@ Bu projedeki tüm önemli değişiklikler bu dosyada belgelenir.
 Format [Keep a Changelog](https://keepachangelog.com/tr/) temellidir;
 sürümleme [Semantic Versioning](https://semver.org/lang/tr/) kurallarına uyar.
 
+## [4.1.0] - 2026-09-19
+
+> Eklemeli — **varsayılan davranış değişmedi**, hiçbir çağrı kırılmaz.
+> Karar: [`GERI-BILDIRIM-KAYDI.md`](GERI-BILDIRIM-KAYDI.md) madde 37 (talep #40, trade-kasa).
+
+### Eklenenler
+
+- **`money.formatGroupedInput(raw, opts?)`** — ikinci parametre `{ dotAsDecimal?: boolean }`.
+
+  ```
+  formatGroupedInput('98.50')                        -> '9.850'   (varsayılan, değişmedi)
+  formatGroupedInput('98.50', { dotAsDecimal: true }) -> '98,50'
+  ```
+
+  **Neden:** risk hesabı yapan bir stop kutusuna `98.50` yazan kullanıcı `9.850`
+  görüyordu — **100 kat** sapma. Nokta binlik sayılmıyor, **siliniyordu**
+  (`/[^0-9,]/g`) ve kalan rakamlar yeniden gruplanıyordu.
+
+  **Neden seçmeli, varsayılan değil:** `1.234` yazan bir kullanıcı bin iki yüz otuz dört
+  de demiş olabilir, 1,234 de. İki niyet tek girdide ayırt edilemez; çekirdek tahmin
+  etmez, kararı tüketiciye sorar.
+
+  **TAKAS — açan bilsin:** `dotAsDecimal: true` olan kutuda binlik ayracı olarak nokta
+  **yazılamaz**; `'1.234'` artık `1,234` olur. Serbest ondalık kutularında (fiyat, oran,
+  stop) açın; binlik ayracını elle yazdıran kutularda kapalı bırakın.
+
+### Ölçülmüş ama bu sürümde ELE ALINMAYAN
+
+`formatGroupedInput` eksi işaretini de siliyor: `'-5'` -> `'5'`, `'(1.210,50)'` -> pozitif.
+Talebi gönderen tüketici ölçtü ve *kendisi için sorun olmadığını* bildirdi (negatif kabul
+eden alanları yok). Gerçek bir ekran ihtiyacı görülmeden çekirdeğe alınmadı
+(`AI-RULES §4.1` Sınır durumu 3). İhtiyaç duyan tüketici ölçümüyle başvurur.
+
+---
+
 ## [4.0.0] - 2026-09-19
 
 > ⚠️ **KIRICI.** Tek davranış değişti; hiçbir ad kaldırılmadı, kodunuz derlenmeye devam eder.
