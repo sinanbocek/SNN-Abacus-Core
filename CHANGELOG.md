@@ -40,6 +40,10 @@ sürümleme [Semantic Versioning](https://semver.org/lang/tr/) kurallarına uyar
 
 ## [3.4.0] - 2026-09-19
 
+> **Not:** 3.4.0 ayrı bir etiket olarak yayımlanmadı; içeriği **v3.5.0 ile birlikte**
+> tüketicilere ulaştı. Sebebi kayda geçirildi: o sırada sürüm etiketi elle atılıyordu
+> ve atılmadı. Etiketleme 2026-09-19'dan beri `surum-etiketi.yml` ile otomatiktir.
+
 > Eklemeli — hiçbir ad ya da davranış değişmedi.
 > **Ama yayınlanan ESLint yapılandırmasına bir kapı eklendi**; tüketicide yeni lint
 > hatası çıkabilir. Karar: [`docs/teknik-borc.md`](docs/teknik-borc.md) TB-005.

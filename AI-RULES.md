@@ -213,4 +213,13 @@ koşul karşılanmadan yeniden tartışılmaz.
 - Commit tipi anlamlı: `feat:`, `test:`, `docs:`, `ci:`, `fix:`.
 - **Push beyanı ≠ push gerçeği.** Her push sonrası: `git fetch` + `git log origin/main`
   ham çıktısı + `git log origin/main..HEAD` (boş olmalı) + `HEAD == origin/main` doğrulanır.
-- Sürüm etiketi (`git tag vX.Y.Z`) yalnız CHANGELOG + version bump commit'lendikten sonra atılır.
+- **Sürüm etiketi ELLE ATILMAZ — makine atar.** `package.json` sürümü `main`'e girer
+  girmez `.github/workflows/surum-etiketi.yml` etiketi oluşturur ve gönderir; etiket
+  `cekirdek-yayilim.yml`'yi tetikler, o da tüketicilerde güncelleme PR'ı açar.
+  Ön koşul: `CHANGELOG.md` içinde `## [X.Y.Z]` başlığı bulunmalıdır, yoksa akış
+  **durur ve etiket atılmaz**.
+
+  > **Neden makine:** 2026-09-19'a kadar bu bağ insan hafızasına bağlıydı. `package.json`
+  > 3.3.0 → 3.4.0 → 3.5.0 oldu, etiket atılmadı ve **hiçbir tüketici haberdar olmadı**.
+  > `#semver:^3.x` aralığı etiketlere göre çözüldüğü için `main`'deki sürüm yükseltmesi
+  > görünmez bile kaldı. "Etiket atmayı unutma" bir kural değil, bir dilekti.
