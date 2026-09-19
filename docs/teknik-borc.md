@@ -12,8 +12,7 @@ Kapanan kayıtlar: `docs/teknik-borc-arsiv.md`
 
 ## İçindekiler
 
-- **🟡 P2 — Planlı:** TB-001, TB-004, TB-012
-- **🟢 P3 — Fırsatta:** TB-011
+- **🟡 P2 — Planlı:** TB-012
 
 ## Öncelikler
 
@@ -40,67 +39,8 @@ Kapanan kayıtlar: `docs/teknik-borc-arsiv.md`
 
 ## 🟡 P2 — Planlı
 
-### TB-001 — Toplama, çıkarma ve çarpma bozuk sayıyı sessizce geçiriyor
-- **Tespit Tarihi:** 2026-09-15 (keşif turu: salt okunur inceleme + bağımsız ölçüm)
-- **Öncelik:** P2 (Planlı)
-
-#### 🟢 Sade Anlatım
-- **Sorun ne?** Temel dört işlemden üçü, bozuk bir sayı (sayı olmayan değer ya da sonsuz) gelince "hata" demiyor; bozuk değeri sonuç olarak geri veriyor. Kütüphanenin kendi kuralı ise hatada boş (`null`) dönmek.
-- **Benzetme:** Tartıya taş yerine boş kutu konunca "hata" demeyen, ekranda anlamsız bir işaret gösteren terazi.
-- **Çözülmezse ne olur?** Kullanan bir projede bozuk bir girdi toplamlara karışırsa, raporda anlamsız tutar çıkar ve hatanın kaynağı zor bulunur.
-- **Senden beklenen karar:** Dönüş tipi `number | null` olsun mu? Bu, kullanan tüm projeleri etkileyen büyük sürüm (v4) demek; alternatif: ayrı güvenli fonksiyonlar eklemek.
-
-#### 🔧 Teknik Detay
-- **Açıklama:** `src/abacus/math/index.ts:13-25` `add`/`sub`/`mul` yalnızca `new D(String(a)).plus(...).toNumber()` yapıyor; `Number.isFinite`/`isSafeInteger` denetimi yok (aynı dosyada `div` ve `money/index.ts:107` denetliyor). **Ölçüm (2026-09-15, tsx):** `add(NaN,1)` → `NaN`; `add(1e308,1e308)` → `Infinity`; `div(1,0)` → `null`. Keşifte öne sürülen "`mul(9007199254740993,3)` sessizce saptı" örneği **yanlış**: girdi fonksiyona girmeden JavaScript tarafından `9007199254740992`'ye yuvarlanıyor; çarpma kendi başına doğru. Bu yüzden öncelik P1 değil P2. `add/sub/mul` için NaN/sınır testi yok.
-- **Etki:** Tüm tüketici projeler; `trading-math/position.ts:14` (`volumeFromQty`) gibi `mul` zincirleri.
-- **Çözüm yönü:** (1) Tüketicilerde `add/sub/mul` dönüşünün doğrudan kullanıldığı yerleri say. (2) NaN/Infinity için kırmızı test yaz. (3) Ya `addSafe/subSafe/mulSafe` ekle (küçük sürüm) ya da v4'te dönüş tipini `number | null` yap.
-- **Neden Şimdi Çözülmüyor:** Kırıcı değişiklik gerektirebilir; karar bekliyor.
-
----
 
 
-
-### TB-004 — 2016 öncesi tarihlerde saat bir saat kayıyor
-- **Tespit Tarihi:** 2026-09-15 (keşif turu: salt okunur inceleme + bağımsız ölçüm)
-- **Öncelik:** P2 (Planlı)
-
-#### 🟢 Sade Anlatım
-- **Sorun ne?** Türkiye 2016'dan önce kışın saati bir saat geri alıyordu. Kütüphane her tarihe bugünkü sabit saat farkını uyguluyor, bu yüzden eski kayıtlarda saat bir saat yanlış görünüyor.
-- **Benzetme:** Eski fotoğraflara bugünkü saat ayarıyla tarih basan bir fotoğraf makinesi.
-- **Çözülmezse ne olur?** Eski işlem ya da fiyat kayıtlarında saat yanlış görünür; gece yarısına yakın kayıtlarda gün de kayabilir (hipotez).
-- **Senden beklenen karar:** Bu sınır kalıcı olarak kabul mü, yoksa 2016 öncesi için küçük bir düzeltme tablosu mu eklensin?
-
-#### 🔧 Teknik Detay
-- **Açıklama:** `src/abacus/date/index.ts:85` sabit UTC+3 kullanıyor. `GERI-BILDIRIM-KAYDI.md:351-356` örneği: `2015-01-15T12:00:00Z` çekirdekte `15:00`, doğrusu `14:00`. `Intl` yasağı nedeniyle bilinçli seçilmiş, belgelenmiş bir sınır.
-- **Etki:** 2016 öncesi saat gösteren ekranı olan tüketici projeler (varlığı ölçülmedi).
-- **Çözüm yönü:** Önce tüketicilerde 2016 öncesi saat gösteren ekran var mı ölç; varsa küçük sabit kural tablosu ekle ve testle sabitle.
-- **Neden Şimdi Çözülmüyor:** Bilinçli kapsam sınırı olarak belgelenmiş.
-
----
-
-
-
-### TB-011 — Ata (Cumhuriyet) altınının saflık ve ağırlığı çekirdekte yok
-- **Tespit Tarihi:** 2026-09-15 (keşif turu: salt okunur inceleme + bağımsız ölçüm)
-- **Öncelik:** P3 (Fırsatta)
-
-#### 🟢 Sade Anlatım
-- **Sorun ne?** Ortak hesap kütüphanesi altını yalnızca ayara göre (24, 22, 21, 18) ve çeyrek/yarım/tam ziynet olarak tanıyor. Ata altınının kendine özgü saflığı ve ağırlığı yok; bu yüzden Portföy projesi bu değerleri kendi içinde elle yazmak zorunda kalmış.
-- **Benzetme:** Resmî fiyat listesinde olmayan bir ürünü her dükkânın kendi defterinden satması.
-- **Çözülmezse ne olur?** Bugün Portföy'deki elle yazılmış değerler doğru; ama başka bir proje ata altını hesaplarsa farklı değer kullanabilir.
-- **Senden beklenen karar:** Yok.
-
-#### 🔧 Teknik Detay
-- **Açıklama:** `src/abacus/gold/index.ts:14-19` `PURITY` yalnız ayar bazlı (`24: 0.995, 22: 0.916, 21: 0.875, 18: 0.750`); `:21-25` `ZIYNET_GRAM` yalnız `quarter 1.754 / half 3.508 / full 7.016`. `src/abacus/gold*` içinde `0.917`, `917`, `ata`, `cumhuriyet`, `7.216` geçişi **0** (2026-09-15, v3.1.0). Tüketici: SNN-Portfoy-Yonetimi `src/config/goldTypes.ts:11, 39-40` 0,917 saflık ve 7,216 gr elle yazılı (o projenin kütüğünde TB-026).
-- **Etki:** Ata altını değerleyen tüketici projeler (bugün SNN-Portfoy-Yonetimi).
-- **Çözüm yönü:** Ata altınının resmî saflık (0,917) ve ağırlık (7,216 gr) değerlerini kaynağıyla doğrula; `gold` modülüne ayar dışı bir tür (ör. `ZIYNET_GRAM.ata` + ayrı saflık) olarak ekle; test + `api-surface.test.ts` + CHANGELOG; tüketiciye sürüm notu.
-- **2026-09-19 araştırması — kapatılamadı, engel kaydedildi.** Çözüm yönü resmî kaynakla doğrulama istiyor (defterin kuralı: *"ikincil kaynaklar mevzuatın yerine geçmez"*, `text.plate` dersi). `darphane.gov.tr` **site izinlerince engelli**, açılamadı; zorlanmadı.
-  Ölçülen iki çelişki, değer yazılmadan önce çözülmeli:
-  1. **Saflık 0,916 mı 0,917 mi?** Çekirdek `PURITY[22] = 0.916`; tüketici `ATA_SAFLIK = 0.917` ve kendi yorumunda ikisini ayrı satırda gösteriyor (*"22 Ayar = 0.916 (Darphane Ziynet)"* / *"Ata (Cumhuriyet) = 0.917"*). Hangisinin doğru olduğu **ölçülmedi**.
-  2. **Tüketicinin yorumu kaynak sayılamaz.** Aynı yorum *"24 Ayar = 1.000 saflık (Has)"* diyor; çekirdek ise `PURITY[24] = 0.995` kullanıyor ve bunu *"fiziki/piyasa altın kuralı"* diye belgeliyor. İki dosya 24 ayarda bile anlaşmıyor — 0,917 rakamının dayanağı da aynı yorumdur.
-- **Neden Şimdi Çözülmüyor:** Resmî kaynak doğrulanamadı (yukarıdaki engel). Değer kaynağıyla sabitlenmeden çekirdeğe yazılmaz: 8 projeye giren yanlış bir sabiti geri almak kırıcı sürüm demektir.
-
----
 
 ### TB-012 — Kod dili standardına uyum yok: 43 Türkçe tanımlayıcı var, turnike hiç kurulmamış
 - **Tespit Tarihi:** 2026-09-19 (abacus-talep yolu kurulurken kanca uyarısı; ardından bağımsız ölçüm)

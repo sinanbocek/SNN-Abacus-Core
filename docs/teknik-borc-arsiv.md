@@ -6,11 +6,28 @@
 > Buradaki kayıtlar yalnızca tarihçe değildir; bir sonraki benzer işte okunması
 > gereken **ders** içerir. Kapanış biçimi: `~/.claude/standartlar/teknik-borc-standardi.md` → Kapanış.
 >
-> **Kayıt sayısı:** 8 · **Oluşturulma:** 2026-09-15
+> **Kayıt sayısı:** 11 · **Oluşturulma:** 2026-09-15
 
 ---
 
 ## Kapanan Kalemler
+
+- **Kapanış:** 2026-09-19 — **TB-001: Toplama, çıkarma ve çarpma bozuk sayıyı sessizce geçiriyor.** — ❌ **KAYIT GEÇERSİZ, borç değil**
+  - **Ne yapıldı (sade):** Hiçbir şey; çünkü ortada bir eksiklik yokmuş. Bu davranış şartnamede **bilinçli bir karar** olarak zaten yazılıydı ve bir test onu zaten çiviliyordu. Kayıt, şartname okunmadan açılmış.
+  - **Ölçülen sonuç:** `ABACUS-SPEC §2.2` → *"İlkel katman istisnası (`math`): `add`, `sub`, `mul`… sonlu olmayan girdide sonlu olmayan çıktı üretir (`add(NaN, 1) → NaN`). Bu IEEE-754 yayılımıdır ve **bilinçlidir**… Girdi doğrulaması **motor katmanının** sorumluluğudur."* O paragraf **2026-08-24**'te yazılmış (`b22ad05`); TB-001 ise **2026-09-15**'te açılmış — **üç hafta sonra**. Zorlayıcı test de vardı: `docs-claims.test.ts:104` `expect(math.add(NaN, 1)).toBeNaN()`.
+  - **Ders:** Borç kaydı açmadan önce **şartnameyi oku.** "Denetim yok" ile "denetim bilinçli olarak burada değil" farklı şeylerdir; ikincisi borç değil mimaridir. Bu kayıt bir keşif turunda açılmış ve 4 gün P2 olarak açık durmuş. Keşif turu, belgeleri okumadan kod okursa **var olmayan borç üretir**.
+
+- **Kapanış:** 2026-09-19 — **TB-004: 2016 öncesi tarihlerde saat bir saat kayıyor.** — ✅ **Bilinçli sınır olarak kabul, çivilendi**
+  - **Ne yapıldı (sade):** Davranış değiştirilmedi. 2016 öncesi yaz saati bilgisini taşımak, yasaklı olan `Intl`'in yerine tarihsel bir saat dilimi veritabanı koymak demekti. Bunun yerine sınır **şartnameye yazıldı** ve **testle çivilendi** — artık kazara değişemez.
+  - **Ölçülen sonuç:** `format('2015-01-15T12:00:00Z','time')` → `15:00` (gerçek `14:00`); `2015-07-15` → `15:00` (o dönem yaz saati yürürlükteydi, **doğru**); 2016 sonrası hepsi doğru; tarih biçimleri (`short`, `long`) etkilenmiyor. `ABACUS-SPEC §2.2`'ye normatif sınır paragrafı eklendi, `src/abacus/date/istanbul-offset.test.ts` (4 test) yazıldı. Mutasyonla sınandı: sabit UTC+2 yapılınca 3 test düştü.
+  - **Ders:** "Belgelenmiş bilinçli sınır" demek, `AI-RULES §1`'e göre **yetmez**: kayıt dört gün boyunca yalnız bir kod yorumuna dayanıyordu, şartnamede yoktu ve hiçbir test korumuyordu. Zorlayıcısı olmayan sınır, sınır değil temennidir. Kapatırken eklenen asıl değer davranış değil, **çivi**.
+
+- **Kapanış:** 2026-09-19 — **TB-011: Ata (Cumhuriyet) altınının saflık ve ağırlığı çekirdekte yok.** — ❌ **Red: kaynaksız sabit çekirdeğe girmez**
+  - **Ne yapıldı (sade):** Değer çekirdeğe **eklenmedi**. Çekirdeğe giren bir sabit 8 projeye girer ve yanlışsa geri almak kırıcı sürüm demektir; dayanağını gösteremediğim bir sayıyı yazmadım.
+  - **Ölçülen sonuç:** Resmî kaynak (`darphane.gov.tr`) **site izinlerince engelli**, açılamadı. Bu arada iki çelişki ölçüldü: (1) saflık **0,916** (çekirdek `PURITY[22]`) mı **0,917** (tüketici `ATA_SAFLIK`) mı belirsiz; (2) tüketicinin yorumu kaynak sayılamaz, çünkü aynı yorum *"24 Ayar = 1.000 saflık"* derken çekirdek `PURITY[24] = 0.995` kullanıyor ve gerekçesini belgeliyor — iki dosya 24 ayarda bile anlaşmıyor, ve 0,917'nin tek dayanağı o yorum.
+  - **Yeniden başvuru koşulu:** Resmî kaynak (Darphane yayını ya da yürürlükteki mevzuat metni) gösterildiğinde. Tüketicinin kendi kodundaki sayı ya da ikincil kaynak **yeterli değildir** — `text.plate` dersi (ikincil kaynakların hepsi yürürlükten kalkmış bir maddeyi gösteriyordu, yalnız Resmî Gazete aslı doğruyu verdi).
+  - **Ders:** Bir sabiti "herkes böyle biliyor" diye çekirdeğe yazmak, onu 8 projede **tek doğru** hâline getirmektir. Kaynak gösterilemiyorsa doğru karar, sabiti tüketicide bırakmaktır: orada yanlışsa bir projeyi etkiler, çekirdekte yanlışsa hepsini.
+
 
 - **Kapanış:** 2026-09-19 — **TB-010: `money.parseNumber` Türkçe olmayan yazımları hata vermeden yanlış sayıya çeviriyor.** (P1)
   - **Ne yapıldı (sade):** Sayı okuyucu artık yalnız Türkçe yazımı kabul ediyor. Anlamadığı bir yazım gelince sessizce bir sayı uydurmuyor, "okuyamadım" diyor. Kırıcı bir düzeltme olduğu için sürüm **4.0.0**'a çıktı ve geçiş rehberi yazıldı.

@@ -158,6 +158,14 @@ doğrulamaz — geçersiz `d`'de decimal.js hatası fırlatır. Hane sayısı al
 sayı değilse `'—'` döner. `money.formatMinorInput` alt birim hanesi olduğu için daha dar
 sınırı (0–4) kullanır. v2.x'te bu kapılar çöküyordu.
 
+**Tarih kapsamı — 2016 öncesi saat (normatif sınır):** `date` motoru Türkiye için
+**sabit UTC+3** kullanır. Türkiye 2016'dan beri kalıcı UTC+3 uygular; öncesinde yaz saati
+vardı. `Intl` §4.2 ile yasaklı olduğundan tarihsel saat dilimi veritabanı çekirdeğe
+taşınmaz. Sonuç: **2016 öncesi kış tarihlerinde saat bir saat ileridir**
+(`2015-01-15T12:00:00Z` → çekirdek `15:00`, gerçek `14:00`). Tarih alanları etkilenmez.
+Bu bilinçli bir kapsam sınırıdır ve `src/abacus/date/istanbul-offset.test.ts` ile
+çivilenmiştir. Geçmiş tarih taşıyan ekranlarda bilinmelidir.
+
 **Yasak:** hiçbir fonksiyon geçersiz girdide `0` döndüremez; `|| 0` ve `?? 0`
 sessiz varsayılanları ESLint `no-restricted-syntax` ile `error` seviyesinde engellenir.
 `0` yalnızca **gerçek sıfır** anlamına gelir.
