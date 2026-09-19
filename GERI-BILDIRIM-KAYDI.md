@@ -35,6 +35,33 @@ talepler değerlendirilemiyor:
 Talebin **elenerek** geldiğini göstermek (kaç aday bakıldı, kaçı geçti,
 elenenler neden elendi) değerlendirme maliyetini ciddi biçimde düşürüyor.
 
+### Beşinci şart: `AI-RULES §4.1` sınavı yazılı olarak doldurulur
+
+Yukarıdaki 2. şart bu depoda **ayrı ve zorunlu bir alandır**, çünkü çekirdeğe giren her şey
+tüm tüketici projelere girer ve geri çıkarmak kırıcı sürüm gerektirir (`AI-RULES §4.1`
+Sınır durumu 3). Sınav tablosu boş bırakılmış talep değerlendirilmez:
+
+| Aday iş | İmzası | Başka alandaki uygulama aynen kullanır mıydı? | Karar |
+|---|---|---|---|
+
+**Elenen adaylar da yazılır.** Ayıraç `AI-RULES §4.1`'dedir ve değiştirilmeden uygulanır.
+
+### Yolu
+
+Talep **issue** ile gelir; çekirdeğe doğrudan kod yazılmaz.
+
+- **Form:** [`.github/ISSUE_TEMPLATE/abacus-talep.yml`](.github/ISSUE_TEMPLATE/abacus-talep.yml)
+  — "Çekirdeğe talep". Beş şartın hepsi zorunlu alandır.
+- **Beceri:** `abacus-talep`. Tüketici projedeki ajan bu formu sizin için doldurur: önce bu
+  defteri okur (reddedilmiş talebi tekrarlamamak için), türü seçer, beş şartı toplar, §4.1
+  sınavını yazılı uygular, taslağı **size gösterip onay ister**, onay gelince issue'yu açar.
+  Kaynağı: [`skills/abacus-talep/SKILL.md`](skills/abacus-talep/SKILL.md).
+- **Elle:** `gh issue create -R sinanbocek/SNN-Abacus-Core --label talep ...`
+
+**Kabul edilen talep kendiliğinden inmez.** Çekirdekte yeni bir sürüm çıkar, etiketlenir ve
+tüketicilere bir **güncelleme PR'ı** olarak gelir; o PR'ı her tüketici kendi inceleyip
+birleştirir. Sabit etikete bağlı tüketicilere (`#vX.Y.Z`) hiç gelmez, elle yükseltilir.
+
 ---
 
 ## Durum tablosu

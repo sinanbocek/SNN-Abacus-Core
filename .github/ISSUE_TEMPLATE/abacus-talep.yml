@@ -1,0 +1,107 @@
+name: Çekirdeğe talep
+description: SNN-Abacus-Core'a yeni yetenek, hata bildirimi, davranış değişikliği, belge düzeltmesi ya da soru.
+title: "[tür] "
+labels: ["talep"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Önce [`GERI-BILDIRIM-KAYDI.md`](../blob/main/GERI-BILDIRIM-KAYDI.md)'ye bakın.**
+        Aradığınız şey orada REDDEDİLDİ olarak duruyorsa gerekçesi yazılıdır; aynı talep ikinci
+        kez değerlendirilmez. Gerekçeyi değiştiren yeni bir olgu varsa onu göstererek başvurun.
+
+        Projedeki ajan bu formu **`abacus-talep`** becerisiyle sizin için doldurabilir.
+
+        Çekirdeğe giren her şey tüm tüketici projelere girer ve geri çıkarmak kırıcı sürüm
+        gerektirir. Bu yüzden 5. alan (`AI-RULES §4.1` yerleştirme sınavı) **zorunludur**.
+
+  - type: dropdown
+    id: tur
+    attributes:
+      label: Tür
+      options:
+        - yeni-yetenek
+        - hata
+        - davranis-degisikligi
+        - belge
+        - soru
+    validations:
+      required: true
+
+  - type: input
+    id: tuketici
+    attributes:
+      label: Tüketici proje
+      description: Talebin geldiği depo.
+      placeholder: sinanbocek/trade-kasa
+    validations:
+      required: true
+
+  - type: input
+    id: surum
+    attributes:
+      label: Kullanılan çekirdek sürümü
+      description: "package.json içindeki @snn/abacus-core satırı. Hangi sürümde yaşandığı önemlidir."
+      placeholder: "3.2.0  (github:sinanbocek/SNN-Abacus-Core#semver:^3.2.0)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: gercek-olay
+    attributes:
+      label: 1. Gerçek olay
+      description: Hangi dosya, hangi satır, hangi ekran. Varsayımsal genellik yeterli değildir.
+    validations:
+      required: true
+
+  - type: textarea
+    id: olculmus-cikti
+    attributes:
+      label: 2. Ölçülmüş çıktı
+      description: İddia değil, çalıştırılmış komutun çıktısı. Komutu da yapıştırın.
+      render: text
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatif
+    attributes:
+      label: 3. Denenen alternatif
+      description: Neden tüketicide çözülemiyor? Ne denendi, neden yetmedi?
+    validations:
+      required: true
+
+  - type: textarea
+    id: etki
+    attributes:
+      label: 4. Kaç tüketiciyi etkiliyor
+      description: Aynı desen başka projelerde de var mı? Ölçmediyseniz "ölçmedim" yazın, tahmin yazmayın.
+    validations:
+      required: true
+
+  - type: textarea
+    id: yerlestirme-sinavi
+    attributes:
+      label: "5. AI-RULES §4.1 yerleştirme sınavı"
+      description: >-
+        SINAV: Başka bir şirketin, başka bir alandaki uygulaması bu fonksiyonu AYNEN kullanabilir
+        miydi? Ayıraç: adında/imzasında işe ait bir kavram (kasa, trade, ödeme, proje, ihale,
+        araç…) geçiyorsa uygulamaya aittir; yalnız sayı, para, metin, tarih, birim biliyorsa
+        çekirdeğe aittir. ELENEN ADAYLARI DA YAZIN — talebin elenerek geldiğini göstermek
+        değerlendirme maliyetini düşürür.
+      value: |
+        | Aday iş | İmzası | Aynen kullanır mıydı? | Karar |
+        |---|---|---|---|
+        |  |  |  |  |
+
+        Elenen adaylar ve eleme gerekçeleri:
+    validations:
+      required: true
+
+  - type: textarea
+    id: beklenen
+    attributes:
+      label: Beklenen sonuç
+      description: Ne olmasını bekliyorsunuz?
+    validations:
+      required: true
