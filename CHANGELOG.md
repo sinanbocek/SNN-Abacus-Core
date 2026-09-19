@@ -4,6 +4,40 @@ Bu projedeki tüm önemli değişiklikler bu dosyada belgelenir.
 Format [Keep a Changelog](https://keepachangelog.com/tr/) temellidir;
 sürümleme [Semantic Versioning](https://semver.org/lang/tr/) kurallarına uyar.
 
+## [3.5.0] - 2026-09-19
+
+> Eklemeli — mevcut hiçbir ad ya da davranış değişmedi.
+> Karar: [`GERI-BILDIRIM-KAYDI.md`](GERI-BILDIRIM-KAYDI.md) madde 34 (talep #23, GHS-Panel).
+
+### Eklenenler
+
+- **`text.properNounSuffix(name, kind)`** — özel ada hâl eki getirir ve adın **ekli
+  hâlini** döner (ekin kendisini değil). `kind` mevcut `SuffixCase` sözlüğünü kullanır:
+  `'loc' | 'dat' | 'abl' | 'acc' | 'gen'`.
+
+  ```
+  properNounSuffix('VakıfBank', 'loc')       -> "VakıfBank'ta"
+  properNounSuffix('A.Ş.', 'abl')            -> "A.Ş.'nden"
+  properNounSuffix('Ziraat Bankası', 'loc')  -> "Ziraat Bankası'nda"
+  properNounSuffix('Ayşe', 'dat')            -> "Ayşe'ye"
+  ```
+
+  `suffix` eki **sayının** okunuşundan türetir; bu işlev **kelimenin** kendisinden.
+  Geçersiz girdide `'—'` döner (madde 27 emsali).
+
+  Üç tuzak testle çivilendi: kısaltmada uyum okunuşa bakar (`A.Ş.'nden`, `'ndan` değil),
+  iyelik ekiyle biten ad kaynaştırma `n`si ister (`Bankası'nda`), iyelik `-I` biçimi
+  `-sI` kalıbına uymaz (`Şirketi'nden`).
+
+  **Bilinen sınırlar — gizlenmedi, testle belgelendi:**
+  - İyelik tespiti **kurum adı sonu listesiyle** yapılır, genel desenle değil. Genel desen
+    (`/(sı|si|su|sü)$/`) denendi ve yer adlarını iyelik sandı: `Gürsu` → `Gürsu'nda`
+    (doğrusu `Gürsu'da`). Listede olmayan bir kurum sonu kaynaştırma almaz.
+  - Harf harf okunan kısaltmalar (`TRT`, `BRT`) kapsam dışı; okunuş tablosu yalnız
+    `a.ş`, `aş`, `şti` için var.
+
+---
+
 ## [3.4.0] - 2026-09-19
 
 > Eklemeli — hiçbir ad ya da davranış değişmedi.

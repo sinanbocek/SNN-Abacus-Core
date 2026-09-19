@@ -837,3 +837,101 @@ export function digits(raw: string, maxLength?: number): string {
   const onlyDigits = raw.replace(/[^0-9]/g, '');
   return maxLength === undefined ? onlyDigits : onlyDigits.slice(0, maxLength);
 }
+
+/**
+ * Okunuşu iyelik ekiyle biten kısaltmalar.
+ *
+ * "A.Ş." okunuşu "Anonim Şirketi", "Şti." okunuşu "Şirketi"dir. Uyum HARFTEN
+ * değil OKUNUŞTAN alınır: harflere bakılırsa son ünlü 'a' görünür (kalın) ve
+ * `A.Ş.'ndan` çıkar; doğrusu `A.Ş.'nden`'dir.
+ */
+const READING_ENDS_WITH_POSSESSIVE = ['a.ş', 'aş', 'şti'];
+
+/**
+ * Üçüncü tekil iyelik eki taşıyan KURUM adı sonları: "İş Bankası", "Anonim Şirketi".
+ * Bunlar hâl ekinden önce kaynaştırma 'n'si ister: `Bankası'nda`, `Şirketi'nden`.
+ *
+ * NEDEN DESEN DEĞİL DE LİSTE — ölçülerek karar verildi (2026-09-19):
+ * Önce genel desen denendi (`/(sı|si|su|sü|…)$/`). O desen YER ADLARINI iyelik
+ * sanıyor: `Gürsu` -> `Gürsu'nda` (doğrusu `Gürsu'da`), aynısı `Aksu`, `Karasu`.
+ * Talebi gönderen tüketicinin 18 testi geçen uygulaması da tam bu kusuru
+ * taşıyor; kod olduğu gibi taşınsaydı kusur da taşınacaktı.
+ *
+ * Ünsüzden sonraki iyelik `-I` biçimini genel kuralla ayırt etmek MÜMKÜN DEĞİLDİR
+ * ("Hepiyi" de `-i` ile biter, iyelik değildir). Bu yüzden kesinlik tercih edildi:
+ * yalnız kurum adı sonları sayılır. Liste bilinçli olarak eksiktir; eksik bir sonu
+ * bildirmek için `GERI-BILDIRIM-KAYDI.md` yolu kullanılır.
+ */
+const POSSESSIVE_ENDINGS = [
+  'bankası', 'şirketi', 'holdingi', 'ortaklığı', 'fabrikası', 'müdürlüğü',
+  'başkanlığı', 'bakanlığı', 'kurumu', 'kurulu', 'birliği', 'derneği', 'vakfı',
+  'hastanesi', 'üniversitesi', 'belediyesi', 'müzesi', 'idaresi', 'merkezi',
+  'enstitüsü', 'mahallesi',
+];
+
+/** Hâl ekinden önce kaynaştırma 'n'si gerektiren durum. */
+type BufferKind = 'abbreviation' | 'possessive' | null;
+
+function bufferKindOf(trimmed: string): BufferKind {
+  const folded = toTrLower(trimmed).replace(/[\s.]+$/, '');
+  if (READING_ENDS_WITH_POSSESSIVE.some((abbr) => folded.endsWith(abbr))) return 'abbreviation';
+  if (POSSESSIVE_ENDINGS.some((ending) => folded.endsWith(ending))) return 'possessive';
+  return null;
+}
+
+/**
+ * ÖZEL ADA HÂL EKİ (ABACUS-SPEC §3.5-b).
+ *
+ * `suffix` eki SAYININ okunuşundan türetir; bu işlev KELİMENİN kendisinden
+ * türetir ve adın **ekli hâlini** döner — ekin kendisini değil.
+ *
+ * TDK kuralı gereği özel adda kesme işareti daima konur.
+ *
+ * Üç tuzak testle çivilenmiştir:
+ *   - `A.Ş.` uyumu OKUNUŞA bakar (ince): `A.Ş.'nden`, `A.Ş.'ndan` değil.
+ *   - İyelik ekiyle biten ad kaynaştırma 'n'si ister: `Bankası'nda`.
+ *   - İyelik `-I` biçimi `-sI` kalıbına uymaz: `Şirketi'nden`.
+ *
+ * Geçersiz girdide (boş ya da yalnız noktalama) `'—'` döner (madde 27 emsali).
+ *
+ * @example properNounSuffix('VakıfBank', 'loc')      // "VakıfBank'ta"
+ * @example properNounSuffix('A.Ş.', 'abl')           // "A.Ş.'nden"
+ * @example properNounSuffix('Ziraat Bankası', 'loc') // "Ziraat Bankası'nda"
+ */
+export function properNounSuffix(name: string, kind: SuffixCase): string {
+  if (typeof name !== 'string') return '—';
+  const trimmed = name.trim();
+  if (!trimmed) return '—';
+
+  // Ses çözümlemesi için sondaki nokta/boşluk atılır; çıktıda ad AYNEN kalır.
+  const stem = trimmed.replace(/[\s.]+$/, '');
+  if (!stem) return '—';
+
+  const buffer = bufferKindOf(trimmed);
+
+  // Kısaltmada harfler yanıltır; okunuş ince bittiği için 'i' kabul edilir.
+  const harmonySource = buffer === 'abbreviation' ? 'i' : (lastVowel(stem) ?? 'a');
+  const back = isBackVowel(harmonySource);
+  const wide = back ? 'a' : 'e';
+  const narrow = getHarmonyVowel(harmonySource);
+
+  const n = buffer ? 'n' : '';
+  // Kaynaştırma 'n'sinden sonra ünsüz benzeşmesi olmaz: 'n' yumuşaktır, d kalır.
+  const d = buffer ? 'd' : endsWithHardConsonant(stem) ? 't' : 'd';
+  const vowelEnd = endsWithVowel(stem);
+
+  switch (kind) {
+    case 'loc':
+      return `${trimmed}'${n}${d}${wide}`;
+    case 'abl':
+      return `${trimmed}'${n}${d}${wide}n`;
+    case 'dat':
+      return `${trimmed}'${buffer ? 'n' : vowelEnd ? 'y' : ''}${wide}`;
+    case 'gen':
+      return `${trimmed}'${buffer || vowelEnd ? 'n' : ''}${narrow}n`;
+    case 'acc':
+      return `${trimmed}'${buffer ? 'n' : vowelEnd ? 'y' : ''}${narrow}`;
+    default:
+      return '—';
+  }
+}

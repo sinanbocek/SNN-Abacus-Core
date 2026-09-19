@@ -606,6 +606,9 @@ text.numberToWords(2026, { spaced: true })   // → 'İki Bin Yirmi Altı'
 
 ```js
 text.suffix(2026, 'year', 'loc')      // → "2026'da"
+text.properNounSuffix('VakıfBank', 'loc')      // → "VakıfBank'ta"
+text.properNounSuffix('A.Ş.', 'abl')           // → "A.Ş.'nden"
+text.properNounSuffix('Ziraat Bankası', 'loc') // → "Ziraat Bankası'nda"
 text.suffix(2, 'percent', 'dat')      // → "%2'ye"
 text.suffix(150000, 'money', 'loc')   // → "₺1.500'da"
 text.suffix(-2, 'percent', 'dat')     // → "-%2'ye"
