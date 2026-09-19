@@ -1,4 +1,7 @@
+/// <reference types="vite/client" />
 import { describe, expect, it } from 'vitest';
+import MOTOR_DETAYLARI from '../../SNN-ABACUS-CORE-MOTOR-DETAYLARI.md?raw';
+import PAKET from '../../package.json';
 import {
   collate,
   currency,
@@ -753,5 +756,18 @@ describe('BELGE İDDİALARI — v3.0.0 geçersiz hane sayısı', () => {
 
   it('ABACUS-SPEC §2.2: math.round ilkel katmanda doğrulama yapmaz', () => {
     expect(() => math.round(4.3, 1.5)).toThrow();
+  });
+});
+
+describe('BELGE İDDİALARI — belgedeki sürüm başlığı koddan geri kalmasın (TB-006)', () => {
+  // TB-006: MOTOR-DETAYLARI başlığı "v2.8 serisi" derken paket 3.3.0'dı.
+  // Başlığı düzeltmek yetmez; bu test olmadan bir sonraki sürümde yine eskir.
+  it('MOTOR-DETAYLARI "vX.Y serisi" ile package.json aynı seriyi gösterir', () => {
+    const iddia = /\*\*Sürüm:\*\*\s*v(\d+)\.(\d+)\s*serisi/.exec(MOTOR_DETAYLARI);
+    expect(iddia, 'MOTOR-DETAYLARI başlığında "**Sürüm:** vX.Y serisi" bulunamadı').not.toBeNull();
+
+    const [, major, minor] = iddia as RegExpExecArray;
+    const [pkgMajor, pkgMinor] = PAKET.version.split('.');
+    expect(`${major}.${minor}`).toBe(`${pkgMajor}.${pkgMinor}`);
   });
 });

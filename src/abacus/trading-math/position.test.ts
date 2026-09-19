@@ -12,6 +12,16 @@ describe('ABACUS trading-math/position motoru (miktardan hacim/kaldıraç türet
       // 10 kontrat * 100,00 TL (10.000 kuruş) * 100 çarpan = 10.000.000 kuruş (100.000 TL)
       expect(volumeFromQty(10, 10000, 100)).toBe(10_000_000);
     });
+
+    // TB-003: bu koruma kolu hiç test edilmemişti.
+    it('miktar, fiyat ya da çarpan <= 0 ise hacim sentinel olarak 0 döner', () => {
+      expect(volumeFromQty(0, 14550, 1)).toBe(0);
+      expect(volumeFromQty(-5, 14550, 1)).toBe(0);
+      expect(volumeFromQty(100, 0, 1)).toBe(0);
+      expect(volumeFromQty(100, -14550, 1)).toBe(0);
+      expect(volumeFromQty(100, 14550, 0)).toBe(0);
+      expect(volumeFromQty(100, 14550, -1)).toBe(0);
+    });
   });
 
   describe('qtyFromVolume', () => {
@@ -32,6 +42,14 @@ describe('ABACUS trading-math/position motoru (miktardan hacim/kaldıraç türet
     it('fiyat veya çarpan 0 olduğunda belirsizliği önlemek için miktar sentinel olarak 0 döner', () => {
       expect(qtyFromVolume(1_000_000, 0, 1, false)).toBe(0);
       expect(qtyFromVolume(1_000_000, 14550, 0, false)).toBe(0);
+    });
+
+    // TB-003: `denom <= 0` kolu savunma amaçlı görünüyor ama ULAŞILABİLİR.
+    // İki pozitif sayının çarpımı taban aşımıyla 0'a düşebilir: mul(1e-200, 1e-200) -> 0.
+    // O noktada bölme tanımsız olurdu; motor 0 (miktarsız) döner.
+    it('fiyat * çarpan taban aşımıyla 0 olursa miktar 0 döner (denom koruması)', () => {
+      expect(qtyFromVolume(1_000_000, 1e-200, 1e-200, false)).toBe(0);
+      expect(qtyFromVolume(1_000_000, 5e-324, 5e-324, true)).toBe(0);
     });
   });
 

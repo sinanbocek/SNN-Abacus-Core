@@ -24,7 +24,7 @@ export function mul(a: number, b: number): number {
   return new D(String(a)).times(String(b)).toNumber();
 }
 
-/** Bölme işlemi. Bölünen 0 ise null döner (sessiz hata/varsayılan yok). */
+/** Bölme işlemi. **Bölen** 0 ise null döner (sessiz hata/varsayılan yok); `div(0, 5)` -> `0`. */
 export function div(a: number, b: number): number | null {
   if (b === 0) return null;
   return new D(String(a)).dividedBy(String(b)).toNumber();
