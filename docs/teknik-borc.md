@@ -12,7 +12,8 @@ Kapanan kayıtlar: `docs/teknik-borc-arsiv.md`
 
 ## İçindekiler
 
-- **🟡 P2 — Planlı:** TB-001, TB-003, TB-004, TB-005, TB-010, TB-012
+- **🔴 P1 — Acil:** TB-010
+- **🟡 P2 — Planlı:** TB-001, TB-003, TB-004, TB-005, TB-012
 - **🟢 P3 — Fırsatta:** TB-006, TB-007, TB-008, TB-009, TB-011
 
 ## Öncelikler
@@ -106,7 +107,7 @@ Kapanan kayıtlar: `docs/teknik-borc-arsiv.md`
 - **Senden beklenen karar:** Kural sıkılaştırılsın mı? Kullanan projelerde yeni lint hataları çıkaracaktır.
 
 #### 🔧 Teknik Detay
-- **Açıklama:** `GERI-BILDIRIM-KAYDI.md` kuralın yalnızca `0` literaline baktığını ve "kural boşluğu genel olarak durmaktadır" diye kaydediyor. Kural `eslint/index.js` içinde yayımlanıyor. Kural gövdesi bu turda satır satır okunmadı; bilgi projenin kendi kaydına dayanıyor.
+- **Açıklama:** `GERI-BILDIRIM-KAYDI.md` kuralın yalnızca `0` literaline baktığını ve "kural boşluğu genel olarak durmaktadır" diye kaydediyor. **Düzeltme (2026-09-19 denetimi, kural gövdesi okundu):** kayıt kuralın `eslint/index.js` içinde yayımlandığını söylüyordu — **yanlış.** Yayımlanan pakette sessiz varsayılan kuralı **yok**; `eslint/index.js` yalnız üç kapı veriyor (`MINOR_UNIT_GATES`, `FORMAT_GATES`, `INTL_GATE`, `:122-123`). Kural aslında `INSTALL.md:307-313`'teki **ev kuralı şablonundadır** ve tüketici onu kendi yapılandırmasına kopyalar. Seçici `right.value=0` eşleştiriyor, yani `?? 1` gerçekten kaçıyor — boşluk gerçek, yeri yanlış yazılmıştı.
 - **Etki:** Kuralı kullanan tüm tüketici projeler (ör. Portföy'deki `|| 1` kur yedeği borcu).
 - **Çözüm yönü:** Önce `eslint/index.js` kuralını oku; sonra `?? <sayı>` / `|| <sayı>` için seçici kural ve `eslint-config.test.ts` testi ekle.
 - **Neden Şimdi Çözülmüyor:** Keşif sırasında bulundu, planlanmadı.
@@ -115,7 +116,8 @@ Kapanan kayıtlar: `docs/teknik-borc-arsiv.md`
 
 ### TB-010 — `money.parseNumber` Türkçe olmayan yazımları hata vermeden yanlış sayıya çeviriyor
 - **Tespit Tarihi:** 2026-09-15 (keşif turu: salt okunur inceleme + bağımsız ölçüm)
-- **Öncelik:** P2 (Planlı)
+- **Öncelik:** P1 (Acil) — *2026-09-19 denetiminde P2'den yükseltildi.*
+  **Gerekçe:** kütüğün P1 tanımı "veri/para/güvenlik/**sessiz hata**". Ölçüm ikisini de veriyor: `parseNumber("1234.56")` → `123456` (**100 kat yanlış para**, hata yok, uyarı yok) ve `parseNumber("12abc34")` → `1234` — oysa JSDoc *"Çözümlenemeyen girdide `null` döner (ABACUS-SPEC §2.1)"* diyor. İkincisi belgelenmiş bir sınır değil, **sözleşme ihlali**: çağıran `null` denetimi yazmışsa o denetim hiç çalışmaz. Çekirdek 8 projede kullanılıyor ve dışarıdan (API, CSV, kopyala-yapıştır) `1234.56` biçimi gelmesi olağan.
 
 #### 🟢 Sade Anlatım
 - **Sorun ne?** Metni sayıya çeviren fonksiyon yalnızca Türkçe yazımı ("1.234,56") doğru okuyor. "1234.56" gibi farklı bir yazım gelince "okuyamadım" demek yerine sessizce yüz kat büyük bir sayı üretiyor; parantezli eksi tutarı da artı okuyor.
@@ -124,7 +126,7 @@ Kapanan kayıtlar: `docs/teknik-borc-arsiv.md`
 - **Senden beklenen karar:** Düzeltme `parseNumber`'ın davranışını değiştirir (bugün yanlış sayı dönen girdiler `null` döner) — kullanan projelerde kırıcı olabilir; ayrı katı bir `parseDecimal` mı eklensin, yoksa `parseNumber` mı düzeltilsin?
 
 #### 🔧 Teknik Detay
-- **Açıklama:** `src/abacus/money/index.ts:275-281`: JSDoc "Türkçe biçimli sayı metnini sayıya çevirir… Çözümlenemeyen girdide `null` döner (ABACUS-SPEC §2.1)". Kod `:277` `val.replace(/\./g, '').replace(',', '.').replace(/[^0-9.\-]/g, '')` → tüm noktaları ve rakam dışı karakterleri siliyor. **Ölçüm (2026-09-15, v3.1.0, tsx):** `"1234.56"` → `123456`, `"1e3"` → `13`, `"(1.210,50)"` → `1210.5` (işaret kayboluyor), `"1.234,56"` → `1234.56` (doğru), `"abc"` → `null`. Sözleşme (çözümlenemeyende `null`) ile davranış çelişiyor.
+- **Açıklama:** `src/abacus/money/index.ts:275-281`: JSDoc "Türkçe biçimli sayı metnini sayıya çevirir… Çözümlenemeyen girdide `null` döner (ABACUS-SPEC §2.1)". Kod `:277` `val.replace(/\./g, '').replace(',', '.').replace(/[^0-9.\-]/g, '')` → tüm noktaları ve rakam dışı karakterleri siliyor. **Ölçüm (2026-09-15, v3.1.0, tsx; 2026-09-19 v3.3.0'te yeniden ölçüldü, sonuç aynı):** `"1234.56"` → `123456`, `"1e3"` → `13`, `"(1.210,50)"` → `1210.5` (işaret kayboluyor), `"1.234,56"` → `1234.56` (doğru), `"abc"` → `null`. Sözleşme (çözümlenemeyende `null`) ile davranış çelişiyor.
 - **Etki:** Tüketiciler: SNN-Ihale `src/infrastructure/excel/decimalCell.ts:25` (önüne kendi biçim kapısını koyarak korunuyor — o projenin kütüğünde TB-005); diğer tüketicilerdeki kullanım sayılmadı.
 - **Çözüm yönü:** (1) Tüketicilerde `parseNumber` çağrılarını say. (2) Yukarıdaki beş girdiyle kırmızı test yaz. (3) Katı biçim doğrulaması ekle (Türkçe dışı → `null`, parantezli eksi ya reddedilir ya işaretli okunur) veya hane sınırsız ayrı `parseDecimal` yayımla; `GERI-BILDIRIM-KAYDI.md` sürecine göre sürüm ve CHANGELOG.
 - **Neden Şimdi Çözülmüyor:** SNN-Ihale kütüğünden taşınan "çekirdek talep adayı" (2026-09-14); proje ayrımı gereği hatanın kendisi burada kayıtlı.
@@ -144,7 +146,7 @@ Kapanan kayıtlar: `docs/teknik-borc-arsiv.md`
 - **Senden beklenen karar:** Yok.
 
 #### 🔧 Teknik Detay
-- **Açıklama:** `SNN-ABACUS-CORE-MOTOR-DETAYLARI.md:11` "Sürüm: v2.8 serisi"; `package.json` `3.1.0`; aynı doküman `:163`'te v3.1.0 içeriği. `docs-claims.test.ts`'in başlık sürümünü denetlemediği test adına bakılarak çıkarıldı (içerik okunmadı).
+- **Açıklama:** `SNN-ABACUS-CORE-MOTOR-DETAYLARI.md:11` "Sürüm: v2.8 serisi"; `package.json` **`3.3.0`** (2026-09-19 denetiminde ölçüldü; kayıt açıldığında `3.1.0`'dı — **fark büyüyor**); aynı doküman `:163`'te v3.1.0 içeriği. `docs-claims.test.ts`'in başlık sürümünü denetlemediği test adına bakılarak çıkarıldı (içerik okunmadı).
 - **Etki:** Dokümanı okuyan tüketici projeler ve yapay zeka oturumları.
 - **Çözüm yönü:** Başlığı düzelt; `package.json` sürümüyle karşılaştıran bir test ekle.
 - **Neden Şimdi Çözülmüyor:** Keşif sırasında bulundu, planlanmadı.
@@ -198,7 +200,7 @@ Kapanan kayıtlar: `docs/teknik-borc-arsiv.md`
 - **Senden beklenen karar:** Silinsin mi?
 
 #### 🔧 Teknik Detay
-- **Açıklama:** `git ls-files` içinde `commit_msg.txt`; içeriği ilk sürüme ait ("7 motor… 163 unit test"). Güncel: 43 test dosyası, 979 test. `.gitignore` kapsamıyor.
+- **Açıklama:** `git ls-files` içinde `commit_msg.txt`; içeriği ilk sürüme ait ("7 motor… 163 unit test"). Güncel: **45 test dosyası, 1013 test** (2026-09-19 ölçümü; kayıt açıldığında 43/979 yazılmıştı — dosyadaki sayı her sürümde daha da eskiyor). `.gitignore` kapsamıyor.
 - **Etki:** Yalnızca depo düzeni.
 - **Çözüm yönü:** `git rm commit_msg.txt` ve `.gitignore` kaydı.
 - **Neden Şimdi Çözülmüyor:** Keşif sırasında bulundu, planlanmadı.
@@ -216,7 +218,7 @@ Kapanan kayıtlar: `docs/teknik-borc-arsiv.md`
 - **Senden beklenen karar:** Yok.
 
 #### 🔧 Teknik Detay
-- **Açıklama:** `src/abacus/gold/index.ts:14-19` `PURITY` yalnız ayar anahtarlı (`24: 0.995, 22: 0.916, 21: 0.875, 18: 0.750`); `:21-25` `ZIYNET_GRAM` yalnız `quarter 1.754 / half 3.508 / full 7.016`. `src/abacus/gold*` içinde `0.917`, `917`, `ata`, `cumhuriyet`, `7.216` geçişi **0** (2026-09-15, v3.1.0). Tüketici: SNN-Portfoy-Yonetimi `src/config/goldTypes.ts:11, 39-40` 0,917 saflık ve 7,216 gr elle yazılı (o projenin kütüğünde TB-026).
+- **Açıklama:** `src/abacus/gold/index.ts:14-19` `PURITY` yalnız ayar bazlı (`24: 0.995, 22: 0.916, 21: 0.875, 18: 0.750`); `:21-25` `ZIYNET_GRAM` yalnız `quarter 1.754 / half 3.508 / full 7.016`. `src/abacus/gold*` içinde `0.917`, `917`, `ata`, `cumhuriyet`, `7.216` geçişi **0** (2026-09-15, v3.1.0). Tüketici: SNN-Portfoy-Yonetimi `src/config/goldTypes.ts:11, 39-40` 0,917 saflık ve 7,216 gr elle yazılı (o projenin kütüğünde TB-026).
 - **Etki:** Ata altını değerleyen tüketici projeler (bugün SNN-Portfoy-Yonetimi).
 - **Çözüm yönü:** Ata altınının resmî saflık (0,917) ve ağırlık (7,216 gr) değerlerini kaynağıyla doğrula; `gold` modülüne ayar dışı bir tür (ör. `ZIYNET_GRAM.ata` + ayrı saflık) olarak ekle; test + `api-surface.test.ts` + CHANGELOG; tüketiciye sürüm notu.
 - **Neden Şimdi Çözülmüyor:** SNN-Portfoy-Yonetimi tüketici raporu #3 §4 ile iletilmiş; proje ayrımı gereği eksikliğin kendisi burada kayıtlı (2026-09-15).
@@ -234,7 +236,7 @@ Kapanan kayıtlar: `docs/teknik-borc-arsiv.md`
 - **Senden beklenen karar:** Yok — ikisi de 2026-09-19'da karara bağlandı. Kapı kuruldu, plaka adları istisna yazıldı. Geriye kalan 38 adın çevrilmesi planlı iş.
 
 #### 🔧 Teknik Detay
-- **Açıklama:** `node <ev>/.claude/standartlar-canli/quality/code-language-scan.js --tumu` (2026-09-19, v3.3.0) **43 farklı tanımlayıcı / 103 satır atfı** buluyor. Oturum kancası "129 bulgu" diyor; bu sayı tarayıcının kendi çıktısıyla **tutmuyor**, aradaki farkın nereden geldiği ölçülmedi. Dosya dağılımı: `scripts/beceri-dogrula.mjs` 8, `src/abacus/text/index.ts` 6, `src/abacus/math/index.ts` 6, `src/abacus/kilavuz.test.ts` 4, `src/abacus/spec-surface.test.ts` 3, `src/abacus/money/index.ts` 3, `src/abacus/math/allocate.test.ts` 3, `src/abacus/date/index.ts` 2, kalanlar 1'er. Eksik olan iki altyapı: `.github/workflows/kod-dili.yml` **yok** (aile standardı `ornek/kod-dili.yml` şablonu sunuyor) ve `.snn-kod-dili.json` istisna dosyası **yok**.
+- **Açıklama:** `node <ev>/.claude/standartlar-canli/quality/code-language-scan.js --tumu` (2026-09-19, v3.3.0) **43 farklı tanımlayıcı / 103 satır atfı** buluyordu. **Güncel: 38** — plaka istisnası (`.snn-kod-dili.json`) 5 tanesini düşürdü. Oturum kancası "129 bulgu" diyor; bu sayı tarayıcının kendi çıktısıyla **tutmuyor**, aradaki farkın nereden geldiği ölçülmedi. Dosya dağılımı: `scripts/beceri-dogrula.mjs` 8, `src/abacus/text/index.ts` 6, `src/abacus/math/index.ts` 6, `src/abacus/kilavuz.test.ts` 4, `src/abacus/spec-surface.test.ts` 3, `src/abacus/money/index.ts` 3, `src/abacus/math/allocate.test.ts` 3, `src/abacus/date/index.ts` 2, kalanlar 1'er. Eksik olan iki altyapı: `.github/workflows/kod-dili.yml` **yok** (aile standardı `ornek/kod-dili.yml` şablonu sunuyor) ve `.snn-kod-dili.json` istisna dosyası **yok**.
 - **Etki:** Kod okunabilirliği ve aile standardı uyumu. Çalışma zamanı davranışı etkilenmiyor — hiçbiri hata üretmiyor.
 - **Çözüm yönü:** (1) ~~Turnikeyi kur~~ **YAPILDI (2026-09-19):** `.github/workflows/kod-dili.yml` kuruldu. Turnike yalnız **eklenen satırları** tarıyor, bu yüzden mevcut 43 ad için geçiş istisnası yazmak gerekmedi — yenilerin girişi kapandı, geçmiş açık kaldı. (2) ~~Plaka adlarına istisna yaz~~ **YAPILDI (2026-09-19):** `.snn-kod-dili.json` içinde `plaka` kökü, dayanağı GERI-BILDIRIM-KAYDI.md talep #4. **Not:** standardın tablosu `plaka → plate` çevirisini öneriyor, örnek JSON'u ise `plaka`yı istisna gösteriyor; ikisi çelişiyor. Sahip kararı istisna yönünde. Çelişki SNN-Standartlar'a bildirilmedi — bildirilirse bu satır güncellenir. (3) Kalanları dosya dosya çevir; test dosyası adları (`giris-suzme.test.ts`, `suffix-sayi.test.ts`) yeniden adlandırılırken `vitest.config.ts` include deseni ve kapsam eşikleri kontrol edilsin.
 - **Neden Şimdi Çözülmüyor:** Kapı ve istisna 2026-09-19'da kapandı; **geriye kalan 38 adın çevrilmesi** açık. Toplu değiştirme kuralı gereği dosya dosya yapılır ve turnike yenileri zaten engellediği için aceleye gerek yok.
