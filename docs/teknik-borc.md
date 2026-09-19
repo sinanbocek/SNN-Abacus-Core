@@ -33,6 +33,8 @@ Kapanan kayıtlar: `docs/teknik-borc-arsiv.md`
 | Lint kuralı | Kod yazım hatalarını otomatik yakalayan denetim kuralı |
 | Tüketici proje | Bu kütüphaneyi kullanan proje (GHS, Portföy, Yönetici Özeti, Günüm Var, trade-kasa) |
 | Kırıcı değişiklik (major) | Kullanan projelerde kodun değişmesini gerektiren sürüm |
+| Tanımlayıcı | Kodda bir şeye verilen ad: dosya adı, değişken, fonksiyon, tip |
+| Turnike (CI kapısı) | Her değişiklikte otomatik çalışan, kuralı sağlamayan işi geçirmeyen denetim |
 
 ---
 
@@ -235,5 +237,23 @@ Kapanan kayıtlar: `docs/teknik-borc-arsiv.md`
 - **Etki:** Ata altını değerleyen tüketici projeler (bugün SNN-Portfoy-Yonetimi).
 - **Çözüm yönü:** Ata altınının resmî saflık (0,917) ve ağırlık (7,216 gr) değerlerini kaynağıyla doğrula; `gold` modülüne ayar dışı bir tür (ör. `ZIYNET_GRAM.ata` + ayrı saflık) olarak ekle; test + `api-surface.test.ts` + CHANGELOG; tüketiciye sürüm notu.
 - **Neden Şimdi Çözülmüyor:** SNN-Portfoy-Yonetimi tüketici raporu #3 §4 ile iletilmiş; proje ayrımı gereği eksikliğin kendisi burada kayıtlı (2026-09-15).
+
+---
+
+### TB-012 — Kod dili standardına uyum yok: 43 Türkçe tanımlayıcı var, turnike hiç kurulmamış
+- **Tespit Tarihi:** 2026-09-19 (abacus-talep yolu kurulurken kanca uyarısı; ardından bağımsız ölçüm)
+- **Öncelik:** P2 (Planlı)
+
+#### 🟢 Sade Anlatım
+- **Sorun ne?** Aile kuralı şunu diyor: kodun içinde şeylere verilen adlar İngilizce olur; açıklamalar, belgeler ve kullanıcının gördüğü yazılar Türkçe kalır. Bu depoda 43 ad bu kurala uymuyor. Asıl sorun sayı değil: **kuralı kontrol eden kapı hiç kurulmamış**, bu yüzden her yeni iş sessizce birkaç tane daha ekliyor.
+- **Benzetme:** Depoda "girişte kask takılır" yazısı asılı ama kapıda kimse yok. Kask takmayan giriyor, kimse saymıyor; yazı kendi kendine çalışmıyor.
+- **Çözülmezse ne olur?** Sayı büyümeye devam eder ve bir gün topluca düzeltmek pahalı hâle gelir. Ayrıca bu kütüphaneyi kullanan 8 projeye "kurala uyun" demek zorlaşır; çekirdek kendisi uymuyorsa kural gevşer.
+- **Senden beklenen karar:** İki ayrı soru var. (1) Kapıyı şimdi kuralım mı? (2) Plaka kuralındaki `PLAKA_HARFLERI` gibi Türkiye'ye özgü adlar çevrilsin mi, yoksa gerekçesiyle istisna mı yazılsın?
+
+#### 🔧 Teknik Detay
+- **Açıklama:** `node <ev>/.claude/standartlar-canli/quality/code-language-scan.js --tumu` (2026-09-19, v3.3.0) **43 farklı tanımlayıcı / 103 satır atfı** buluyor. Oturum kancası "129 bulgu" diyor; bu sayı tarayıcının kendi çıktısıyla **tutmuyor**, aradaki farkın nereden geldiği ölçülmedi. Dosya dağılımı: `scripts/beceri-dogrula.mjs` 8, `src/abacus/text/index.ts` 6, `src/abacus/math/index.ts` 6, `src/abacus/kilavuz.test.ts` 4, `src/abacus/spec-surface.test.ts` 3, `src/abacus/money/index.ts` 3, `src/abacus/math/allocate.test.ts` 3, `src/abacus/date/index.ts` 2, kalanlar 1'er. Eksik olan iki altyapı: `.github/workflows/kod-dili.yml` **yok** (aile standardı `ornek/kod-dili.yml` şablonu sunuyor) ve `.snn-kod-dili.json` istisna dosyası **yok**.
+- **Etki:** Kod okunabilirliği ve aile standardı uyumu. Çalışma zamanı davranışı etkilenmiyor — hiçbiri hata üretmiyor.
+- **Çözüm yönü:** (1) `ornek/kod-dili.yml` turnikesini kur — **önce** kur, yoksa temizlik sırasında yenileri girer. (2) Türkiye'ye özgü olanları (`PLAKA_HARFLERI`, `PLAKA_AYRACLARI`, `YENI_KAYIT_HARFLERI`, `PLAKA_RAKAM_EN_AZ/COK`) `.snn-kod-dili.json`'a gerekçesiyle istisna yaz — bunlar Türkiye tescil plakası kavramına ait (dayanağı GERI-BILDIRIM-KAYDI.md talep #4 notunda yazılı), İngilizce karşılıkları kavramı bozar. (3) Kalanları dosya dosya çevir; test dosyası adları (`giris-suzme.test.ts`, `suffix-sayi.test.ts`) yeniden adlandırılırken `vitest.config.ts` include deseni ve kapsam eşikleri kontrol edilsin.
+- **Neden Şimdi Çözülmüyor:** `abacus-talep` yolu kurulurken yan bulgu olarak çıktı; asıl işi (talep yolu + talep #23) bölmemek için kaydedildi. Ayrıca istisna kararı (madde 2) proje sahibinin kararını gerektiriyor.
 
 ---
