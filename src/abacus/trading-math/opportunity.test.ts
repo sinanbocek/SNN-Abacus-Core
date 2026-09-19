@@ -23,4 +23,12 @@ describe('ABACUS trading-math/opportunity motoru (fırsat maliyeti eşik günü)
     expect(calculateThresholdDays(-0.05, 35)).toBeNull();
     expect(calculateThresholdDays(0.10, -10)).toBeNull();
   });
+
+  // TB-003: logaritma kolu da ULAŞILABİLİR. Faiz pozitif ama o kadar küçükse ki
+  // `1 + faiz/100` toplamı 1'e yuvarlanıyorsa günlük oran 0 olur; ln(1) = 0 ve
+  // bölme tanımsız kalır. Motor sessiz bir sayı uydurmaz, null döner.
+  it('faiz pozitif ama toplamda kaybolacak kadar küçükse null döner (ln kolu)', () => {
+    expect(calculateThresholdDays(0.1, 1e-300)).toBeNull();
+    expect(calculateThresholdDays(0.1, 1e-320)).toBeNull();
+  });
 });

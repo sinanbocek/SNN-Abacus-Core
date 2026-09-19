@@ -1,4 +1,7 @@
+/// <reference types="vite/client" />
 import { describe, expect, it } from 'vitest';
+import ENGINE_DETAILS_DOC from '../../SNN-ABACUS-CORE-MOTOR-DETAYLARI.md?raw';
+import PACKAGE_MANIFEST from '../../package.json';
 import {
   collate,
   currency,
@@ -22,7 +25,7 @@ import {
  * içindeki her kod örneği burada birebir doğrulanır.
  *
  * Amaç: denetim raporundaki B7 hatasının tekrarını önlemek — belgelerin
- * yanlış çıktı iddia etmesi. Bir belge örneği değişirse bu test kırmızı verir.
+ * yanlış çıktı claim etmesi. Bir belge örneği değişirse bu test kırmızı verir.
  */
 
 describe('BELGE İDDİALARI — README.md hızlı başlangıç', () => {
@@ -753,5 +756,18 @@ describe('BELGE İDDİALARI — v3.0.0 geçersiz hane sayısı', () => {
 
   it('ABACUS-SPEC §2.2: math.round ilkel katmanda doğrulama yapmaz', () => {
     expect(() => math.round(4.3, 1.5)).toThrow();
+  });
+});
+
+describe('BELGE İDDİALARI — belgedeki sürüm başlığı koddan geri kalmasın (TB-006)', () => {
+  // TB-006: MOTOR-DETAYLARI başlığı "v2.8 serisi" derken paket 3.3.0'dı.
+  // Başlığı düzeltmek yetmez; bu test olmadan bir sonraki sürümde yine eskir.
+  it('MOTOR-DETAYLARI "vX.Y serisi" ile package.json aynı seriyi gösterir', () => {
+    const claim = /\*\*Sürüm:\*\*\s*v(\d+)\.(\d+)\s*serisi/.exec(ENGINE_DETAILS_DOC);
+    expect(claim, 'MOTOR-DETAYLARI başlığında "**Sürüm:** vX.Y serisi" bulunamadı').not.toBeNull();
+
+    const [, major, minor] = claim as RegExpExecArray;
+    const [pkgMajor, pkgMinor] = PACKAGE_MANIFEST.version.split('.');
+    expect(`${major}.${minor}`).toBe(`${pkgMajor}.${pkgMinor}`);
   });
 });

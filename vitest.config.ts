@@ -10,14 +10,14 @@ export default defineConfig({
       // Yalnız barrel dosyaları hariç: kendi mantıkları yok, sadece re-export.
       exclude: ['src/**/*.test.ts', 'src/abacus/index.ts', 'src/abacus/trading-math/index.ts'],
       all: true,
-      // Eşikler son ölçümün biraz altına çekilmiştir (2026-08-24:
-      // statements 91.08 / branches 86.05 / functions 99.04 / lines 96.46).
+      // Eşikler son ölçümün biraz altına çekilmiştir (2026-09-19, TB-003 sonrası:
+      // statements 93.42 / branches 89.89 / functions 100 / lines 98.39; önceki tur 2026-08-24: 91.08 / 86.05 / 99.04 / 96.46).
       // Amaç gerilemeyi yakalamak; kapsam arttıkça eşikler yukarı çekilmelidir.
       thresholds: {
-        statements: 90,
-        branches: 85,
-        functions: 98,
-        lines: 95,
+        statements: 93,
+        branches: 89,
+        functions: 100,
+        lines: 98,
       },
     },
   },

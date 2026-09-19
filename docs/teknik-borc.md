@@ -13,8 +13,8 @@ Kapanan kayıtlar: `docs/teknik-borc-arsiv.md`
 ## İçindekiler
 
 - **🔴 P1 — Acil:** TB-010
-- **🟡 P2 — Planlı:** TB-001, TB-003, TB-004, TB-005, TB-012
-- **🟢 P3 — Fırsatta:** TB-006, TB-007, TB-008, TB-009, TB-011
+- **🟡 P2 — Planlı:** TB-001, TB-004, TB-005, TB-012
+- **🟢 P3 — Fırsatta:** TB-008, TB-009, TB-011
 
 ## Öncelikler
 
@@ -60,23 +60,6 @@ Kapanan kayıtlar: `docs/teknik-borc-arsiv.md`
 ---
 
 
-### TB-003 — İşlem hesaplama bölümünde geçersiz girdi kolları test edilmemiş
-- **Tespit Tarihi:** 2026-09-15 (keşif turu: salt okunur inceleme + bağımsız ölçüm)
-- **Öncelik:** P2 (Planlı)
-
-#### 🟢 Sade Anlatım
-- **Sorun ne?** Pozisyon büyüklüğü ve fırsat hesabı yapan bölümde, sıfır ya da negatif girdi gelince çalışan kod kolları hiç sınanmamış.
-- **Benzetme:** Arabanın frenini yalnızca düz yolda denemek, yokuşta hiç denememek.
-- **Çözülmezse ne olur?** Bu kollar ileride değiştirilirse bozulma fark edilmez; kullanan projelerde yanlış pozisyon büyüklüğü çıkabilir.
-- **Senden beklenen karar:** Yok.
-
-#### 🔧 Teknik Detay
-- **Açıklama:** `npm run test:coverage` (2026-09-15): `trading-math` satır %85,93 / dal %88,37; `position.ts` satır %82,35 (test edilmeyen: 12, 29, 34); `opportunity.ts` dal %73,68 (`:36`). Genel kapsam %93,19, eşiklerin üstünde → genel eşik tek dosyaları korumuyor. `qtyFromVolume` içindeki `denom <= 0` dalı testsiz.
-- **Etki:** trade-kasa ve Portföy'ün pozisyon/risk hesapları.
-- **Çözüm yönü:** Eksik dallar için test yaz; gerekirse `vitest.config.ts` içinde dosya başına eşik (`perFile`) tanımla.
-- **Neden Şimdi Çözülmüyor:** Keşif sırasında bulundu, planlanmadı.
-
----
 
 ### TB-004 — 2016 öncesi tarihlerde saat bir saat kayıyor
 - **Tespit Tarihi:** 2026-09-15 (keşif turu: salt okunur inceleme + bağımsız ölçüm)
@@ -135,41 +118,7 @@ Kapanan kayıtlar: `docs/teknik-borc-arsiv.md`
 
 ## 🟢 P3 — Fırsatta
 
-### TB-006 — Ana teknik dokümanın başlığı eski sürümü gösteriyor
-- **Tespit Tarihi:** 2026-09-15 (keşif turu: salt okunur inceleme + bağımsız ölçüm)
-- **Öncelik:** P3 (Fırsatta)
 
-#### 🟢 Sade Anlatım
-- **Sorun ne?** Motor detayları dokümanının başında "v2.8 serisi" yazıyor, oysa kütüphane v3.1.0 ve dokümanın içi de v3.1.0'ı anlatıyor.
-- **Benzetme:** Kapağında 2. baskı yazan ama içi 3. baskı olan kitap.
-- **Çözülmezse ne olur?** Okuyan kişi ya da yapay zeka, yeni özelliklerin olmadığını sanabilir.
-- **Senden beklenen karar:** Yok.
-
-#### 🔧 Teknik Detay
-- **Açıklama:** `SNN-ABACUS-CORE-MOTOR-DETAYLARI.md:11` "Sürüm: v2.8 serisi"; `package.json` **`3.3.0`** (2026-09-19 denetiminde ölçüldü; kayıt açıldığında `3.1.0`'dı — **fark büyüyor**); aynı doküman `:163`'te v3.1.0 içeriği. `docs-claims.test.ts`'in başlık sürümünü denetlemediği test adına bakılarak çıkarıldı (içerik okunmadı).
-- **Etki:** Dokümanı okuyan tüketici projeler ve yapay zeka oturumları.
-- **Çözüm yönü:** Başlığı düzelt; `package.json` sürümüyle karşılaştıran bir test ekle.
-- **Neden Şimdi Çözülmüyor:** Keşif sırasında bulundu, planlanmadı.
-
----
-
-### TB-007 — Bölme fonksiyonunun açıklaması koddan farklı şey söylüyor
-- **Tespit Tarihi:** 2026-09-15 (keşif turu: salt okunur inceleme + bağımsız ölçüm)
-- **Öncelik:** P3 (Fırsatta)
-
-#### 🟢 Sade Anlatım
-- **Sorun ne?** Açıklama "üstteki sayı sıfırsa boş döner" diyor, kod ise "alttaki sayı sıfırsa" kontrol ediyor. Kod doğru, açıklama yanlış.
-- **Benzetme:** Kapıda "itiniz" yazması ama kapının çekilerek açılması.
-- **Çözülmezse ne olur?** Açıklamayı okuyan biri 0÷5 işleminin boş döneceğini sanıp gereksiz kontrol yazabilir.
-- **Senden beklenen karar:** Yok.
-
-#### 🔧 Teknik Detay
-- **Açıklama:** `src/abacus/math/index.ts:27` JSDoc "Bölünen 0 ise null döner"; `:29` `if (b === 0) return null;`. Ölçüm (2026-09-15): `div(0,5)` → `0`, `div(1,0)` → `null`.
-- **Etki:** Yalnızca dokümantasyon.
-- **Çözüm yönü:** JSDoc'u "Bölen 0 ise null döner" yap.
-- **Neden Şimdi Çözülmüyor:** Keşif sırasında bulundu, planlanmadı.
-
----
 
 ### TB-008 — Oturum günlüğü bir aydır güncellenmemiş
 - **Tespit Tarihi:** 2026-09-15 (keşif turu: salt okunur inceleme + bağımsız ölçüm)
