@@ -12,7 +12,7 @@ Kapanan kayıtlar: `docs/teknik-borc-arsiv.md`
 
 ## İçindekiler
 
-- **🟡 P2 — Planlı:** TB-001, TB-002, TB-003, TB-004, TB-005, TB-010
+- **🟡 P2 — Planlı:** TB-001, TB-003, TB-004, TB-005, TB-010, TB-012
 - **🟢 P3 — Fırsatta:** TB-006, TB-007, TB-008, TB-009, TB-011
 
 ## Öncelikler
@@ -58,23 +58,6 @@ Kapanan kayıtlar: `docs/teknik-borc-arsiv.md`
 
 ---
 
-### TB-002 — Harfleri Türkçesiz büyüten fonksiyon (`toAsciiUpper`) yok
-- **Tespit Tarihi:** 2026-09-15 (keşif turu: salt okunur inceleme + bağımsız ölçüm)
-- **Öncelik:** P2 (Planlı)
-
-#### 🟢 Sade Anlatım
-- **Sorun ne?** Kütüphane harfleri Türkçe karakter kullanmadan küçültebiliyor ama büyütemiyor. GHS-Panel bu fonksiyonu bekliyor ve beklerken kendi içinde geçici yama yazmış.
-- **Benzetme:** Takım çantasında vidayı sökmek için tornavida var, takmak için yok.
-- **Çözülmezse ne olur?** GHS-Panel'deki harf işleme geçişi durmaya devam eder; geçici yama orada kalıcılaşır.
-- **Senden beklenen karar:** Fonksiyon eklensin mi, hangi sürümle çıksın? (öneri: 3.2.0)
-
-#### 🔧 Teknik Detay
-- **Açıklama:** `src/abacus/internal/tr-case.ts:41` yalnızca `toAsciiLower` içeriyor; `toAsciiUpper` `src/` içinde 0 geçiş (2026-09-15 ölçümü). `src/abacus/text/index.ts:99` yalnızca `toAsciiLower`'ı dışarı veriyor. Tüketici şu an `text.upper(...).replace(/İ/g,'I')` yapıyor (GHS-Panel `vehiclePlate.ts:46-47`).
-- **Etki:** GHS-Panel TB-064 (harf işleme göçü) bu eksik yüzünden bloklu.
-- **Çözüm yönü:** Testi önce yaz: `toAsciiLower` tablosunun büyük harf karşılığı. Sonra `internal/tr-case.ts`'e `toAsciiUpper` ekle, `text` üzerinden dışarı aç; `api-surface.test.ts`, `SNN-ABACUS-CORE-MOTOR-DETAYLARI.md`, `CHANGELOG.md` güncellenir.
-- **Neden Şimdi Çözülmüyor:** Keşif sırasında bulundu, planlanmadı.
-
----
 
 ### TB-003 — İşlem hesaplama bölümünde geçersiz girdi kolları test edilmemiş
 - **Tespit Tarihi:** 2026-09-15 (keşif turu: salt okunur inceleme + bağımsız ölçüm)
