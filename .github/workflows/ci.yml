@@ -3,8 +3,23 @@ name: SNN-Abacus-Core CI
 on:
   push:
     branches: [ main ]
+    paths-ignore:
+      - 'docs/**'
+      - 'CHANGELOG.md'
+      - 'README.md'
   pull_request:
     branches: [ main ]
+    paths-ignore:
+      - 'docs/**'
+      - 'CHANGELOG.md'
+      - 'README.md'
+
+# Kota koruması (2026-09-20): aynı dala arka arkaya gönderim yapılınca biten
+# olmayan eski koşum iptal edilir. main'de iptal YOK — ana dalın her commit'i
+# doğrulanmış kalmalı.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   verify:
