@@ -340,8 +340,38 @@ export interface GroupedInputOptions {
    *
    * Serbest ondalık kutularında (fiyat, oran, stop) açın; binlik ayracını elle
    * yazdıran kutularda kapalı bırakın.
+   *
+   * ⚠️ KONTROLLÜ KUTUDA `previous` İLE KULLANIN. Kutunun kendi çıktısı 1.000 ve
+   * üzerinde bir binlik noktası taşır (`8.534`); `previous` verilmezse bir sonraki
+   * tuşta o nokta ondalık sanılır: `8.534` + `0` -> `8,5340` (talep #48).
    */
   readonly dotAsDecimal?: boolean;
+  /**
+   * Kutunun bu tuştan ÖNCEKİ metni — kontrollü kutuda (React `value`) state'teki değer.
+   * Yalnız `dotAsDecimal: true` iken etkilidir; varsayılan kipte noktalar zaten silinir.
+   *
+   * Önceki metinde bulunan noktalar kütüphanenin koyduğu binlik ayraçlarıdır ve
+   * silinir; yalnız bu tuşla EKLENEN nokta ondalık sayılabilir:
+   *
+   *   formatGroupedInput('8.5340', { dotAsDecimal: true, previous: '8.534' })  // '85.340'
+   *   formatGroupedInput('85.34',  { dotAsDecimal: true, previous: '85.340' }) // '8.534'  (silme)
+   *
+   * `previous` bu fonksiyonun üretebileceği bir metin değilse (ör. başlangıç değeri
+   * `String(98.5)` ile yazılmışsa) noktasının kimden geldiği bilinemez; o zaman
+   * `previous` yokmuş gibi davranılır. Yapıştırma (boş kutuya ya da seçimin üstüne)
+   * `previous` olmadan olduğu gibi çalışır: `'98.50'` -> `'98,50'`, `'1.234'` -> `'1,234'`.
+   */
+  readonly previous?: string;
+  /**
+   * Virgülden sonra en çok kaç hane yazılabileceği (0–20). Fazla hane **kesilir**,
+   * yuvarlanmaz: kullanıcı yazarken son tuşu yutmak doğrudur, yazdığı rakamı
+   * değiştirmek değildir. `0` tam sayı kutusudur, virgül yazılamaz.
+   *
+   * Para kutusunda `2` verin: kutu `money.parse`'ın okuyamayacağı `'1.234,567'`
+   * metnini hiç üretmez. Verilmezse sınır yoktur (bugünkü davranış). Geçersiz
+   * değerde `'—'` döner (`text.digits` emsali).
+   */
+  readonly maxDigits?: number;
 }
 
 /**
@@ -364,13 +394,57 @@ function dotToDecimal(raw: string): string {
   return raw.replace('.', ',');
 }
 
+/**
+ * Kontrollü kutu için `dotToDecimal` (talep #48, v4.2.0).
+ *
+ * Durumsuz kural `'85.34'` metninde noktanın kullanıcıdan mı yoksa kütüphanenin
+ * gruplamasından mı geldiğini bilemez: kullanıcı `85.34` yapıştırmış da olabilir,
+ * `85.340`'tan bir rakam silmiş de. Önceki metin bu soruyu cevaplar.
+ *
+ * Önceki ve yeni metnin ortak başı ve sonu değişmemiş kısımdır; oradaki noktalar
+ * kütüphanenin binlik ayraçlarıdır ve silinir. Kalan (eklenen) parça ile birlikte
+ * iki koşullu kural (madde 38) yine uygulanır; böylece virgül varken basılan nokta
+ * ikinci bir ondalık ayracına dönüşmez.
+ *
+ * Önceki metin bu fonksiyonun çıktısı değilse (varsayılan kipte kendini
+ * değiştirmeden geri vermiyorsa) noktalarına güvenilmez; durumsuz kurala düşülür.
+ */
+function dotToDecimalAfter(raw: string, previous: string): string {
+  if (formatGroupedInput(previous) !== previous) return dotToDecimal(raw);
+
+  // Baş ve son örtüşmez: ikisinin toplamı kısa metnin boyunu aşamaz.
+  const shorter = raw.length < previous.length ? raw.length : previous.length;
+  let head = 0;
+  while (head < shorter && raw[head] === previous[head]) head++;
+  let tail = 0;
+  while (
+    tail < shorter - head &&
+    raw[raw.length - 1 - tail] === previous[previous.length - 1 - tail]
+  ) {
+    tail++;
+  }
+
+  const kept = (part: string) => part.replace(/\./g, '');
+  const inserted = raw.slice(head, raw.length - tail);
+  return dotToDecimal(kept(raw.slice(0, head)) + inserted + kept(raw.slice(raw.length - tail)));
+}
+
 export function formatGroupedInput(raw: string, opts?: GroupedInputOptions): string {
+  const maxDigits = opts?.maxDigits;
+  if (maxDigits !== undefined && !isValidDigits(maxDigits)) return '—';
   if (!raw) return '';
-  const source = opts?.dotAsDecimal === true ? dotToDecimal(raw) : raw;
-  const clean = source.replace(/[^0-9,]/g, '');
+  let source = raw;
+  if (opts?.dotAsDecimal === true) {
+    source =
+      typeof opts.previous === 'string' ? dotToDecimalAfter(raw, opts.previous) : dotToDecimal(raw);
+  }
+  let clean = source.replace(/[^0-9,]/g, '');
+  // Tam sayı kutusu: virgül ve sonrası hiç yazılmamış sayılır.
+  if (maxDigits === 0 && clean.includes(',')) clean = clean.slice(0, clean.indexOf(','));
   const firstComma = clean.indexOf(',');
   const intPartRaw = firstComma === -1 ? clean : clean.slice(0, firstComma);
-  const decPart = firstComma === -1 ? '' : clean.slice(firstComma + 1).replace(/,/g, '');
+  const allDecimals = firstComma === -1 ? '' : clean.slice(firstComma + 1).replace(/,/g, '');
+  const decPart = maxDigits === undefined ? allDecimals : allDecimals.slice(0, maxDigits);
   const intDigits = intPartRaw.replace(/^0+(?=\d)/, '');
   if (!intDigits && firstComma === -1) return '';
   // Sessiz varsayilan (|| 0) yok: bos hane dizisi acikca 0 demektir.

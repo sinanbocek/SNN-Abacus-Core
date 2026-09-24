@@ -548,11 +548,36 @@ money.formatGroupedInput('121212scca')  // → '121.212'
 money.parseNumber('1.250.000')          // → 1250000
 money.formatGroupedInput('98.50')                         // → '9.850'
 money.formatGroupedInput('98.50', { dotAsDecimal: true })  // → '98,50'
+money.formatGroupedInput('1234,567', { maxDigits: 2 })     // → '1.234,56'
+money.formatGroupedInput('1234,56', { maxDigits: 0 })      // → '1.234'
+// Kontrollü kutu: önceki metin verilince kutunun kendi binlik noktası ondalık sanılmaz
+money.formatGroupedInput('8.5340', { dotAsDecimal: true, previous: '8.534' })  // → '85.340'
+money.formatGroupedInput('8.5340', { dotAsDecimal: true })                     // → '8,5340'
 ```
 
 ⚠️ **Para kutusu için yeni bir fonksiyon aramayın.** Canlı biçim
 `money.formatGroupedInput`, geri okuma `money.parseNumber` — ikisi de v2.x'ten beri
 çekirdekte. Harf ve simge ikisinde de kendiliğinden süzülür.
+
+⚠️ **`dotAsDecimal` açık bir kontrollü kutuda `previous` zorunludur.** 1.000 ve üzerindeki
+her tutarda kutunun kendi çıktısı bir binlik noktası taşır; `previous` verilmezse bir
+sonraki tuşta o nokta ondalık sanılır (`8.534` + `0` → `8,5340`, 10.000 kat küçük).
+
+```ts
+<input
+  inputMode="decimal"
+  value={value}
+  onChange={(e) =>
+    setValue(money.formatGroupedInput(e.target.value, { dotAsDecimal: true, previous: value, maxDigits: 2 }))
+  }
+/>
+```
+
+**Kutu metnini hangi okuyucu okumalı?** Tutar kuruş olarak saklanacaksa `money.parse`
+(kuruş döner, en çok 2 ondalık hane okur; üçüncü hane kuruşa sığmadığı için `null`).
+Oran, fiyat gibi serbest ondalıklı bir sayıysa `money.parseNumber` (her hane okunur,
+para simgesi tanınmaz). Para kutusunda `maxDigits: 2` verin; kutu `parse`'ın
+reddedeceği bir metin hiç üretmez.
 
 ⚠️ Ham `toUpperCase()` Türkçede yanlıştır (`'i'` → `'I'`). `lower` ile `toTrLower` aynı
 fonksiyondur.

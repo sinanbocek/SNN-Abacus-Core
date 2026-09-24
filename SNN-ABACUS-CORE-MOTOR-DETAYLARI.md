@@ -8,7 +8,7 @@
 > **karar vermek** için önce [KILAVUZ.md](KILAVUZ.md). Kenar durumları, sürüm geçmişi ve
 > tasarım gerekçeleri için bu belge. Bağlayıcı kurallar için [ABACUS-SPEC.md](ABACUS-SPEC.md).
 >
-> **Sürüm:** v4.1 serisi · **Kod dili:** İngilizce · **Bağımlılık:** yalnız `decimal.js` (yalnız `math` içinde)
+> **Sürüm:** v4.2 serisi · **Kod dili:** İngilizce · **Bağımlılık:** yalnız `decimal.js` (yalnız `math` içinde)
 
 ---
 
@@ -469,9 +469,18 @@ Ondalıklı sayıyı binlik-ayraçlı (nokta) + ondalık (virgül) gösterir; so
 (`1.5`, `-1`, `NaN`, `Infinity`, `21`) **`'—'`** döner. v2.x bu değerlerde hata
 fırlatıyordu. `fmtDecimalGrouped(4.3, -1) → "—"`.
 
-### `formatGroupedInput(raw: string): string`
+### `formatGroupedInput(raw: string, opts?: GroupedInputOptions): string`
 Serbest ondalık giriş kutuları için canlı biçimlendirme (kullanıcı yazarken). Örnek: ham girişten
-binlik-ayraçlı çıktı üretir; boş girişte `''`.
+binlik-ayraçlı çıktı üretir; boş girişte `''`. Seçenekler:
+
+- `dotAsDecimal?: boolean` (v4.1.0) — nokta tuşu ondalık ayracı sayılır. TAKAS: bu kutuda
+  binlik ayracı olarak nokta yazılamaz (`'1.234'` → `'1,234'`). Karar: madde 37, 38.
+- `previous?: string` (v4.2.0) — kutunun önceki metni. Kontrollü kutuda `dotAsDecimal` ile
+  **zorunludur**: yoksa kutunun kendi binlik noktası bir sonraki tuşta ondalık sanılır
+  (`8.534` + `0` → `8,5340`). Önceki metin fonksiyonun kendi çıktısı değilse yok sayılır.
+  Karar: madde 40A.
+- `maxDigits?: number` (v4.2.0) — virgülden sonra en çok hane (0–20); fazlası kesilir,
+  yuvarlanmaz. `0` tam sayı kutusudur. Geçersiz değerde `'—'`. Karar: madde 40B.
 
 ### `toWords(kurus: number, opts?: ToWordsOptions): string`
 Çek/sözleşme "Yalnız..." tutar yazısı. Girdi kuruş. `ToWordsOptions.spaced?: boolean` (boşluklu yazım).

@@ -4,6 +4,68 @@ Bu projedeki tüm önemli değişiklikler bu dosyada belgelenir.
 Format [Keep a Changelog](https://keepachangelog.com/tr/) temellidir;
 sürümleme [Semantic Versioning](https://semver.org/lang/tr/) kurallarına uyar.
 
+## [4.2.0] - 2026-09-24
+
+> Eklemeli: **seçenek verilmezse davranış değişmez**, hiçbir çağrı kırılmaz.
+> Karar: [`GERI-BILDIRIM-KAYDI.md`](GERI-BILDIRIM-KAYDI.md) madde 40 (talep #12, issue #48, GHS-Panel).
+
+### Düzeltilen — `dotAsDecimal` kontrollü kutuda kullanılamıyordu
+
+React gibi kontrollü bir kutuda her tuşta kutunun **önceki çıktısı** yeniden biçimlenir.
+1.000 ve üzerindeki her tutarda o çıktı bir binlik noktası taşır ve bir sonraki tuşta
+ondalık sanılıyordu. Silerken de aynısı oluyordu:
+
+```
+                                   4.1.1          4.2.0 (previous ile)
+tuş tuş 85340.50              ->   '8,534050'     '85.340,50'   <- 10.000 KAT sapma düzeldi
+'85.340,' kutusunda virgül sil ->  '85,340'       '85.340'      <- 1000 kat
+```
+
+Durumsuz bir fonksiyon `'85.34'` metnindeki noktanın kullanıcıdan mı (yapıştırdı) yoksa
+kütüphanenin gruplamasından mı (bir rakam sildi) geldiğini bilemez. Bu yüzden düzeltme
+yeni bir seçenekle geliyor:
+
+- **`previous?: string`**: kutunun önceki metni. Önceki metinde bulunan noktalar binlik
+  ayracıdır ve silinir; yalnız bu tuşla eklenen nokta ondalık sayılabilir. Önceki metin
+  fonksiyonun kendi çıktısı değilse (ör. başlangıç değeri `String(98.5)`) yok sayılır.
+
+  ```ts
+  onChange={(e) => setValue(money.formatGroupedInput(e.target.value, { dotAsDecimal: true, previous: value }))}
+  ```
+
+  **`dotAsDecimal` kullanan kontrollü kutular `previous`'u vermeli.** Vermeyenlerin
+  davranışı değişmez (hata sürer); bu yüzden sürüm MINOR.
+
+Yapıştırma sözleşmesi aynen kalır: `'98.50'` → `'98,50'`, `'1.234,56'` → `'1.234,56'`,
+`'1.234'` → `'1,234'` (madde 37 TAKAS'ı).
+
+### Eklenenler
+
+- **`maxDigits?: number`**: virgülden sonra en çok kaç hane yazılabileceği (0–20).
+  Fazlası **kesilir**, yuvarlanmaz. `0` tam sayı kutusudur. Geçersiz değerde `'—'`.
+
+  ```
+  formatGroupedInput('1234,567')                   -> '1.234,567'  (varsayılan, değişmedi)
+  formatGroupedInput('1234,567', { maxDigits: 2 }) -> '1.234,56'
+  formatGroupedInput('1234,56',  { maxDigits: 0 }) -> '1.234'
+  ```
+
+  Para kutusunda `maxDigits: 2` verildiğinde kutu `money.parse`'ın reddettiği
+  `'1.234,567'` metnini hiç üretmez.
+
+### Belge
+
+KILAVUZ'a kutu metnini hangi okuyucunun okuması gerektiği eklendi: kuruş için `parse`,
+serbest ondalık için `parseNumber`. İki fonksiyonun farkı bilinçlidir (madde 40C).
+
+### Nasıl kaçtı
+
+37A ve 38'in testleri adımları ham metinle veriyordu; çıktıyı kutuya geri beslemiyordu.
+4.2.0 testleri kontrollü kutuyu taklit ediyor (`box = f(box + tuş, { previous: box })`)
+ve yazma, silme, araya ekleme ile yapıştırmayı ayrı ayrı sınıyor.
+
+---
+
 ## [4.1.1] - 2026-09-19
 
 > 🔴 **v4.1.0 KULLANMAYIN** — `dotAsDecimal: true` açıkken Türkçe standart biçimi bozuyordu.
