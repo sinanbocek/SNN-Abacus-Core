@@ -132,6 +132,9 @@ birleştirir. Sabit etikete bağlı tüketicilere (`#vX.Y.Z`) hiç gelmez, elle 
 | 42 | Aynı dönemin kabulleri tek sürümde çıksın (toplu sürüm) | Sahip (2026-09-24) | ✅ Kabul — `AI-RULES §4.3`, CI ve etiket kapısı | 4.3.0 |
 | 43 | `properNounSuffix` rakamla biten adda eki sayının okunuşundan alsın (`2027'ye`) | Talep #13 (issue #51) | ✅ Kabul — **hata düzeltmesi**; `text.suffix` ile aynı kural | yayınlanmadı (main) |
 | 43B | `date.suffix(iso, kind)` | Talep #13 (elenen aday) | ❌ **Red** — `properNounSuffix` düzelince tarih metni de doğru çekiliyor | — |
+| 44A | Ünlüsüz kısaltma harf harf okunsun (`THY'de`, `TDK'den`) | TB-014 (iç bulgu) | ✅ Kabul — **hata düzeltmesi**; otorite TDK "Kısaltmalar" | yayınlanmadı (main) |
+| 44B | "-aş" ile biten ad "AŞ" kısaltması sanılıyordu (`Kocataş'ne`) | TB-014 çalışılırken ölçüldü | ✅ Kabul — **hata düzeltmesi**; kısaltma yalnız ayrı kelime | yayınlanmadı (main) |
+| 44C | Ünlü içeren harf harf kısaltma (`ABD'ye`) | TB-014 (sınır) | ❌ **Red** (ertelendi) — metinden ayırt edilemez; çekirdek tahmin etmez | — |
 
 ---
 
@@ -652,6 +655,37 @@ bildirir:
   yazım tuzağı JS'te de vardır (`String(1e-7) === "1e-7"`); çekirdek bunu testle çiviledi.
 
 ---
+
+### Madde 44 — kısaltmaya hâl eki (TB-014, iç bulgu)
+
+**Otorite TDK'nın kendisi** (tdk.gov.tr, Yazım Kuralları → Kısaltmalar): büyük harfli
+kısaltmada ek son harfin okunuşuna göre gelir (`BDT'ye`, `TDK'den`, `THY'de`, `TRT'den`,
+`TL'nin`); kelime gibi okunan kısaltmada okunuşa göre (`ASELSAN'da`, `BOTAŞ'ın`,
+`NATO'dan`, `UNESCO'ya`), sert ünsüz yumuşamaz (`AGİK'in`, `RTÜK'e`). On bir örneğin on
+biri test olarak çivilendi.
+
+**44A — kabul, dar tutuldu.** TDK'nın iki türü aynı biçimde yazılıyor. Kesin olan tek durum:
+**hiç ünlü içermeyen** büyük harf dizisi kelime gibi okunamaz. Yalnız o harf harf okunur.
+Harf adları TDK'den: be, ce, çe, de, fe, ge, he, je, **ke** (`TDK'den`), le… Türkçe
+alfabede olmayan Q, W, X için fiilî okunuş (kü, ve, iks; §4.1 Sınır durumu 4).
+
+**44B — kabul; daha ciddi olan buydu.** TB-014 çalışılırken TDK örneği `BOTAŞ'ın` da kırmızı
+çıktı. Sebep: noktasız "AŞ" yazımını tanıyan kural adın sonuna bakıyordu ve "-aş" ile biten
+her adı şirket kısaltması sanıyordu. Ölçüldü: `Ahmet Kocataş'ne` (doğrusu `Kocataş'a`),
+`Karataş'nin`, `Yavaş'nde`, `Arkadaş'nden`. v3.5.0'dan (madde 34A) beri vardı. Aktaş, Bektaş,
+Karataş yaygın soyadlarıdır ve GHS-Panel'in WhatsApp hatırlatma penceresi bu işlevi müşteri
+adıyla `dat` hâlinde çağırıyor (`WhatsAppReminderModal.tsx:108,118,201,215`). Canlı
+veride kaç müşteride tetiklendiği **ölçülmedi** (canlı veritabanına dokunulmadı).
+
+**44C — red (ertelendi).** `ABD` (a-be-de, doğrusu `ABD'ye`) ile `AGİK` (kelime, `AGİK'in`)
+aynı biçimde yazılıyor. Bir kural ikisini ayıramaz; bugünkü davranış (kelime okunuşu)
+kalır ve testte "BİLİNEN SINIR" diye çivilendi. **Yeniden başvuru koşulu:** bir tüketicide
+ünlülü harf harf kısaltmanın gerçek bir ekranda yanlış çıktığı ölçülürse. O zaman aday
+çözüm, çağıranın okunuşu belirttiği bir ipucu seçeneğidir; çekirdek yine tahmin etmez.
+
+**Ders — beklenen değer de kaynaktan okunur.** Kayıt açılırken `SGK'da` doğru diye yazıldı;
+gündelik konuşmadan gelen bir tahmindi. TDK'nın kendi kısaltması (`TDK'den`) K'nin "ke"
+okunduğunu gösteriyor: doğrusu `SGK'de`.
 
 ### Talep #13 — rakamla biten özel ada hâl eki (madde 43)
 
