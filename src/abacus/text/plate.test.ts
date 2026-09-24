@@ -25,14 +25,14 @@ import { plate } from './index';
  * 4) YENİ KAYIT (il kodu + "YK", arkasında rakam yok): Resmî bir plaka DEĞİLDİR.
  *    Sigorta sektöründe, tescili yapılmamış sıfır araçlara poliçe kesilirken
  *    kullanılan yazılı olmayan bir teamüldür. AI-RULES §4.1 önerisine karşın
- *    çekirdek sahibinin kararıyla her zaman kabul edilir ve `yeniKayit`
+ *    çekirdek sahibinin kararıyla her zaman kabul edilir ve `newRegistration`
  *    bayrağıyla işaretlenir. Bkz. GERI-BILDIRIM-KAYDI.md.
  */
 
 describe('text.plate — girdi temizleme ve biçimlendirme', () => {
   it('tüketicinin örnek girdileri', () => {
     expect(plate('54apy281')).toEqual({
-      stored: '54APY281', display: '54 APY 281', raw: '54apy281', valid: true, yeniKayit: false,
+      stored: '54APY281', display: '54 APY 281', raw: '54apy281', valid: true, newRegistration: false, yeniKayit: false,
     });
     expect(plate('34.ABD.344').display).toBe('34 ABD 344');
     expect(plate('34-acb-23').display).toBe('34 ACB 23');
@@ -79,7 +79,7 @@ describe('text.plate — Türkçe klavye tuzağı', () => {
   it('büyük İ de I olur — Caps Lock açıkken Türkçe klavyenin i tuşu', () => {
     // Türkçe klavyede Caps Lock açıkken i tuşu İ yazar; kullanıcı I kastetmiştir.
     expect(plate('34 ABİ 12')).toEqual({
-      stored: '34ABI12', display: '34 ABI 12', raw: '34 ABİ 12', valid: true, yeniKayit: false,
+      stored: '34ABI12', display: '34 ABI 12', raw: '34 ABİ 12', valid: true, newRegistration: false, yeniKayit: false,
     });
     expect(plate('34 İİ 1234').display).toBe('34 II 1234');
     // Üç yazım da aynı plakayı gösterir — aynı stored değeri.
@@ -110,7 +110,7 @@ describe('text.plate — harf ve rakam grupları (fiilî uygulama, gevşek)', ()
     // Tüketici reddedilmesi gerektiğini düşünüyordu; biçim fiilen geçerli ve
     // tüketici özel serileri kabul ediyor.
     expect(plate('34CD3455')).toEqual({
-      stored: '34CD3455', display: '34 CD 3455', raw: '34CD3455', valid: true, yeniKayit: false,
+      stored: '34CD3455', display: '34 CD 3455', raw: '34CD3455', valid: true, newRegistration: false, yeniKayit: false,
     });
   });
 
@@ -135,7 +135,7 @@ describe('text.plate — harf ve rakam grupları (fiilî uygulama, gevşek)', ()
 });
 
 describe('text.plate — reddedilenler', () => {
-  const GECERSIZ = { stored: '', display: '', valid: false, yeniKayit: false };
+  const GECERSIZ = { stored: '', display: '', valid: false, newRegistration: false, yeniKayit: false };
 
   it('var olmayan il kodu', () => {
     expect(plate('82 AB 123')).toEqual({ ...GECERSIZ, raw: '82 AB 123' });
@@ -205,26 +205,26 @@ describe('text.plate — reddedilenler', () => {
 describe('text.plate — YENİ KAYIT (YK) teamülü', () => {
   it('il kodu + YK, rakamsız: geçerli ve işaretli', () => {
     expect(plate('34yk')).toEqual({
-      stored: '34YK', display: '34 YK', raw: '34yk', valid: true, yeniKayit: true,
+      stored: '34YK', display: '34 YK', raw: '34yk', valid: true, newRegistration: true, yeniKayit: true,
     });
-    expect(plate('54 YK').yeniKayit).toBe(true);
+    expect(plate('54 YK').newRegistration).toBe(true);
     expect(plate('67YK').display).toBe('67 YK');
   });
 
   it('tek haneli il koduyla da çalışır', () => {
     expect(plate('6yk').display).toBe('06 YK');
-    expect(plate('6yk').yeniKayit).toBe(true);
+    expect(plate('6yk').newRegistration).toBe(true);
   });
 
   it('YK arkasında rakam varsa SIRADAN plakadır, yeni kayıt değil', () => {
     expect(plate('34 YK 123')).toEqual({
-      stored: '34YK123', display: '34 YK 123', raw: '34 YK 123', valid: true, yeniKayit: false,
+      stored: '34YK123', display: '34 YK 123', raw: '34 YK 123', valid: true, newRegistration: false, yeniKayit: false,
     });
   });
 
   it('il kodu kuralı YK için de geçerlidir', () => {
     expect(plate('82yk').valid).toBe(false);
-    expect(plate('82yk').yeniKayit).toBe(false);
+    expect(plate('82yk').newRegistration).toBe(false);
     expect(plate('00YK').valid).toBe(false);
   });
 
@@ -235,9 +235,9 @@ describe('text.plate — YENİ KAYIT (YK) teamülü', () => {
     expect(plate('34 AYK').valid).toBe(false);
   });
 
-  it('geçersiz girdide yeniKayit her zaman false', () => {
+  it('geçersiz girdide newRegistration her zaman false', () => {
     for (const girdi of ['', '82yk', '34 AB', 'YK', '34 YK!']) {
-      expect(plate(girdi).yeniKayit).toBe(false);
+      expect(plate(girdi).newRegistration).toBe(false);
     }
   });
 });

@@ -136,6 +136,7 @@ birleştirir. Sabit etikete bağlı tüketicilere (`#vX.Y.Z`) hiç gelmez, elle 
 | 44B | "-aş" ile biten ad "AŞ" kısaltması sanılıyordu (`Kocataş'ne`) | TB-014 çalışılırken ölçüldü | ✅ Kabul — **hata düzeltmesi**; kısaltma yalnız ayrı kelime | yayınlanmadı (main) |
 | 44C | Ünlü içeren harf harf kısaltma (`ABD'ye`) | TB-014 (sınır) | ❌ **Red** (ertelendi) — metinden ayırt edilemez; çekirdek tahmin etmez | — |
 | 44D | K harfi "ka" okunsun (`SGK'da`, `SGK'ya`) | Sahip (2026-09-24) | ⚠️ **Kabul — sahip kararıyla istisna** (TDK: "ke", `TDK'den`) | yayınlanmadı (main) |
+| 45 | `PlateResult.newRegistration` eklensin, `yeniKayit` eskisin (TB-013 adım 1) | TB-013 (iç denetim) | ✅ Kabul — **eklemeli**, kimse kırılmaz; silme bir sonraki MAJOR'da | yayınlanmadı (main) |
 
 ---
 
@@ -656,6 +657,22 @@ bildirir:
   yazım tuzağı JS'te de vardır (`String(1e-7) === "1e-7"`); çekirdek bunu testle çiviledi.
 
 ---
+
+### Madde 45 — `yeniKayit` → `newRegistration`, iki adımda (TB-013)
+
+**Neden iki adım.** Alan genel API'dir; doğrudan yeniden adlandırmak MAJOR ister (§4.0).
+Sahip aynı gün "sürüm çıkma, bekle" kararı vermişti (madde 42 uygulaması); bir MAJOR bu
+kararla çelişirdi. Adım 1 eklemelidir: yeni ad eklenir, eski ad aynı değeri taşımaya devam
+eder ve `@deprecated` işaretlenir. Adım 2 (silme) bir sonraki MAJOR'a kalır.
+
+**Kırıcı olmadığı ölçüldü.** Alan eklemek, sonucu elle kuran (`const x: PlateResult = {...}`)
+ya da bütünüyle karşılaştıran (`toEqual`) tüketiciyi kırar. Tarandı: çekirdek dışında hiçbir
+proje bunu yapmıyor; `yeniKayit`'i yalnız GHS-Panel okuyor (6 kaynak + 3 test/betik satırı).
+Tam nesne karşılaştırması yalnız çekirdeğin kendi testlerinde vardı; güncellendi.
+
+**Kaydın ortaya çıkardığı boşluk kapatıldı.** `api-surface.test.ts` yalnız fonksiyon adlarını
+çiviliyordu; dönüş nesnesinin alan adları değişse hiçbir test kırılmazdı. `result-shape.test.ts`
+artık `text.plate`, `phone`, `email`, `website`, `name`, `company` alanlarını çiviliyor.
 
 ### Madde 44 — kısaltmaya hâl eki (TB-014, iç bulgu)
 

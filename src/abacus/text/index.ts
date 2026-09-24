@@ -284,6 +284,11 @@ export interface PlateResult extends NormalizeResult {
    * Girdi, tescili henüz yapılmamış bir aracı gösteren YENİ KAYIT biçimindeyse
    * (`34 YK` — il kodu + YK, rakam yok) `true`. Geçersiz girdide daima `false`.
    */
+  newRegistration: boolean;
+  /**
+   * @deprecated `newRegistration` kullanın; değeri birebir aynıdır. Bir sonraki MAJOR
+   * sürümde kaldırılacak (TB-013: tanımlayıcılar İngilizce, aile kod dili standardı).
+   */
   yeniKayit: boolean;
 }
 
@@ -314,7 +319,7 @@ const PLAKA_RAKAM_EN_COK = 5;
  *   plate('34.ABD.344')  // { display: '34 ABD 344', stored: '34ABD344', valid: true, ... }
  *   plate('34-acb-23')   // display '34 ACB 23'
  *   plate('6abc12')      // display '06 ABC 12' — tek haneli il koduna sıfır eklenir
- *   plate('34yk')        // display '34 YK', yeniKayit: true
+ *   plate('34yk')        // display '34 YK', newRegistration: true
  *   plate('82 AB 123')   // valid: false — il kodu yok
  *
  * **Kabul edilen:**
@@ -342,13 +347,13 @@ const PLAKA_RAKAM_EN_COK = 5;
  * ⚠️ **YENİ KAYIT resmî bir plaka değildir.** Sigorta sektöründe tescili
  * yapılmamış sıfır araçlara poliçe kesilirken yazılan yazılı olmayan bir
  * teamüldür (`34 YK`, arkasında rakam yok). Çekirdek sahibinin kararıyla her
- * zaman kabul edilir ve `yeniKayit: true` ile işaretlenir; tüketici "plakası
+ * zaman kabul edilir ve `newRegistration: true` ile işaretlenir; tüketici "plakası
  * çıktı mı?" sorusunu metni ayrıştırmadan bu bayraktan yanıtlar.
- * `34 YK 123` ise sıradan bir plakadır (`yeniKayit: false`).
+ * `34 YK 123` ise sıradan bir plakadır (`newRegistration: false`).
  */
 export function plate(raw: string): PlateResult {
   const invalid: PlateResult = {
-    stored: '', display: '', raw: raw ?? '', valid: false, yeniKayit: false,
+    stored: '', display: '', raw: raw ?? '', valid: false, newRegistration: false, yeniKayit: false,
   };
   if (!raw) return invalid;
 
@@ -391,7 +396,10 @@ export function plate(raw: string): PlateResult {
 
   if (digitPart.length === 0) {
     if (letters !== YENI_KAYIT_HARFLERI) return invalid;
-    return { stored: `${il}${letters}`, display: `${il} ${letters}`, raw, valid: true, yeniKayit: true };
+    return {
+      stored: `${il}${letters}`, display: `${il} ${letters}`, raw, valid: true,
+      newRegistration: true, yeniKayit: true,
+    };
   }
 
   if (digitPart.length < PLAKA_RAKAM_EN_AZ || digitPart.length > PLAKA_RAKAM_EN_COK) {
@@ -403,6 +411,7 @@ export function plate(raw: string): PlateResult {
     display: `${il} ${letters} ${digitPart}`,
     raw,
     valid: true,
+    newRegistration: false,
     yeniKayit: false,
   };
 }

@@ -22,7 +22,7 @@
     },
     {
       "name": "yeniKayit",
-      "reason": "GEÇİŞ İSTİSNASI — kalıcı değil. `PlateResult.yeniKayit` GENEL API alanıdır; çevirmek kırıcı sürüm gerektirir (AI-RULES §4.0). TB-013 ile kayıtlı ve bir sonraki MAJOR sürümde `newRegistration` olacak. O sürümde bu satır SİLİNİR. İngilizce karşılığı vardır; istisna dil gerekçesiyle değil, sürüm disipliniyle verildi."
+      "reason": "GEÇİŞ İSTİSNASI — kalıcı değil. `PlateResult.yeniKayit` GENEL API alanıdır; çevirmek kırıcı sürüm gerektirir (AI-RULES §4.0). TB-013 adım 1 yapıldı: İngilizce karşılığı `newRegistration` yanına eklendi, `yeniKayit` @deprecated. Bir sonraki MAJOR sürümde alan ve bu satır SİLİNİR. İstisna dil gerekçesiyle değil, sürüm disipliniyle verildi."
     }
   ]
 }

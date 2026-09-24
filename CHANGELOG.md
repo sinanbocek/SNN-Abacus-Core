@@ -8,7 +8,25 @@ sürümleme [Semantic Versioning](https://semver.org/lang/tr/) kurallarına uyar
 
 > `main`'de, henüz sürüm numarası almadı. Toplu sürüm kuralı (`AI-RULES §4.3`) gereği bir
 > sonraki pakette çıkar; 4.3.0 güncelleme PR'ları tüketicilerde hâlâ açık.
-> Karar: [`GERI-BILDIRIM-KAYDI.md`](GERI-BILDIRIM-KAYDI.md) madde 43 (talep #13, issue #51) ve madde 44 (TB-014).
+> Karar: [`GERI-BILDIRIM-KAYDI.md`](GERI-BILDIRIM-KAYDI.md) madde 43 (talep #13, issue #51), madde 44 (TB-014)
+> ve madde 45 (TB-013 adım 1).
+>
+> ⚠️ **Bu paket bir alan EKLİYOR (`newRegistration`), yani sürüm en az MINOR olmalı (4.4.0).**
+
+### Eklenenler — `PlateResult.newRegistration` (TB-013 adım 1, madde 45)
+
+`text.plate` sonucuna İngilizce adlı `newRegistration` alanı eklendi. Değeri `yeniKayit` ile
+birebir aynıdır. **`yeniKayit` eskidi** (`@deprecated`; editörde üstü çizili görünür) ve bir
+sonraki ana sürümde kaldırılacak. Geçiş tek kelime:
+
+```
+text.plate('34yk').yeniKayit        -> true   (çalışmaya devam ediyor, eskidi)
+text.plate('34yk').newRegistration  -> true   (yeni ad)
+```
+
+Kimse kırılmaz: ölçüldü, hiçbir tüketici `PlateResult` nesnesini elle kurmuyor ya da bütünüyle
+karşılaştırmıyor. Dönüş nesnelerinin alan adları artık bir testle çivili
+(`result-shape.test.ts`); bir alanın adı değişirse CI kırılır.
 
 ### Düzeltilen — `text.properNounSuffix` rakamla biten adlarda yanlış ek seçiyordu
 

@@ -897,7 +897,7 @@ sayı→yazı ve Türkçe ek çekimi. En kapsamlı motor.
 > `internal/` dışa açık API **değildir**, barrel üzerinden export edilmez.
 
 **Normalizasyon dönüş tipi:** `NormalizeResult { stored, display, raw, valid }`.
-`phone` bundan türeyen `PhoneResult { ..., kind }`, `plate` ise `PlateResult { ..., yeniKayit }` döner (aşağıya bakınız).
+`phone` bundan türeyen `PhoneResult { ..., kind }`, `plate` ise `PlateResult { ..., newRegistration }` döner (aşağıya bakınız).
 `stored` = kanonik/DB formu, `display` = gösterim formu, `raw` = ham girdi, `valid` = geçerli mi.
 Geçersizde `stored`/`display` boş, `valid: false`, `raw` korunur.
 
@@ -951,10 +951,11 @@ Türkçe liste bağlama ("A, B ve C"). Boş elemanlar elenir. Örnek: `join(['Al
 Geçersiz (`phone('123')`): boş stored/display, `valid: false`.
 
 **`plate(raw): PlateResult`** — Türkiye tescil plakası normalizasyonu (v2.8.0).
-`PlateResult` = `NormalizeResult` + **`yeniKayit: boolean`**.
+`PlateResult` = `NormalizeResult` + **`newRegistration: boolean`** (v4.4.0). Eski adı `yeniKayit`
+aynı değeri taşır, `@deprecated` işaretlidir ve bir sonraki MAJOR sürümde kaldırılacak (TB-013).
 `stored` boşluksuz (`34ABC23` — veritabanı, eşsizlik, arama), `display` gruplu (`34 ABC 23` — kullanıcı).
 
-| Girdi | `display` | `stored` | `valid` | `yeniKayit` |
+| Girdi | `display` | `stored` | `valid` | `newRegistration` |
 |---|---|---|---|---|
 | `54apy281` | `54 APY 281` | `54APY281` | ✔ | `false` |
 | `34.ABD.344` | `34 ABD 344` | `34ABD344` | ✔ | `false` |
@@ -998,10 +999,10 @@ karşılıkları yoktur ve `C`/`G`/`O`/`S`/`U`'ya indirmek başka bir plakayı g
 ⚠️ **YENİ KAYIT (YK) resmî bir plaka DEĞİLDİR.** Sigorta sektöründe, tescili henüz
 yapılmamış sıfır araçlara kasko/trafik poliçesi kesilirken yazılan, yazılı olmayan bir
 teamüldür: il kodu + `YK`, **arkasında rakam yoktur** (`54 YK`, `67 YK`). Çekirdek
-sahibinin kararıyla her zaman kabul edilir ve `yeniKayit: true` ile işaretlenir.
+sahibinin kararıyla her zaman kabul edilir ve `newRegistration: true` ile işaretlenir.
 Plakası çıkmış araçla karışmasın diye kararı metinden değil **bu bayraktan** verin —
 `display.endsWith('YK')` gibi görüntü metnine bağlı kurallar yazmayın.
-`34 YK 123` sıradan bir plakadır (`yeniKayit: false`).
+`34 YK 123` sıradan bir plakadır (`newRegistration: false`).
 Karar gerekçesi: [`GERI-BILDIRIM-KAYDI.md`](GERI-BILDIRIM-KAYDI.md).
 
 > **Plaka türü (resmî, diplomatik, yabancı, geçici) sınıflandırılmaz.** Özel seriler

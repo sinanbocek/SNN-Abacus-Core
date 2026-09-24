@@ -633,12 +633,12 @@ text.plate('34-acb-23').display      // → '34 ACB 23'
 text.plate('34-acb-23').stored       // → '34ACB23'
 text.plate('34 ABİ 12').display      // → '34 ABI 12'
 text.plate('82 AB 123').valid        // → false
-text.plate('34yk').yeniKayit         // → true
+text.plate('34yk').newRegistration   // → true
 ```
 
 İl kodu 01–81; Ç Ğ Ö Ş Ü ve Q W X reddedilir. `34 YK` sigorta sektöründe tescili
 yapılmamış araç için kullanılır; "plakası çıktı mı?" kararını metinden değil
-`yeniKayit` bayrağından verin. Harf/rakam grupları yönetmelikte listelenmediği için
+`newRegistration` bayrağından verin (eski adı `yeniKayit`; v4'te hâlâ var ama eskidi, bir sonraki ana sürümde kalkacak). Harf/rakam grupları yönetmelikte listelenmediği için
 rakam grubu bilinçli olarak gevşektir.
 
 **Sayıyı yazıya çevirmek**

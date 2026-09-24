@@ -139,12 +139,13 @@ const p = text.plate('34-acb-23');
 console.log(p.display);    // 34 ACB 23   ← kullanıcıya
 console.log(p.stored);     // 34ACB23     ← veritabanına (aynı plaka iki kez kaydedilmez)
 console.log(text.plate('82 AB 123').valid);  // false — il kodu yok
-console.log(text.plate('34yk').yeniKayit);   // true  — tescili yapılmamış araç
+console.log(text.plate('34yk').newRegistration);   // true  — tescili yapılmamış araç
 ```
 
 ⚠️ Plaka harf/rakam grupları yönetmelikte yazılı değildir (KTY Madde 55, 4/11/2025'te
 kaldırıldı); kurallar fiilî uygulamadan derlenmiştir ve rakam grubu gevşektir.
-"Plakası çıktı mı?" kararını metinden değil `yeniKayit` bayrağından verin.
+"Plakası çıktı mı?" kararını metinden değil `newRegistration` bayrağından verin. Eski adı
+`yeniKayit` v4 boyunca aynı değeri taşır ama eskidi; bir sonraki ana sürümde kaldırılacak.
 
 ### Yüzde işareti — renkle anlatılan arayüzler
 
