@@ -53,7 +53,7 @@ TDK: büyük harfli kısaltmaya ek, son harfin okunuşuna göre gelir.
                                    önce          sonra
 properNounSuffix('THY', 'loc')     'THY'da'      'THY'de'
 properNounSuffix('PTT', 'loc')     'PTT'ta'      'PTT'de'
-properNounSuffix('TDK', 'abl')     'TDK'dan'     'TDK'den'
+properNounSuffix('SGK', 'loc')     'SGK'ta'      'SGK'da'     (K "ka": sahip kararı, madde 44D)
 properNounSuffix('BMW', 'dat')     'BMW'a'       'BMW'ye'
 properNounSuffix('NATO', 'abl')    'NATO'dan'    'NATO'dan'   (kelime gibi okunur, değişmedi)
 ```

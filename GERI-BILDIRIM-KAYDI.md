@@ -132,9 +132,10 @@ birleştirir. Sabit etikete bağlı tüketicilere (`#vX.Y.Z`) hiç gelmez, elle 
 | 42 | Aynı dönemin kabulleri tek sürümde çıksın (toplu sürüm) | Sahip (2026-09-24) | ✅ Kabul — `AI-RULES §4.3`, CI ve etiket kapısı | 4.3.0 |
 | 43 | `properNounSuffix` rakamla biten adda eki sayının okunuşundan alsın (`2027'ye`) | Talep #13 (issue #51) | ✅ Kabul — **hata düzeltmesi**; `text.suffix` ile aynı kural | yayınlanmadı (main) |
 | 43B | `date.suffix(iso, kind)` | Talep #13 (elenen aday) | ❌ **Red** — `properNounSuffix` düzelince tarih metni de doğru çekiliyor | — |
-| 44A | Ünlüsüz kısaltma harf harf okunsun (`THY'de`, `TDK'den`) | TB-014 (iç bulgu) | ✅ Kabul — **hata düzeltmesi**; otorite TDK "Kısaltmalar" | yayınlanmadı (main) |
+| 44A | Ünlüsüz kısaltma harf harf okunsun (`THY'de`, `TRT'den`) | TB-014 (iç bulgu) | ✅ Kabul — **hata düzeltmesi**; otorite TDK "Kısaltmalar" | yayınlanmadı (main) |
 | 44B | "-aş" ile biten ad "AŞ" kısaltması sanılıyordu (`Kocataş'ne`) | TB-014 çalışılırken ölçüldü | ✅ Kabul — **hata düzeltmesi**; kısaltma yalnız ayrı kelime | yayınlanmadı (main) |
 | 44C | Ünlü içeren harf harf kısaltma (`ABD'ye`) | TB-014 (sınır) | ❌ **Red** (ertelendi) — metinden ayırt edilemez; çekirdek tahmin etmez | — |
+| 44D | K harfi "ka" okunsun (`SGK'da`, `SGK'ya`) | Sahip (2026-09-24) | ⚠️ **Kabul — sahip kararıyla istisna** (TDK: "ke", `TDK'den`) | yayınlanmadı (main) |
 
 ---
 
@@ -666,7 +667,7 @@ biri test olarak çivilendi.
 
 **44A — kabul, dar tutuldu.** TDK'nın iki türü aynı biçimde yazılıyor. Kesin olan tek durum:
 **hiç ünlü içermeyen** büyük harf dizisi kelime gibi okunamaz. Yalnız o harf harf okunur.
-Harf adları TDK'den: be, ce, çe, de, fe, ge, he, je, **ke** (`TDK'den`), le… Türkçe
+Harf adları TDK'den: be, ce, çe, de, fe, ge, he, je, ke (bkz. 44D), le… Türkçe
 alfabede olmayan Q, W, X için fiilî okunuş (kü, ve, iks; §4.1 Sınır durumu 4).
 
 **44B — kabul; daha ciddi olan buydu.** TB-014 çalışılırken TDK örneği `BOTAŞ'ın` da kırmızı
@@ -683,9 +684,16 @@ kalır ve testte "BİLİNEN SINIR" diye çivilendi. **Yeniden başvuru koşulu:*
 ünlülü harf harf kısaltmanın gerçek bir ekranda yanlış çıktığı ölçülürse. O zaman aday
 çözüm, çağıranın okunuşu belirttiği bir ipucu seçeneğidir; çekirdek yine tahmin etmez.
 
-**Ders — beklenen değer de kaynaktan okunur.** Kayıt açılırken `SGK'da` doğru diye yazıldı;
-gündelik konuşmadan gelen bir tahmindi. TDK'nın kendi kısaltması (`TDK'den`) K'nin "ke"
-okunduğunu gösteriyor: doğrusu `SGK'de`.
+**44D — sahip kararıyla istisna, emsal değildir.** TDK'nın harf adı "ke"dir ve kendi
+örneği `TDK'den`dir; uzun biçime göre ek yalnız küçük harfli kısaltmalarda geçer (`kg'dan`).
+Çekirdek sahibi, halk arasındaki okunuşu ("es-ge-ka") ve kurumların yaygın yazımını
+(`SGK'ya`, `BDDK'ya`, `TSK'ya`) esas aldı: **K "ka" okunur.** Sonuç: `SGK'da`, `SGK'ya`;
+TDK'nın kendi örneği bilerek `TDK'dan` çıkar. Değerlendirmede madde 25 emsali (TDK kuralına
+aykırı sahip talebi reddedilmişti) sahibe sunuldu; sahip istisnayı seçti. Madde 17 gibi
+"sahip kararıyla istisna" olarak işlendi, kural sessizce esnetilmedi.
+
+**Ders — beklenen değer de kaynaktan okunur.** Kayıt açılırken `SGK'da` gündelik okunuştan
+yazılmıştı; TDK'ye bakınca `SGK'de` çıktı. İki kaynak çelişince karar sahibe götürüldü.
 
 ### Talep #13 — rakamla biten özel ada hâl eki (madde 43)
 
