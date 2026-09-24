@@ -130,6 +130,8 @@ birleştirir. Sabit etikete bağlı tüketicilere (`#vX.Y.Z`) hiç gelmez, elle 
 | 40C | `parse` ile `parseNumber` hizalansın | Talep #12 aday 3 | ❌ **Red** — fark bilinçli; KILAVUZ'a "hangi okuyucu" notu eklendi | 4.2.0 (belge) |
 | 41 | `compact` 1 trilyon ve üstünü milyona "terfi" ettiriyordu (`2e12` → `₺2M`) | 4.3.0 hazırlığı (ölçüm) | ✅ Kabul — **hata düzeltmesi**; en üst ölçek milyar | 4.3.0 |
 | 42 | Aynı dönemin kabulleri tek sürümde çıksın (toplu sürüm) | Sahip (2026-09-24) | ✅ Kabul — `AI-RULES §4.3`, CI ve etiket kapısı | 4.3.0 |
+| 43 | `properNounSuffix` rakamla biten adda eki sayının okunuşundan alsın (`2027'ye`) | Talep #13 (issue #51) | ✅ Kabul — **hata düzeltmesi**; `text.suffix` ile aynı kural | yayınlanmadı (main) |
+| 43B | `date.suffix(iso, kind)` | Talep #13 (elenen aday) | ❌ **Red** — `properNounSuffix` düzelince tarih metni de doğru çekiliyor | — |
 
 ---
 
@@ -651,6 +653,27 @@ bildirir:
 
 ---
 
+### Talep #13 — rakamla biten özel ada hâl eki (madde 43)
+
+**İddialar bağımsız ölçüldü: 7 çıktının 7'si birebir aynı** (v4.3.0). Kök neden talepte doğru
+tarif edilmişti: ek adın son HARFİNDEN alınıyor, sondaki rakamlar atlanıyordu.
+
+**Düzeltme `text.suffix` ile aynı kuralı kullanır**, ikinci bir ek mantığı yazılmadı. Sondaki
+sayının okunuşunun son kelimesi ses çözümlemesine verilir. Doğrulama bağımsız bir kaynağa
+dayanır: `0`–`3000` arası her sayı, beş hâlin hepsinde `text.suffix(n, 'number', hâl)` ile
+birebir aynı eki veriyor (15.005 karşılaştırma).
+
+**Yan bulgu kütüğe yazıldı, kovalanmadı.** Kontrol listesine konan `3D` bugün `3D'da`
+veriyordu (doğrusu `3D'de`). Harf harf okunan kısaltmalar da yanlış (`THY'da`, `PTT'ta`,
+`BMW'a`). Talep "harfle biten adlar değişmesin" dediği ve kısaltmanın harf harf mi kelime
+gibi mi okunduğu metinden anlaşılamadığı için (madde 34D emsali) ayrı kayıt açıldı:
+`docs/teknik-borc.md` TB-014.
+
+**Neden sürüm çıkmadı.** 4.3.0 güncelleme PR'ları tüketicilerde aynı gün açılmıştı; yeni
+sürüm onları kapatıp yeniden açacaktı (madde 42). Talebi gönderen prototip çekirdeği `main`
+klonundan kullanıyor, düzeltme ona `main`'de ulaşıyor. Canlı kullanıcıdaki etki (GHS-Panel;
+şirket, müşteri ve banka adları) rakamla biten ad nadir olduğu için düşük; ölçülmedi.
+
 ### Madde 42 — toplu sürüm kuralı (sahip kararı, 2026-09-24)
 
 **Ne oldu.** Talep #12 (issue #48) 4.2.0 olarak tek başına yayınlandı. Aynı gün kabul
@@ -866,3 +889,4 @@ yazılmıştır.
 | #10 | 19 Eylül 2026 | trade-kasa: `dotAsDecimal` karışık biçim hatası (issue #42) | 4.1.0 → 4.1.1 |
 | #11 | 24 Eylül 2026 | GHS-Panel: para gösterimi, proje varsayılanı, elle simge ekleme (issue #47) | 4.1.1 → 4.3.0 |
 | #12 | 24 Eylül 2026 | GHS-Panel: `dotAsDecimal` kontrollü kutu hatası + hane sınırı (issue #48) | 4.1.1 → 4.2.0 |
+| #13 | 24 Eylül 2026 | TYC Grup şartname özeti (prototip): rakamla biten özel ada hâl eki (issue #51) | 4.3.0 → main (yayınlanmadı) |
