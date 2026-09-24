@@ -4,6 +4,78 @@ Bu projedeki tüm önemli değişiklikler bu dosyada belgelenir.
 Format [Keep a Changelog](https://keepachangelog.com/tr/) temellidir;
 sürümleme [Semantic Versioning](https://semver.org/lang/tr/) kurallarına uyar.
 
+## [4.3.0] - 2026-09-24
+
+> Eklemeli: **seçenek verilmezse davranış değişmez** (tek istisna aşağıdaki hata düzeltmesi).
+> Karar: [`GERI-BILDIRIM-KAYDI.md`](GERI-BILDIRIM-KAYDI.md) madde 39C, 39D, 39F (talep #11,
+> issue #47, GHS-Panel) ve madde 41.
+>
+> ⚠️ **Aynı gün ikinci sürüm; bu bir hataydı.** 39C/D/F, 4.2.0 çıktığında kabul edilmiş ve
+> bekliyordu; aynı pakete girmeleri gerekirdi. Bu yüzden 4.2.0 güncelleme PR'ınızı henüz
+> birleştirmediyseniz bu sürüm onu kapatıp yerine geçer. Tekrarı makinede engellendi:
+> `AI-RULES §4.3` (toplu sürüm kuralı).
+
+### Eklenenler
+
+- **`zero?: 'plain' | 'symbol'`** (`format`, `formatMajor`, `compact`, `compactMajor`):
+  sıfır tutarda para birimi işareti.
+
+  ```
+  formatMajor(0, { kurus: true })                  -> '0,00'   (varsayılan, değişmedi)
+  formatMajor(0, { kurus: true, zero: 'symbol' })  -> '₺0,00'
+  ```
+
+  Simge biçimi sıfırda simgeyi düşürüyordu, metin biçimi ise kısaltmayı koruyordu
+  (`0,00 TL`). Tablo sütununda `₺1.234,56` ile `0,00` yan yana tutarsız duruyordu.
+  Varsayılan bir sonraki MAJOR sürümde `'symbol'` olmaya adaydır.
+
+- **`digits?: number`** (`compact`, `compactMajor`): kısaltılmış değerin sabit hanesi.
+
+  ```
+  compactMajor(1200000, { style: 'B/Mn/Mr' })             -> '₺1,2Mn'   (değişmedi)
+  compactMajor(1200000, { style: 'B/Mn/Mr', digits: 2 })  -> '₺1,20Mn'
+  ```
+
+- **`minScale?: 'thousand' | 'million' | 'billion'`** (`compact`, `compactMajor`):
+  kısaltmanın başladığı ölçek; altı tam yazılır. `'B'` harfi varsayılan stilde milyar,
+  `B/Mn/Mr` stilinde bin demek. `minScale: 'million'` bin ölçeğini ekrandan kaldırır.
+
+  ```
+  compactMajor(1500, { style: 'B/Mn/Mr' })                        -> '₺1,5B'
+  compactMajor(1500, { style: 'B/Mn/Mr', minScale: 'million' })   -> '₺1.500'
+  ```
+
+- **ESLint `strict`: elle para simgesi ekleme yasağı.** `tutar + ' ₺'`, `` `${tutar} ₺` ``,
+  `'₺' + tutar`, `tutar + ' TL'`, `` `${tutar} TL` `` yakalanır; doğrusu `money.formatMajor`.
+  TCMB: simge solda ve boşluksuz, metin içinde `TL`, ikisi birlikte kullanılmaz.
+  `recommended`'a **girmedi** (madde 35: minor sürümde yeni kapı eklenmez).
+  Kurallar ayrıca `manualCurrencyGates` adıyla dışa açık.
+
+### Düzeltilen — 1 trilyon ve üstü milyona "terfi" ediyordu (madde 41)
+
+Varsayılan stilde üst ölçeğe terfi kararı birimin **harfine** bakıyordu. `'B'` hem milyar
+(varsayılan stil) hem bin (Türkçe stil) demek olduğu için milyar ölçeğinde yuvarlanan değer
+1000'e ulaşınca tutar milyona geçiyordu:
+
+```
+                              4.2.0      4.3.0
+compactMajor(2e12)       ->   '₺2M'      '₺2000B'   <- MİLYON kat küçüktü
+compactMajor(999999999999) -> '₺1M'      '₺1000B'
+compactMajor(2e12, { style: 'B/Mn/Mr' }) -> '₺2000Mr' (değişmedi, doğruydu)
+```
+
+Çekirdekte trilyon birimi yok; en üst ölçek milyardır ve orada kalınır. Çıktısı değişen
+girdiler yalnız 1 trilyon ve üstü (varsayılan stil); eski çıktı yanlıştı.
+
+### Kural — toplu sürüm (AI-RULES §4.3)
+
+Her sürüm bütün tüketicilerde yeni bir güncelleme PR'ı açar. Artık aynı dönemde kabul
+edilen maddeler tek sürümde çıkar. Kayıtta "bekliyor" durumunda kabul edilmiş madde
+varken sürüm değiştiren PR'ın CI'ı kırılır ve etiket atılmaz
+(`scripts/surum-toplu-dogrula.mjs`).
+
+---
+
 ## [4.2.0] - 2026-09-24
 
 > Eklemeli: **seçenek verilmezse davranış değişmez**, hiçbir çağrı kırılmaz.

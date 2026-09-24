@@ -121,13 +121,15 @@ birleştirir. Sabit etikete bağlı tüketicilere (`#vX.Y.Z`) hiç gelmez, elle 
 | 39 | Para gösterim standardı: `₺1.234,56` (solda, boşluksuz), metin içinde `1.234,56 TL`; sondaki simge desteklenmez | Talep #11 (issue #47) | ✅ **Teyit** — TCMB aslından okundu; davranış zaten böyle | — |
 | 39A | `money.display({ precision })` — tek gösterim kapısı | Talep #11 aday 1 | ❌ **Red** — `formatMajor`/`compactMajor` üstüne ikinci kapı (33C/33D emsali) | — |
 | 39B | `money.withDefaults(opts)` — proje varsayılanı | Talep #11 aday 2 | ❌ **Red** (ertelendi) — tek tüketici; sondaki simgeyi önlemezdi | — |
-| 39C | Sıfır tutarda simge (`zero: 'symbol'` → `₺0,00`) | Talep #11 aday 3 | ✅ Kabul — **seçenek olarak**; varsayılanı sonraki MAJOR'a aday | bekliyor |
-| 39D | `compactMajor`: sabit hane (`digits`) ve alt ölçek sınırı (`minScale`) | Talep #11 aday 4 | ✅ Kabul · `space` seçeneği **açık** (yazım kaynağı okunmadı) | bekliyor |
+| 39C | Sıfır tutarda simge (`zero: 'symbol'` → `₺0,00`) | Talep #11 aday 3 | ✅ Kabul — **seçenek olarak**; varsayılanı sonraki MAJOR'a aday | 4.3.0 |
+| 39D | `compactMajor`: sabit hane (`digits`) ve alt ölçek sınırı (`minScale`) | Talep #11 aday 4 | ✅ Kabul · `space` seçeneği **ertelendi** (yazım kaynağı okunmadı) | 4.3.0 |
 | 39E | `currency: 'TL'` takma adı ve kayıt defterine CHF | Talep #11 aday 5 | ❌ **Red** — anahtarlar ISO 4217; CHF'nin tek simgesi yok; tanım nesnesi var | — |
-| 39F | Elle simge/`TL` birleştirmeyi yakalayan lint kuralı | Talep #11 aday 6 | ✅ Kabul — **`strict`** (madde 35) | bekliyor |
+| 39F | Elle simge/`TL` birleştirmeyi yakalayan lint kuralı | Talep #11 aday 6 | ✅ Kabul — **`strict`** (madde 35) | 4.3.0 |
 | 40A | `dotAsDecimal` kontrollü kutuda kendi çıktısını bozuyor (`8.534` + `0` → `8,5340`) | Talep #12 (issue #48) | ✅ Kabul — **hata**; çözüm `previous` seçeneği, talebin önerdiği kural DEĞİL | 4.2.0 |
 | 40B | `formatGroupedInput` ondalık hane sınırı | Talep #12 aday 2 | ✅ Kabul — adı `maxDigits` (talepte `maxFraction`) | 4.2.0 |
 | 40C | `parse` ile `parseNumber` hizalansın | Talep #12 aday 3 | ❌ **Red** — fark bilinçli; KILAVUZ'a "hangi okuyucu" notu eklendi | 4.2.0 (belge) |
+| 41 | `compact` 1 trilyon ve üstünü milyona "terfi" ettiriyordu (`2e12` → `₺2M`) | 4.3.0 hazırlığı (ölçüm) | ✅ Kabul — **hata düzeltmesi**; en üst ölçek milyar | 4.3.0 |
+| 42 | Aynı dönemin kabulleri tek sürümde çıksın (toplu sürüm) | Sahip (2026-09-24) | ✅ Kabul — `AI-RULES §4.3`, CI ve etiket kapısı | 4.3.0 |
 
 ---
 
@@ -649,6 +651,46 @@ bildirir:
 
 ---
 
+### Madde 42 — toplu sürüm kuralı (sahip kararı, 2026-09-24)
+
+**Ne oldu.** Talep #12 (issue #48) 4.2.0 olarak tek başına yayınlandı. Aynı gün kabul
+edilen talep #11'in üç maddesi (39C/D/F) kayıtta "bekliyor"du ve dakikalar sonra 4.3.0
+gerekti. Her etiket bütün tüketicilerde yeni bir güncelleme PR'ı açıyor
+(`core/abacus-core-vX.Y.Z` dalı) ve bir öncekini "aşıldı" diye kapatıyor. Tüketiciler aynı
+gün iki kez güncellemek zorunda kaldı.
+
+**Sahip kararı:** "Aynı dönem içinde gelmiş talepler birden fazlaysa tek bir paket
+güncellemesiyle hepsi aynı pakete konur. Her yeni güncelleme ek iş yükü ve ek maliyettir."
+
+**Uygulama:** `AI-RULES §4.3`. Makine zorlaması `scripts/surum-toplu-dogrula.mjs`: kayıtta
+son sütunu `bekliyor` olan satır varken sürüm değiştiren PR'ın CI'ı kırılır ve `main`'de
+etiket atılmaz. Geriye dönük sınandı: 4.2.0 çıkarken kapı olsaydı "39C, 39D, 39F bekliyor"
+diyerek sürümü durdururdu.
+
+**Ders — "X'i uygula" talimatı sürümün kapsamı değildir.** Talimat #48'i söylüyordu. Ama
+sürüm kararı, dönemin bütün kabul edilmiş maddelerine bakılarak verilir. Bekleyen madde
+varsa sürümden önce sahibe sorulur.
+
+### Madde 41 — `compact` trilyonu milyona terfi ettiriyordu (4.3.0 hazırlığında ölçüldü)
+
+**Kabul; çekirdeğin kendi kusuru, ilk sürümden beri.** Yuvarlama sonrası üst ölçeğe terfi
+kararı birimin HARFİNE bakıyordu (`unit === 'K' || unit === 'B'`). Varsayılan stilde `'B'`
+milyar olduğu için milyar ölçeğinde yuvarlanan değer 1000'e ulaşınca "bin"miş gibi milyona
+terfi ediyordu:
+
+```
+compactMajor(2e12)            -> '₺2M'    (doğrusu '₺2000B': MİLYON kat küçük)
+compactMajor(999999999999)    -> '₺1M'    (doğrusu '₺1000B')
+compactMajor(2e12, { style: 'B/Mn/Mr' }) -> '₺2000Mr' (Türkçe stilde harfler ayrı, doğruydu)
+```
+
+Madde 39D'nin ölçtüğü aynı belirsizliğin ('B' iki anlamlı) çekirdeğin içindeki hâli.
+Düzeltme: ölçekler sıralı bir tabloda tutulur, terfi sıraya bakar ve en üst ölçek (milyar)
+aşılmaz. Çekirdekte trilyon birimi yok; trilyon eklemek ayrı bir karardır.
+
+**Neden MINOR içinde:** çıktısı değişen girdiler yalnız varsayılan stilde 1 trilyon ve
+üstü; eski çıktı milyon kat yanlıştı (madde 38 emsali: yanlış çıktının düzeltilmesi).
+
 ### Talep #12 — `dotAsDecimal` kontrollü kutuda kendi çıktısını bozuyor (madde 40)
 
 **İddialar bağımsız ölçüldü: 18 çıktının 18'i birebir aynı** (`ae1630d`, temiz kurulum).
@@ -822,5 +864,5 @@ yazılmıştır.
 | #8 | 19 Eylül 2026 | GHS-Panel: özel adlara hâl eki (issue #23; ikinci tüketici olarak Gunum-Var ölçüldü) | 3.4.0 → 3.5.0 |
 | #9 | 19 Eylül 2026 | trade-kasa: `formatGroupedInput` nokta ile ondalık (issue #40) | 4.0.0 → 4.1.0 |
 | #10 | 19 Eylül 2026 | trade-kasa: `dotAsDecimal` karışık biçim hatası (issue #42) | 4.1.0 → 4.1.1 |
-| #11 | 24 Eylül 2026 | GHS-Panel: para gösterimi, proje varsayılanı, elle simge ekleme (issue #47) | 4.1.1 → (39C/D/F bekliyor) |
+| #11 | 24 Eylül 2026 | GHS-Panel: para gösterimi, proje varsayılanı, elle simge ekleme (issue #47) | 4.1.1 → 4.3.0 |
 | #12 | 24 Eylül 2026 | GHS-Panel: `dotAsDecimal` kontrollü kutu hatası + hane sınırı (issue #48) | 4.1.1 → 4.2.0 |
