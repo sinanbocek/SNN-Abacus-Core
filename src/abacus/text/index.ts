@@ -896,8 +896,12 @@ function trailingNumberReading(stem: string): string | null {
 /**
  * Harf harf okunan kısaltmanın son harfinin OKUNUŞU; ad öyle bitmiyorsa `null` (TB-014).
  *
- * TDK: büyük harfli kısaltmaya ek son harfin okunuşuna göre gelir (`THY'de`, `TDK'den`,
+ * TDK: büyük harfli kısaltmaya ek son harfin okunuşuna göre gelir (`THY'de`, `TRT'den`,
  * `BDT'ye`); kelime gibi okunan kısaltmaya ise okunuşuna göre (`NATO'dan`, `AGİK'in`).
+ *
+ * SAHİP KARARIYLA İSTİSNA (madde 44D) — emsal değildir: K, TDK'deki "ke" yerine halk
+ * arasındaki okunuşuyla "ka" okunur (`SGK'da`, `SGK'ya`). TDK'nın kendi örneği `TDK'den`
+ * bu yüzden bilerek `TDK'dan` çıkar.
  * İkisi aynı biçimde yazılır ve metinden ayırt edilemez. Kesin olan tek durum ele alınır:
  * HİÇ ÜNLÜ İÇERMEYEN büyük harf dizisi kelime gibi okunamaz. Ünlü içeren ve harf harf
  * okunan kısaltma (`ABD`, doğrusu `ABD'ye`) bilinen sınırdır; çekirdek tahmin etmez.
@@ -908,7 +912,7 @@ function trailingNumberReading(stem: string): string | null {
 // Anahtarlar tanımlayıcı değil, harf VERİSİDİR; bu yüzden tırnak içinde.
 const LETTER_NAMES: Readonly<Record<string, string>> = {
   'B': 'be', 'C': 'ce', 'Ç': 'çe', 'D': 'de', 'F': 'fe', 'G': 'ge', 'Ğ': 'ge', 'H': 'he',
-  'J': 'je', 'K': 'ke', 'L': 'le', 'M': 'me', 'N': 'ne', 'P': 'pe', 'R': 're', 'S': 'se',
+  'J': 'je', 'K': 'ka', 'L': 'le', 'M': 'me', 'N': 'ne', 'P': 'pe', 'R': 're', 'S': 'se',
   'Ş': 'şe', 'T': 'te', 'V': 've', 'Y': 'ye', 'Z': 'ze',
   // Türkçe alfabede yok; fiilî okunuş (§4.1 Sınır durumu 4).
   'Q': 'kü', 'W': 've', 'X': 'iks',

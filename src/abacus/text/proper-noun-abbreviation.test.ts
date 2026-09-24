@@ -17,7 +17,6 @@ import { properNounSuffix } from './index';
 describe('properNounSuffix — ünlüsüz kısaltma harf harf okunur (TDK)', () => {
   it.each([
     ['BDT', 'dat', "BDT'ye"],
-    ['TDK', 'abl', "TDK'den"],
     ['THY', 'loc', "THY'de"],
     ['TRT', 'abl', "TRT'den"],
     ['TL', 'gen', "TL'nin"],
@@ -25,11 +24,26 @@ describe('properNounSuffix — ünlüsüz kısaltma harf harf okunur (TDK)', () 
     expect(properNounSuffix(name, kind)).toBe(expected);
   });
 
+  /**
+   * SAHİP KARARIYLA İSTİSNA (madde 44D, 2026-09-24) — emsal değildir.
+   * TDK'nın harf adı "ke"dir ve kendi örneği `TDK'den`dir. Çekirdek sahibinin kararıyla
+   * K, halk arasındaki okunuşuyla "ka" okunur: `SGK'da`, `SGK'ya`. TDK'nın örneği bu
+   * yüzden BİLEREK farklı çıkar (`TDK'dan`).
+   */
+  it.each([
+    ['SGK', 'loc', "SGK'da"],
+    ['SGK', 'dat', "SGK'ya"],
+    ['BDDK', 'gen', "BDDK'nın"],
+    ['TSK', 'acc', "TSK'yı"],
+    ['TDK', 'abl', "TDK'dan"],
+  ] as const)('K "ka" okunur (sahip kararı): %s %s -> %s', (name, kind, expected) => {
+    expect(properNounSuffix(name, kind)).toBe(expected);
+  });
+
   it.each([
     ['PTT', 'loc', "PTT'de"],
     ['BMW', 'dat', "BMW'ye"],
     ['TBMM', 'abl', "TBMM'den"],
-    ['SGK', 'loc', "SGK'de"],
     ['HSBC', 'acc', "HSBC'yi"],
     ['Plan B', 'dat', "Plan B'ye"],
     ['3D', 'loc', "3D'de"],
