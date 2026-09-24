@@ -6,13 +6,12 @@ Kapanan kayıtlar: `docs/teknik-borc-arsiv.md`
 > **Teknik borç nedir?** Bir işi hızlı bitirmek için kestirme yol kullanmak, sonradan
 > ödenecek bir borç almak gibidir. Borç ödenmedikçe faizi (bakım zorluğu, hata riski) büyür.
 
-> **Standart:** `~/.claude/standartlar-canli/standartlar/teknik-borc-standardi.md` · **Oluşturulma:** 2026-09-15 · **Açık:** 2 (P1: 0 · P2: 1 · P3: 1)
+> **Standart:** `~/.claude/standartlar-canli/standartlar/teknik-borc-standardi.md` · **Oluşturulma:** 2026-09-15 · **Açık:** 1 (P1: 0 · P2: 0 · P3: 1)
 
 > **2026-09-15:** Kütük ilk kez oluşturuldu. Kayıtlar keşif turunda bulundu (dokümanlar, oturum günlüğü, kod, test/lint çıktıları); kritik iddialar bağımsız olarak yeniden ölçüldü. Ölçülemeyenler kayıt içinde "ölçülmedi/hipotez" diye belirtilmiştir.
 
 ## İçindekiler
 
-- **🟡 P2 — Planlı:** TB-014
 - **🟢 P3 — Fırsatta:** TB-013
 
 ## Öncelikler
@@ -39,27 +38,6 @@ Kapanan kayıtlar: `docs/teknik-borc-arsiv.md`
 | Hâl eki | Ada gelen -de, -den, -e, -in, -i ekleri (İstanbul'da, THY'den) |
 
 ---
-
----
-
-## 🟡 P2 — Planlı
-
-### TB-014 — Harf harf okunan kısaltmalar yanlış ek alıyor
-- **Tespit Tarihi:** 2026-09-24 (issue #51, rakamla biten adların düzeltmesi sırasında)
-- **Öncelik:** P2 (Planlı) — yanlış yazım kullanıcıya görünür; para ya da veri bozulmuyor.
-
-#### 🟢 Sade Anlatım
-- **Sorun ne?** Çekirdek kısaltmalara eki yanlış ekliyor: "THY'da" yazıyor, doğrusu "THY'de". Sebebi, eki harfin okunuşuna ("te-he-ye") göre değil, kısaltmanın içindeki harflere göre seçmesi.
-- **Benzetme:** Birinin adını yazıdan tahmin edip yanlış telaffuz etmek gibi. "PTT"yi "pıt" diye okuyup "PTT'ta" demek.
-- **Çözülmezse ne olur?** Kısaltma geçen mesajlarda (banka adları, kurum adları) ek yanlış çıkar. Okuyan anlar ama metin özensiz görünür.
-- **Senden beklenen karar:** Yok. Çözüm yolu ölçülüp önerilecek; karar gerekirse o zaman sorulur.
-
-#### 🔧 Teknik Detay
-- **Açıklama:** `src/abacus/text/index.ts` → `properNounSuffix`. Ünlü uyumu `lastVowel(sound) ?? 'a'`, sertlik `endsWithHardConsonant(sound)` ile ADIN HARFLERİNDEN alınıyor. Ölçüldü (2026-09-24, #51 düzeltmesinin üstünde): `3D'da` (doğrusu `3D'de`), `THY'da` (`THY'de`), `PTT'ta` (`PTT'de`), `BMW'a` (`BMW'ye`), `TBMM'dan` (`TBMM'den`), `SGK'ta` (`SGK'da`). Doğru çıkan: `NATO'da` (kelime gibi okunuyor). Ünlüsüz kısaltmada `lastVowel` `null` döner ve `'a'` varsayılanı kalın uyum verir; bu, 6 yanlışın çoğunu açıklıyor.
-- **Etki:** GHS-Panel `properNounSuffix`'i banka ve şirket adlarıyla çağırıyor (`src/infrastructure/documentReader/bankReceipt/messages.ts:24,87`, `WhatsAppReminderModal.tsx:108,118,201,215`). Canlı veride ünlüsüz kısaltma adı geçiyor mu, ölçülmedi (hipotez: `HSBC`, `QNB` gibi banka adları).
-- **Çözüm yönü:** Önce ölçülecek: tüketicilerde bu işleve giden adlarda kaç tanesi harf harf okunan kısaltma. Zorluk: `PTT` harf harf, `NATO` ve `TÜBİTAK` kelime gibi okunur; metinden ayırt edilemez. Madde 34D emsali: genel desen yerine kesinlik. Aday yol: yalnız **ünlüsüz** büyük harf dizisini harf harf oku (TDK harf adları: be, ce, çe, de, fe, ge, he, je, ke/ka, le, me, ne, pe, re, se, şe, te, ve, ye, ze), ünlü içerenleri bugünkü gibi bırak. `TEB` gibi ünlülü ama harf harf okunan kısaltmalar için sınır ölçülmeli.
-- **Neden Şimdi Çözülmüyor:** #51'in kapsamı rakamla biten adlardı; talep "harfle biten adlar değişmesin" diyor. Kısaltma okunuşu ayrı bir tasarım kararı ve kelime listesi gerektirebilir (§4.1 Sınır durumu 3: emin değilsen alma).
-- **Bağlı kalemler:** issue #51 (rakamla biten adlar, düzeltildi), `GERI-BILDIRIM-KAYDI.md` madde 34D.
 
 ---
 
