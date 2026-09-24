@@ -118,6 +118,16 @@ birleştirir. Sabit etikete bağlı tüketicilere (`#vX.Y.Z`) hiç gelmez, elle 
 | 37B | Nokta→ondalık **varsayılan** olsun | Talep #9 (elenen aday) | ❌ **Red** — binlik yazan kullanıcıyı bozar; tahmine dayalı |  |
 | 37C | Eksi işaretinin silinmesi düzeltilsin | Talep #9 (bilgi notu) | ❌ **Red** (ertelendi) — gerçek ekran ihtiyacı bildirilmedi | — |
 | 38 | `dotAsDecimal` karışık biçimi bozuyor (`1.234,56` → `1,23456`) | Talep #10 (issue #42) | ✅ Kabul — **hata düzeltmesi** | 4.1.1 |
+| 39 | Para gösterim standardı: `₺1.234,56` (solda, boşluksuz), metin içinde `1.234,56 TL`; sondaki simge desteklenmez | Talep #11 (issue #47) | ✅ **Teyit** — TCMB aslından okundu; davranış zaten böyle | — |
+| 39A | `money.display({ precision })` — tek gösterim kapısı | Talep #11 aday 1 | ❌ **Red** — `formatMajor`/`compactMajor` üstüne ikinci kapı (33C/33D emsali) | — |
+| 39B | `money.withDefaults(opts)` — proje varsayılanı | Talep #11 aday 2 | ❌ **Red** (ertelendi) — tek tüketici; sondaki simgeyi önlemezdi | — |
+| 39C | Sıfır tutarda simge (`zero: 'symbol'` → `₺0,00`) | Talep #11 aday 3 | ✅ Kabul — **seçenek olarak**; varsayılanı sonraki MAJOR'a aday | bekliyor |
+| 39D | `compactMajor`: sabit hane (`digits`) ve alt ölçek sınırı (`minScale`) | Talep #11 aday 4 | ✅ Kabul · `space` seçeneği **açık** (yazım kaynağı okunmadı) | bekliyor |
+| 39E | `currency: 'TL'` takma adı ve kayıt defterine CHF | Talep #11 aday 5 | ❌ **Red** — anahtarlar ISO 4217; CHF'nin tek simgesi yok; tanım nesnesi var | — |
+| 39F | Elle simge/`TL` birleştirmeyi yakalayan lint kuralı | Talep #11 aday 6 | ✅ Kabul — **`strict`** (madde 35) | bekliyor |
+| 40A | `dotAsDecimal` kontrollü kutuda kendi çıktısını bozuyor (`8.534` + `0` → `8,5340`) | Talep #12 (issue #48) | ✅ Kabul — **hata**; çözüm `previous` seçeneği, talebin önerdiği kural DEĞİL | 4.2.0 |
+| 40B | `formatGroupedInput` ondalık hane sınırı | Talep #12 aday 2 | ✅ Kabul — adı `maxDigits` (talepte `maxFraction`) | 4.2.0 |
+| 40C | `parse` ile `parseNumber` hizalansın | Talep #12 aday 3 | ❌ **Red** — fark bilinçli; KILAVUZ'a "hangi okuyucu" notu eklendi | 4.2.0 (belge) |
 
 ---
 
@@ -501,6 +511,67 @@ etkilediği için kırıcı sayıldı ve 3.0.0 ile birlikte verildi.
 `math.round(x, d)` bilinçli olarak değiştirilmedi: ilkel katmandadır ve doğrulamayı
 motor kapılarına bırakır (ABACUS-SPEC §2.2).
 
+### 39A · `money.display({ precision })` — tek gösterim kapısı
+
+**Karar: red — aynı işin ikinci kapısı (33C/33D emsali).**
+
+`precision`'ın üç değeri çekirdekte zaten var olan üç çağrının yeni adıdır:
+`'full'` = `formatMajor(v, { kurus: true })`, `'whole'` = `formatMajor(v)`,
+`'compact'` = `compactMajor(v)`. Yeni bir hesap ya da yeni bir karar taşımıyor. Talebin
+asıl derdi (ekranın tek bir karar vermesi) tüketicide tek satırlık bir sarmalayıcıyla
+karşılanır ve o sarmalayıcı madde 39C/39D gelince elle kısaltma ya da elle sıfır
+yazmak zorunda kalmaz.
+
+**Yeniden başvuru koşulu:** `formatMajor`/`compactMajor` ile ifade EDİLEMEYEN bir
+gösterim kararı.
+
+### 39B · `money.withDefaults(opts)` — proje varsayılanı
+
+**Karar: red (ertelendi) — tek tüketici; gösterilen sorunu da çözmüyor.**
+
+Talebin kök neden tespiti "çekirdekte proje varsayılanı yok, sondaki simge bu boşluktan
+doğdu" idi. Ölçülen olgu bunu desteklemiyor: sondaki simge panelin **kendi kararı**
+(PR #169, CHANGELOG 1.7.2 "Simge sona alındı"); bir fabrika fonksiyonu o kararı
+engellemezdi, sarmalayıcı yine `+ ' ₺'` yazabilirdi. Elle birleştirmeyi yakalayan şey
+madde 39F'dir. `withDefaults` ayrıca tüketicide üç satırdır
+(`(v, o) => money.formatMajor(v, { ...VARSAYILAN, ...o })`) ve yalnız bir tüketicide
+ölçüldü (§4.1 Sınır durumu 3: emin değilsen alma).
+
+**Yeniden başvuru koşulu:** ikinci bir tüketicide aynı seçenek kümesini tekrar yazan
+ve birbirinden **sapan** sarmalayıcıların ölçülmesi.
+
+### 39E · `currency: 'TL'` takma adı ve CHF
+
+**Karar: red — tüketici veri sınırında eşler; talep bu sonucu önceden kabul etmişti.**
+
+- **`'TL'`:** kayıt defterinin anahtarları ISO 4217 kodlarıdır. `TL`, TRY'nin **metin
+  kısaltmasıdır** (`CurrencyDef.text`), para birimi kodu değildir. Takma ad kabul
+  etmek bir kapı açar (`YTL`, `$`, `TRL`…) ve `resolveCurrency`'nin "tanınmayan kodda
+  uydurma yapma" sözleşmesini bulanıklaştırır. Veride `'TL'` tutan tüketici onu okuma
+  anında `'TRY'`ye eşler.
+- **CHF:** tek ve evrensel bir simgesi yok (`CHF`, `Fr.`). Kayda eklemek çekirdeğin bir
+  simge seçmesi demek. Kayıt defterinin tasarım ilkesi bu durum içindir: tüketici
+  `{ code: 'CHF', symbol: …, text: 'CHF', minorDigits: 2 }` tanımını kendisi verir.
+
+**Yeniden başvuru koşulu (CHF):** simgesi tartışmasız olan bir birim, ya da çekirdeğin
+simge konumu ve boşluğunu okuyucu diline göre seçmeye başlaması (madde 25 notu).
+
+### 40C · `parse` ile `parseNumber` hizalansın
+
+**Karar: red — fark bilinçli; belge eksikti, belge düzeltildi (4.2.0).**
+
+İki fonksiyon iki ayrı iş yapıyor:
+
+| | `money.parse` | `money.parseNumber` |
+|---|---|---|
+| İş | para metni → **kuruş** | Türkçe sayı metni → sayı |
+| `'1.234,567'` | `null` — üçüncü hane kuruşa sığmaz; yuvarlamak sessiz veri kaybı olurdu | `1234.567` |
+| `'₺1.234,56'` | `123456` — ayna kuralı: çekirdeğin ürettiğini okur | `null` — para simgesi tanımaz |
+
+Tüketicinin yaşadığı çelişki (kutu, `parse`'ın reddettiği metni üretebiliyordu) madde
+40B ile kapandı: para kutusunda `maxDigits: 2` verilince kutu o metni hiç üretmez.
+KILAVUZ'a "kutu metnini hangi okuyucu okumalı" notu eklendi.
+
 ---
 
 ## Tüketicinin kendi eleyip göndermediği adaylar
@@ -529,6 +600,18 @@ teminat oranları (mevzuata bağlı, madde 10) · finansman giderinin matrahtan 
 kademeli araç maliyeti (`math.ceil` + `mul` karşılıyor) · başabaş çözücü (sınavı geçiyor,
 tek tüketici, analitik çözüm var) · `currency.breakEvenRate` (tek bölme) · kalem başına
 teklif fiyatı (alan kavramı).
+
+**Talep #11 (GHS-Panel, para gösterimi):** 10 aday, 6'sı gönderildi. Elenenler:
+`money.parse` sondaki `₺`'yi okusun (resmî olmayan biçimi meşrulaştırır; ayna kuralı) ·
+`symbolPosition: 'trailing'` (madde 25 gerekçesi; TCMB kuralı) · `formatPremium` /
+`formatCommission` (poliçe, komisyon: alan kavramı) · panelin kendi sarmalayıcıları
+(tüketiciye özel varsayılan). Çekirdek dört elemeye de katılıyor.
+
+**Talep #12 (GHS-Panel, tutar giriş kutusu):** 8 aday, 3'ü gönderildi. Elenenler:
+`allowNegative` (madde 37C'ye yeni olgu yok; iade tutarları pozitif girilip işareti iş
+kuralıyla veriliyor) · sondaki virgüle izin (`blur`'da tüketici çözüyor) ·
+`parsePasted` tahmini (madde 37B) · `MoneyInput` bileşeni (arayüz katmanı) ·
+`money.parseInput` (`parse` zaten kuruş döndürüyor). Çekirdek beş elemeye de katılıyor.
 
 ---
 
@@ -563,6 +646,85 @@ bildirir:
   yayımlanan ölçümleri etkilemiyor: `tam_dagitim` üslü yazımda (`1e-07`) ölçeği 0 alıyor;
   `basit_yuvarlama` ondalıklı ağırlık toplamında `InvalidOperation` fırlatıyor. Aynı üslü
   yazım tuzağı JS'te de vardır (`String(1e-7) === "1e-7"`); çekirdek bunu testle çiviledi.
+
+---
+
+### Talep #12 — `dotAsDecimal` kontrollü kutuda kendi çıktısını bozuyor (madde 40)
+
+**İddialar bağımsız ölçüldü: 18 çıktının 18'i birebir aynı** (`ae1630d`, temiz kurulum).
+
+**40A — kabul; madde 38 ile AYNI sınıf hata, ikinci kez.** Kontrollü kutuda her tuşta
+kutunun önceki çıktısı yeniden biçimlenir. 1.000 ve üzerindeki her tutarda o çıktı bir
+binlik noktası taşır ve bir sonraki tuşta ondalık sanılır: `8.534` + `0` → `8,5340`
+(10.000 kat). Çekirdeğin ölçümü talebin görmediği bir yol daha buldu: **silme de
+bozuk.** `85.340,` kutusunda virgül silinince `85,340` (1000 kat).
+
+**Talebin önerdiği kural ALINMADI — ölçüldü, hatayı düzeltmiyor.** Öneri "binlik grup
+desenine uymayan nokta ondalıktır" idi. Ama geri beslenen metin `8.5340`, yani nokta
+dört hanelik bir grubun önünde; desene uymuyor ve yine ondalık sayılıyor. Silmede
+gelen `85.34` de desene uymuyor. Kural üstelik madde 37'nin TAKAS sözleşmesini
+değiştiriyordu: yapıştırılan `1.234`, `1,234` yerine `1.234` kalıyordu.
+
+**Kök neden: durumsuz bir fonksiyon bunu bilemez.** `85.34` metninde nokta kullanıcıdan
+da gelmiş olabilir (yapıştırdı) kütüphaneden de (`85.340`'tan bir rakam sildi). İki
+niyet aynı metinde. Cevap önceki metinde: **`previous` seçeneği.** Önceki ve yeni metnin
+ortak başı ve sonu değişmemiş kısımdır, oradaki noktalar kütüphanenin binlik
+ayraçlarıdır; yalnız eklenen parçadaki nokta ondalık sayılabilir. `previous`
+fonksiyonun kendi çıktısı değilse (ör. `String(98.5)`) durumsuz kurala düşülür.
+
+| | 4.1.1 | talebin önerisi | 4.2.0 (`previous`) |
+|---|---|---|---|
+| tuş tuş `85340.50` | `8,534050` | `8,534050` | `85.340,50` |
+| `85.340,`'tan virgül silinir | `85,340` | `85.340` → sonra `85,34` | `85.340` → `8.534` |
+| boş kutuya `1.234` | `1,234` | `1.234` (TAKAS değişti) | `1,234` |
+
+`previous` verilmezse davranış değişmez; bu yüzden MINOR. Kontrollü kutuda
+`dotAsDecimal` açan tüketici `previous`'u da vermelidir (KILAVUZ'da örnek var).
+
+**40B — kabul, adıyla birlikte.** Talep `maxFraction` önerdi; çekirdekte ondalık hane
+sayısı her yerde `digits` (`FormatMoneyOptions.digits`, `fmtDecimalGrouped(v, digits)`),
+bu yüzden `maxDigits`. Fazla hane **kesilir**, yuvarlanmaz. `0` tam sayı kutusudur.
+Geçersiz değerde `'—'` (`text.digits` emsali).
+
+**Ders — bir giriş seçeneği, kutunun kendi döngüsünde sınanmadan kabul edilmez.**
+37A ve 38'in testleri adımları ham metinle veriyordu (`['9', '98', '98.', …]`);
+gerçek kutuda adım `f(önceki çıktı + tuş)`'tur. Madde 38'in dersi "yeni kolun eski
+girdilerle ne yaptığını ölç" idi; bu kez eski girdi, kütüphanenin **bir önceki tuştaki
+kendi çıktısıydı.** 4.2.0 testlerinin hepsi çıktıyı kutuya geri besliyor; yazma,
+silme, araya ekleme ve yapıştırma ayrı ayrı sınanıyor.
+
+**Canlı etki: yok.** GHS-Panel seçeneği hiç kullanmıyor. trade-kasa'nın `NumField`
+bileşeni seçeneği destekliyor, ama 2026-09-24 itibarıyla onu yalnız testi açıyor.
+
+### Talep #11 — para gösterimi (madde 39)
+
+**İddialar bağımsız ölçüldü: çekirdek çıktısı olan 19 satırın 19'u birebir aynı** (`ae1630d`;
+20. satır panelin elle birleştirmesi, çekirdek çıktısı değil).
+
+**Standart TCMB'nin kendi sayfasından okundu** (§4.2; talep ikincil kaynağa dayanıyordu).
+TCMB SSS: simge rakamın **solunda ve boşluksuz**; yazılı metinde `Türk lirası` ya da
+`TL`; grafik ve tablolarda simge; ikisi **aynı anda kullanılmaz**. Çekirdeğin çıktısı
+buna zaten uyuyor. Sondaki simge (`1.234,56 ₺`) desteklenmez ve `parse` onu okumaz.
+
+**39C — sıfırda simge: çekirdeğin kendi tutarsızlığı çıktı.** Metin biçimi sıfırda
+kısaltmayı KORUYOR (`0,00 TL`), simge biçimi simgeyi DÜŞÜRÜYOR (`0,00`). Üstelik
+`formatMajor(0.005, { kurus: true })` → `₺0,01` ama `formatMajor(0, { kurus: true })`
+→ `0,00`. İlk commit'ten beri yazılı bir gerekçesi yok ve TCMB tablolarda simge istiyor.
+Varsayılanı değiştirmek tüketicinin gördüğü çıktıyı değiştirir (§4.0 → MAJOR), bu
+yüzden önce **seçenek** gelir; varsayılan bir sonraki MAJOR'a adaydır (madde 23 → 24
+emsali). `compact(0)` da kapsanmalıdır (bugün `form: 'text'`'te bile `'0'`).
+
+**39D — kısa biçim.** `digits` (sabit hane: `₺1,20 Mr`) ve `minScale` (1 milyonun altı
+kısaltılmaz) alınır. `minScale` ayrıca çekirdekteki bir belirsizliği giderir: `'B'`
+varsayılan stilde **milyar**, `B/Mn/Mr` stilinde **bin** demektir. `space` açık kaldı:
+Türkçede sayı ile `Mn` arasına boşluk konup konmadığı bir yazım kaynağından okunmadan
+seçenek eklenmez.
+
+**39F — lint kuralı; kapsamı panelden geniş.** Kaba bir desen taraması (ölçüm değil;
+hata ve günlük metinleri de dahil) elle `₺`/`TL` eklemeyi başka tüketicilerin `src`
+dizinlerinde de gösterdi: SNN-Portfoy-Yonetimi ~26, SNN-Yonetici-Ozeti ~7. Kural
+`strict`e girer (madde 35). Uyarı: GHS-Panel çekirdeğin ESLint paketini hiç
+kullanmıyor; kural orada paket benimsenmeden etkisizdir.
 
 ---
 
@@ -660,3 +822,5 @@ yazılmıştır.
 | #8 | 19 Eylül 2026 | GHS-Panel: özel adlara hâl eki (issue #23; ikinci tüketici olarak Gunum-Var ölçüldü) | 3.4.0 → 3.5.0 |
 | #9 | 19 Eylül 2026 | trade-kasa: `formatGroupedInput` nokta ile ondalık (issue #40) | 4.0.0 → 4.1.0 |
 | #10 | 19 Eylül 2026 | trade-kasa: `dotAsDecimal` karışık biçim hatası (issue #42) | 4.1.0 → 4.1.1 |
+| #11 | 24 Eylül 2026 | GHS-Panel: para gösterimi, proje varsayılanı, elle simge ekleme (issue #47) | 4.1.1 → (39C/D/F bekliyor) |
+| #12 | 24 Eylül 2026 | GHS-Panel: `dotAsDecimal` kontrollü kutu hatası + hane sınırı (issue #48) | 4.1.1 → 4.2.0 |
