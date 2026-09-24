@@ -156,6 +156,47 @@ const silentNumericDefault = (operator) => ({
 const SILENT_DEFAULT_GATES = [silentNumericDefault('||'), silentNumericDefault('??')];
 
 /**
+ * ELLE PARA SİMGESİ / KISALTMASI EKLEME YASAĞI (v4.3.0, madde 39F).
+ *
+ * Ölçüm (talep #11, GHS-Panel): panelin yaygın `1.234,56 ₺` biçimi çekirdekten
+ * gelmiyordu; sayı çekirdekten alınıp sonuna elle `' ₺'` ekleniyordu. Aynı ekranda
+ * iki biçim yan yana duruyordu ve `money.parse` bu biçimi okuyamıyor. Kaba desen
+ * taraması aynı alışkanlığı başka tüketicilerde de gösterdi.
+ *
+ * TCMB: simge rakamın solunda ve boşluksuz; yazılı metinde `TL`; ikisi birlikte
+ * kullanılmaz. Çekirdek ikisini de üretir: `money.formatMajor(v)` -> `₺1.234,56`,
+ * `money.formatMajor(v, { form: 'text' })` -> `1.234,56 TL`.
+ *
+ * Yakalanan: `₺` içeren bir metnin `+` ile ya da şablon içinde bir değere
+ * bitiştirilmesi; bir değerin ardından yalnız ` TL` gelmesi. Yakalanmayan (yanlış
+ * alarm üretmemek için): tek başına `'₺'`, sütun başlığı `' (TL)'`, değişken
+ * içermeyen şablon.
+ */
+const MANUAL_CURRENCY_MESSAGE =
+  'Para simgesi/kısaltması elle eklenmiş (madde 39F). Tutarı money.formatMajor ile yazın: ' +
+  "simge biçimi '₺1.234,56', metin biçimi { form: 'text' } ile '1.234,56 TL'. " +
+  'TCMB: simge solda ve boşluksuz; simge ile TL birlikte kullanılmaz.';
+
+const MANUAL_CURRENCY_GATES = [
+  {
+    selector: "BinaryExpression[operator='+'] > Literal[value=/₺/]",
+    message: MANUAL_CURRENCY_MESSAGE,
+  },
+  {
+    selector: "BinaryExpression[operator='+'] > Literal[value=/^\\s*TL\\s*$/]",
+    message: MANUAL_CURRENCY_MESSAGE,
+  },
+  {
+    selector: 'TemplateLiteral[expressions.length>0] > TemplateElement[value.raw=/₺/]',
+    message: MANUAL_CURRENCY_MESSAGE,
+  },
+  {
+    selector: 'TemplateLiteral[expressions.length>0] > TemplateElement[value.raw=/^\\s*TL\\b/]',
+    message: MANUAL_CURRENCY_MESSAGE,
+  },
+];
+
+/**
  * `recommended` — MAJOR HAT İÇİNDE SABİT SÖZLEŞME.
  *
  * Tüketiciler `#semver:^3.x` ile bağlanır; minor sürümler onlara OTOMATİK iner.
@@ -184,7 +225,8 @@ const recommended = [
  * `strict` — `recommended` + henüz major hatta taşınmamış kapılar.
  *
  * Tüketici bunu **isteyerek** açar; hazır olmadan CI'ı kırılmaz. Bugün içerdiği
- * ek kapı: sessiz sayısal varsayılan yasağı (`?? 0`, `GERI_GUN[kod] ?? 1`).
+ * ek kapılar: sessiz sayısal varsayılan yasağı (`?? 0`, `GERI_GUN[kod] ?? 1`) ve
+ * elle para simgesi ekleme yasağı (`tutar + ' ₺'`, v4.3.0).
  *
  * Kullanımı: `...abacusEslint.configs.strict` (recommended yerine).
  */
@@ -193,7 +235,12 @@ const strict = [
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     rules: {
       'no-restricted-properties': ['error', ...MINOR_UNIT_GATES, ...FORMAT_GATES],
-      'no-restricted-syntax': ['error', INTL_GATE, ...SILENT_DEFAULT_GATES],
+      'no-restricted-syntax': [
+        'error',
+        INTL_GATE,
+        ...SILENT_DEFAULT_GATES,
+        ...MANUAL_CURRENCY_GATES,
+      ],
     },
   },
 ];
@@ -205,6 +252,15 @@ export default {
   formatGates: FORMAT_GATES,
   intlGate: INTL_GATE,
   silentDefaultGates: SILENT_DEFAULT_GATES,
+  manualCurrencyGates: MANUAL_CURRENCY_GATES,
 };
 
-export { recommended, strict, MINOR_UNIT_GATES, FORMAT_GATES, INTL_GATE, SILENT_DEFAULT_GATES };
+export {
+  recommended,
+  strict,
+  MINOR_UNIT_GATES,
+  FORMAT_GATES,
+  INTL_GATE,
+  SILENT_DEFAULT_GATES,
+  MANUAL_CURRENCY_GATES,
+};

@@ -37,6 +37,18 @@ export interface FormatMoneyOptions {
    * dört haneli çıktı `parse` ile geri okunamaz. Bilinçli kapsam sınırıdır.
    */
   digits?: number;
+  /**
+   * Sıfır tutarın yazımı (v4.3.0, madde 39C).
+   *
+   * - `'plain'` (varsayılan): simge biçiminde sıfır simgesiz yazılır, `'0,00'`.
+   * - `'symbol'`: sıfırda da para birimi işareti yazılır, `'₺0,00'`. Metin
+   *   biçimi zaten işaretliydi (`'0,00 TL'`), değişmez.
+   *
+   * Tablo sütununda `₺1.234,56` ile `0,00` yan yana tutarsız durur; TCMB tablolarda
+   * simge kullanılmasını ister. Varsayılan bir sonraki MAJOR sürümde `'symbol'`
+   * olmaya adaydır.
+   */
+  zero?: 'plain' | 'symbol';
 }
 
 /** Binlik ayraç ekleyici (Intl / toLocale kullanmadan) */
@@ -74,7 +86,8 @@ export function formatMoney(kurus: number | null | undefined, opts?: FormatMoney
 
   if (kurus === 0) {
     const zero = showKurus ? `0,${padMinor(0, cur.minorDigits)}` : '0';
-    return form === 'text' ? `${zero} ${cur.text}` : zero;
+    if (form === 'text') return `${zero} ${cur.text}`;
+    return opts?.zero === 'symbol' ? `${cur.symbol}${zero}` : zero;
   }
 
   const isNegative = kurus < 0;

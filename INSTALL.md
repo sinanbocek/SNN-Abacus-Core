@@ -306,6 +306,8 @@ export default [
       // Sessiz varsayılan korumasını istiyorsanız `recommended` yerine `strict`
       // açın (v3.5.1'den beri). `recommended` major hat içinde sabittir ve
       // minor sürümle sertleşmez — bu koruma bilinçli olarak opt-in'dir.
+      // `strict` v4.3.0'dan beri elle para simgesi eklemeyi de yakalar
+      // (`tutar + ' ₺'`, `${tutar} TL`); doğrusu money.formatMajor.
       'no-restricted-globals': [
         'error',
         {

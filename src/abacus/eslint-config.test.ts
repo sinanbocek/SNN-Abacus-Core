@@ -153,6 +153,45 @@ describe('yayınlanan ESLint yapılandırması — alt birim kapıları (rapor �
     expect(await lintStrict('const a = deger ?? 1;')).toHaveLength(0);
   });
 
+  // Madde 39F (talep #11, issue #47): GHS-Panel'in `1.234,56 ₺` biçimi çekirdekten
+  // gelmiyordu; sayı çekirdekten alınıp sonuna elle ' ₺' ekleniyordu. Kaba desen
+  // taraması aynı alışkanlığı başka tüketicilerde de gösterdi.
+  it('strict: elle eklenen para simgesi ve TL yakalanır', async () => {
+    for (const source of [
+      "const a = tutar + ' ₺';",
+      "const b = '₺' + tutar;",
+      'const c = `${tutar} ₺`;',
+      'const d = `₺${tutar}`;',
+      "const e = tutar + ' TL';",
+      'const f = `${tutar} TL`;',
+      "const g = money.fmtDecimalGrouped(v, 2) + ' ₺';",
+      "const h = 'Toplam: ₺' + tutar;",
+    ]) {
+      const messages = await lintStrict(source);
+      expect(messages, source).toHaveLength(1);
+      expect(messages[0]?.message, source).toContain('money.formatMajor');
+    }
+  });
+
+  it('strict: para simgesi elle eklenmeyen yazımlar yakalanmaz', async () => {
+    for (const source of [
+      'const a = money.formatMajor(v, { kurus: true });',
+      "const b = 'Tutar (TL)';",
+      "const c = '₺';",
+      'const d = `Toplam: ${money.formatMajor(v)}`;',
+      "const e = baslik + ' (TL)';",
+      'const f = `${adet} TLF kodu`;',
+      'const g = `Tutar ₺ cinsinden`;',
+      "const h = 'TL cinsinden: ' + tutar;",
+    ]) {
+      expect(await lintStrict(source), source).toHaveLength(0);
+    }
+  });
+
+  it('recommended elle simge kapısını İÇERMEZ (madde 35: minor sürümde eklenmez)', async () => {
+    expect(await lint("const a = tutar + ' ₺';")).toHaveLength(0);
+  });
+
   it('yapılandırma düz bir ESLint flat-config dizisidir', () => {
     expect(Array.isArray(abacusEslint.configs.recommended)).toBe(true);
     expect(abacusEslint.configs.recommended).toHaveLength(1);
