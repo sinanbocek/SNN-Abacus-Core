@@ -21,11 +21,30 @@ export interface ToWordsOptions {
   spaced?: boolean;
 }
 
+/** Kısaltma ölçeği. Adlar stilden bağımsızdır: `'B'` harfi bir stilde bin, ötekinde milyar demek. */
+export type CompactScale = 'thousand' | 'million' | 'billion';
+
 export interface CompactMoneyOptions {
   style?: 'K/M' | 'B/Mn/Mr';
   form?: 'symbol' | 'text';
   /** Yerleşik kod veya tam tanım. v2.2.0 öncesinde bu seçenek YOK SAYILIYORDU. */
   currency?: CurrencyRef;
+  /**
+   * Kısaltılmış değerin SABİT ondalık hane sayısı (v4.3.0, madde 39D): `2` ile
+   * `₺1,20Mn` ve `₺29,99Mn` aynı hanede yazılır, sütunda hizalanır. Verilmezse en
+   * çok 2 hane yazılır ve sondaki sıfır atılır (`₺1,2Mn`). Kısaltılmayan (ölçeğin
+   * altındaki) tutara uygulanmaz. Geçerli aralık 0–20; dışında `'—'`.
+   */
+  digits?: number;
+  /**
+   * Kısaltmanın başladığı en küçük ölçek (v4.3.0, madde 39D). Altındaki tutar tam
+   * yazılır: `minScale: 'million'` ile `1500` -> `₺1.500`. Varsayılan `'thousand'`.
+   * Türkçe stilde `'million'` seçmek `B` (bin) kısaltmasını ekrandan kaldırır.
+   * Geçersiz değerde `'—'`.
+   */
+  minScale?: CompactScale;
+  /** Sıfır tutarın yazımı; bkz. `FormatMoneyOptions.zero` (v4.3.0, madde 39C). */
+  zero?: 'plain' | 'symbol';
 }
 
 /**
@@ -500,12 +519,25 @@ export function toWords(kurus: number, opts?: ToWordsOptions): string {
   return `${prefix}${majorWords}${joinStr}Lira${joinStr}${minorWords}${joinStr}Kuruş`;
 }
 
+/** Ölçekler küçükten büyüğe; birim harfi stile göre seçilir. */
+const COMPACT_SCALES: readonly { name: CompactScale; divisor: number; km: string; tr: string }[] = [
+  { name: 'thousand', divisor: 1000, km: 'K', tr: 'B' },
+  { name: 'million', divisor: 1000000, km: 'M', tr: 'Mn' },
+  { name: 'billion', divisor: 1000000000, km: 'B', tr: 'Mr' },
+];
+
 export function compact(kurus: number | null | undefined, opts?: CompactMoneyOptions): string {
   if (kurus === null || kurus === undefined || !Number.isFinite(kurus)) {
     return '—';
   }
+  const digits = opts?.digits;
+  if (digits !== undefined && !isValidDigits(digits)) return '—';
+  const minScale = opts?.minScale ?? 'thousand';
+  const firstScale = COMPACT_SCALES.findIndex((s) => s.name === minScale);
+  if (firstScale === -1) return '—';
 
-  if (kurus === 0) {
+  // Varsayılan yol para birimini çözmeden döner (bugünkü davranış: geçersiz birimde de '0').
+  if (kurus === 0 && opts?.zero !== 'symbol') {
     return '0';
   }
 
@@ -514,55 +546,57 @@ export function compact(kurus: number | null | undefined, opts?: CompactMoneyOpt
   const cur = resolveCurrency(opts?.currency);
   if (cur === null) return '—';
 
+  if (kurus === 0) {
+    return form === 'text' ? `0 ${cur.text}` : `${cur.symbol}0`;
+  }
+
   const isNegative = kurus < 0;
   const absMinor = abs(kurus);
   const majorValue = div(absMinor, minorFactor(cur));
 
   if (majorValue === null) return '—';
 
-  // 1.000 birim altı kısaltmasız standart biçime düşer
-  if (majorValue < 1000) {
+  // Ölçek eşiğinin altı kısaltmasız standart biçime düşer
+  const floorScale = COMPACT_SCALES[firstScale];
+  if (floorScale === undefined || majorValue < floorScale.divisor) {
     return format(kurus, { form, kurus: false, currency: cur });
   }
 
-  let divisor = 1000;
-  let unit = style === 'K/M' ? 'K' : 'B';
-
-  if (majorValue >= 1000000000) {
-    divisor = 1000000000;
-    unit = style === 'K/M' ? 'B' : 'Mr';
-  } else if (majorValue >= 1000000) {
-    divisor = 1000000;
-    unit = style === 'K/M' ? 'M' : 'Mn';
+  // HATA DÜZELTMESİ (v4.3.0, madde 41): terfi kararı eskiden birim HARFİNE bakıyordu;
+  // varsayılan stilde 'B' milyar olduğu için 2 trilyon '₺2M' yazılıyordu. Artık sıraya
+  // bakılır ve en üst ölçek (milyar) aşılmaz.
+  let index = firstScale;
+  for (let i = firstScale + 1; i < COMPACT_SCALES.length; i++) {
+    const next = COMPACT_SCALES[i];
+    if (next !== undefined && majorValue >= next.divisor) index = i;
   }
 
-  // Sessiz varsayilan (?? 0) yok: hesaplanamazsa bicimlendirme sentineli doner.
-  const scaled = div(majorValue, divisor);
-  if (scaled === null) return '—';
-  let scaledVal = scaled;
+  const places = digits ?? 2;
+  const roundAt = (i: number): number | null => {
+    const scale = COMPACT_SCALES[i];
+    if (scale === undefined) return null;
+    const scaled = div(majorValue, scale.divisor);
+    // Sessiz varsayilan (?? 0) yok: hesaplanamazsa bicimlendirme sentineli doner.
+    return scaled === null ? null : round(scaled, places);
+  };
 
-  let roundedVal = round(scaledVal, 2);
-
-  // Yuvarlama sonrası 1000 ve üzerine ulaşırsa üst ölçeğe terfi et
-  if (roundedVal >= 1000) {
-    if (unit === 'K' || unit === 'B') {
-      const promoted = div(roundedVal, 1000);
-      if (promoted !== null) {
-        scaledVal = promoted;
-        unit = style === 'K/M' ? 'M' : 'Mn';
-        roundedVal = round(scaledVal, 2);
-      }
-    } else if (unit === 'M' || unit === 'Mn') {
-      const promoted = div(roundedVal, 1000);
-      if (promoted !== null) {
-        scaledVal = promoted;
-        unit = style === 'K/M' ? 'B' : 'Mr';
-        roundedVal = round(scaledVal, 2);
-      }
-    }
+  let roundedVal = roundAt(index);
+  // Yuvarlama sonrası 1000 ve üzerine ulaşırsa üst ölçeğe terfi et (üst ölçek varsa)
+  if (roundedVal !== null && roundedVal >= 1000 && index + 1 < COMPACT_SCALES.length) {
+    index++;
+    roundedVal = roundAt(index);
   }
+  const scale = COMPACT_SCALES[index];
+  if (roundedVal === null || scale === undefined) return '—';
+  const unit = style === 'K/M' ? scale.km : scale.tr;
 
-  const numStr = String(roundedVal).replace('.', ',');
+  const [intText, fracText = ''] = String(roundedVal).split('.');
+  const numStr =
+    digits === undefined
+      ? String(roundedVal).replace('.', ',')
+      : digits === 0
+        ? `${intText}`
+        : `${intText},${fracText.padEnd(digits, '0')}`;
 
   const scaledWithUnit = `${numStr}${unit}`;
   // v2.2.0: burada para birimi YOK SAYILIYORDU; compact(x, {currency:'USD'})

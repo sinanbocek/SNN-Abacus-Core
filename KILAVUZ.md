@@ -340,13 +340,34 @@ money.formatMajor(1.2345, { currency: 'TRY', digits: 4, kurus: true })   // → 
 
 `digits` para biriminin hane sayısını geçersiz kılar; simge ve kısaltma çekirdekte kalır.
 
+**Sıfır tutar (tablo sütunu)**
+
+```js
+money.formatMajor(0, { kurus: true })                     // → '0,00'
+money.formatMajor(0, { kurus: true, zero: 'symbol' })     // → '₺0,00'
+```
+
+Tabloda `₺1.234,56` ile `0,00` yan yana tutarsız durur; sütunda `zero: 'symbol'` verin.
+Sıfırı elle yazmayın.
+
+⚠️ **Simgeyi elle eklemeyin** (`tutar + ' ₺'`). Simge rakamın solunda ve boşluksuz
+yazılır (`₺1.234,56`); metin içinde `formatMajor(v, { form: 'text' })` → `1.234,56 TL`.
+Sondaki simge (`1.234,56 ₺`) resmî biçim değildir ve `money.parse` onu okumaz.
+Yayınlanan ESLint yapılandırmasının `strict` seti bunu yakalar.
+
 **Kısaltmak (grafik ekseni, özet kartları)**
 
 ```js
 money.compact(150000000)                              // → '₺1,5M'
 money.compact(150000000, { style: 'B/Mn/Mr' })        // → '₺1,5Mn'
 money.compactMajor(1500000, { style: 'B/Mn/Mr' })     // → '₺1,5Mn'
+money.compactMajor(1200000, { style: 'B/Mn/Mr', digits: 2 })           // → '₺1,20Mn'
+money.compactMajor(1500, { style: 'B/Mn/Mr', minScale: 'million' })    // → '₺1.500'
 ```
+
+Tablo sütununda `digits` verin, hepsi aynı hanede yazılır. `'B'` harfi varsayılan stilde
+milyar, `B/Mn/Mr` stilinde bin demektir; Türkçe ekranda `minScale: 'million'` ile bin
+ölçeği hiç kullanılmaz.
 
 **Sayı ve yüzde yazmak**
 

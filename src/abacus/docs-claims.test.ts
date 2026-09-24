@@ -532,6 +532,13 @@ describe('BELGE İDDİALARI — v2.5.0 (tüketici raporu karşılığı)', () =>
     expect(money.percent(-0.04, 1, { sign: 'never' })).toBe('%0');
   });
 
+  it('MOTOR-DETAYLARI: v4.3.0 compact seçenekleri ve en üst ölçek (madde 39C/D, 41)', () => {
+    expect(money.compact(120000000, { style: 'B/Mn/Mr', digits: 2 })).toBe('₺1,20Mn');
+    expect(money.compact(150000, { style: 'B/Mn/Mr', minScale: 'million' })).toBe('₺1.500');
+    expect(money.compact(0, { zero: 'symbol' })).toBe('₺0');
+    expect(money.compact(200000000000000)).toBe('₺2000B');
+  });
+
   it('MOTOR-DETAYLARI: compactMajor örnekleri', () => {
     expect(money.compactMajor(1500000, { style: 'B/Mn/Mr' })).toBe('₺1,5Mn');
     expect(money.compactMajor(1500000)).toBe('₺1,5M');

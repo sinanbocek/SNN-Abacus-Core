@@ -42,6 +42,15 @@ jobs:
       - name: Beceri ve issue sablonu butunluk kontrolu
         run: npm run beceri:dogrula
 
+      # AI-RULES §4.3: surum degistiren PR'da kayitta "bekliyor" durumunda kabul
+      # edilmis madde kalamaz. Her surum tum tuketicilerde yeni PR acar.
+      - name: Toplu surum kurali (bekleyen kabul varken surum cikmaz)
+        if: github.event_name == 'pull_request'
+        run: |
+          git fetch --depth=1 origin "${{ github.base_ref }}"
+          BASE=$(git show "origin/${{ github.base_ref }}:package.json" | node -e "let s='';process.stdin.on('data',(d)=>{s+=d}).on('end',()=>console.log(JSON.parse(s).version))")
+          npm run surum:toplu -- --base "$BASE"
+
       - name: Run ESLint
         run: npm run lint
 

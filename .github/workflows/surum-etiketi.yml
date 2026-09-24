@@ -71,6 +71,13 @@ jobs:
           fi
           echo "CHANGELOG kaydı bulundu: ## [$VERSION]"
 
+      # AI-RULES §4.3: her etiket TÜM tüketicilerde yeni güncelleme PR'ı açar. Kayıtta
+      # kabul edilmiş ama uygulanmamış madde varken sürüm çıkarsa tüketiciler birkaç
+      # dakika sonra ikinci kez güncellemek zorunda kalır (2026-09-24: 4.2.0 → 4.3.0).
+      - name: Bekleyen kabul var mı (toplu sürüm kuralı)
+        if: steps.kontrol.outputs.var == 'hayir'
+        run: node scripts/check-release-batching.mjs
+
       - name: Etiketi at ve gönder
         if: steps.kontrol.outputs.var == 'hayir'
         run: |

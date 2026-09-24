@@ -8,7 +8,7 @@
 > **karar vermek** için önce [KILAVUZ.md](KILAVUZ.md). Kenar durumları, sürüm geçmişi ve
 > tasarım gerekçeleri için bu belge. Bağlayıcı kurallar için [ABACUS-SPEC.md](ABACUS-SPEC.md).
 >
-> **Sürüm:** v4.2 serisi · **Kod dili:** İngilizce · **Bağımlılık:** yalnız `decimal.js` (yalnız `math` içinde)
+> **Sürüm:** v4.3 serisi · **Kod dili:** İngilizce · **Bağımlılık:** yalnız `decimal.js` (yalnız `math` içinde)
 
 ---
 
@@ -281,6 +281,8 @@ Kuruş tam sayısını para metnine çevirir.
 - `form?: 'symbol' | 'text'` — simge solda (`₺23.232`) veya kod sağda (`23.232 TL`); varsayılan `symbol`.
 - `negative?: 'minus' | 'paren'` — negatifte `-₺..` veya `(₺..)`; varsayılan `minus`.
 - `currency?: 'TRY' | 'USD'` — simge `₺`/`$`, kod `TL`/`USD`; varsayılan `TRY`.
+- `zero?: 'plain' | 'symbol'` (v4.3.0) — sıfır tutarın yazımı. `'plain'` (varsayılan): `0,00`;
+  `'symbol'`: `₺0,00`. Metin biçimi zaten işaretliydi (`0,00 TL`), değişmez. Karar: madde 39C.
 
 **DİKKAT — isim çakışması:** `kurus` hem 1. parametredir (girdi tutarı, integer) hem de opsiyon
 alanıdır (`opts.kurus`, "kuruş basamağı göster" boolean'ı). İkisi ayrıdır.
@@ -501,9 +503,16 @@ sınırının ötesinde `'—'`.
 Büyük tutar kısaltma. `CompactMoneyOptions`:
 - `style?: 'K/M' | 'B/Mn/Mr'` — bin/milyon/milyar birim etiketi; varsayılan `K/M`.
 - `form?: 'symbol' | 'text'`.
+- `digits?: number` (v4.3.0) — kısaltılmış değerin **sabit** ondalık hanesi (0–20; dışında `'—'`).
+  Verilmezse en çok 2 hane, sondaki sıfır atılır. Karar: madde 39D.
+- `minScale?: 'thousand' | 'million' | 'billion'` (v4.3.0) — kısaltmanın başladığı ölçek;
+  altındaki tutar tam yazılır. Varsayılan `'thousand'`. Karar: madde 39D.
+- `zero?: 'plain' | 'symbol'` (v4.3.0) — `'symbol'` ile sıfır `₺0` (metin biçiminde `0 TL`).
 
-**1.000 TL altı** kısaltmasız standart `format`'a düşer. Yuvarlama sonucu üst ölçeğe ulaşırsa
-terfi eder (ör. 999.999 TL → ₺1M). Örnekler:
+**1.000 TL altı** (ya da `minScale` eşiğinin altı) kısaltmasız standart `format`'a düşer.
+Yuvarlama sonucu üst ölçeğe ulaşırsa terfi eder (ör. 999.999 TL → ₺1M). **En üst ölçek
+milyardır**; trilyonlar milyar cinsinden yazılır (`₺2000B`). v4.3.0 öncesinde varsayılan
+stilde 1 trilyon ve üstü yanlışlıkla milyona terfi ediyordu (`₺2M`, madde 41). Örnekler:
 - `compact(123456789) → "₺1,23M"` · `compact(123456789, { style: 'B/Mn/Mr' }) → "₺1,23Mn"`
 - `compact(100000000) → "₺1M"` (gereksiz sıfır yok) · `compact(150000000) → "₺1,5M"`
 - `compact(1234500) → "₺12,35K"` · `compact(1234500, { style: 'B/Mn/Mr' }) → "₺12,35B"`
@@ -511,6 +520,9 @@ terfi eder (ör. 999.999 TL → ₺1M). Örnekler:
 - `compact(50000) → "₺500"` (1.000 TL altı, normal format) · `compact(-123456789) → "-₺1,23M"`
 - `compact(0) → "0"` · `compact(null) → "—"` · `compact(123456789, { form: 'text' }) → "1,23M TL"`
 - Ölçek sınırı: `compact(99999900) → "₺1M"` · `compact(99999990000) → "₺1B"` · `compact(99990000) → "₺999,9K"` (atlamaz)
+- Sabit hane: `compact(120000000, { style: 'B/Mn/Mr', digits: 2 }) → "₺1,20Mn"`
+- Alt ölçek: `compact(150000, { style: 'B/Mn/Mr', minScale: 'million' }) → "₺1.500"`
+- Sıfır: `compact(0, { zero: 'symbol' }) → "₺0"` · en üst ölçek: `compact(200000000000000) → "₺2000B"`
 
 ### `compactMajor(amountMajor, opts?): string` — v2.5.0
 `compact`'in **ana birim** ikizi; `format` / `formatMajor` çiftiyle simetriktir.
