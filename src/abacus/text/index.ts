@@ -872,6 +872,27 @@ const POSSESSIVE_ENDINGS = [
 /** Hâl ekinden önce kaynaştırma 'n'si gerektiren durum. */
 type BufferKind = 'abbreviation' | 'possessive' | null;
 
+/**
+ * Adın sonundaki sayının OKUNUŞUNUN son kelimesi; ad rakamla bitmiyorsa `null`.
+ *
+ * HATA DÜZELTMESİ (talep #13, issue #51): ek eskiden adın son HARFİNDEN alınıyordu
+ * ve sondaki rakamlar atlanıyordu: `17 Şubat 2027'a`, `Madde 40'den`. TDK: sayıya
+ * gelen ek okunuşa göre yazılır (`2027'ye`, `40'tan`). Kural `suffix` ile aynıdır:
+ * binlik noktalı sayı bütün okunur (`1.000.000` -> "milyon"), ondalıkta kesir kısmı
+ * okunur (`7,65` -> "altmış beş"). `Ek-6`'daki kısa çizgi eksi değildir; eksi
+ * zaten okunuşun sonunu değiştirmez.
+ */
+function trailingNumberReading(stem: string): string | null {
+  const match = /(\d{1,3}(?:\.\d{3})+|\d+)(?:,(\d+))?$/.exec(stem);
+  if (match === null) return null;
+  const [, whole = '', fraction] = match;
+  const readPart = fraction === undefined ? whole.replace(/\./g, '') : fraction;
+  // numberToWords güvenli tam sayı sınırı dışında '' döner; o zaman harf kuralına düşülür.
+  const words = numberToWords(Number(readPart), { spaced: true }).split(' ');
+  const last = words[words.length - 1];
+  return last ? last : null;
+}
+
 function bufferKindOf(trimmed: string): BufferKind {
   const folded = toTrLower(trimmed).replace(/[\s.]+$/, '');
   if (READING_ENDS_WITH_POSSESSIVE.some((abbr) => folded.endsWith(abbr))) return 'abbreviation';
@@ -908,17 +929,19 @@ export function properNounSuffix(name: string, kind: SuffixCase): string {
   if (!stem) return '—';
 
   const buffer = bufferKindOf(trimmed);
+  // Ad rakamla bitiyorsa ses çözümlemesi harflere değil sayının okunuşuna bakar.
+  const sound = trailingNumberReading(stem) ?? stem;
 
   // Kısaltmada harfler yanıltır; okunuş ince bittiği için 'i' kabul edilir.
-  const harmonySource = buffer === 'abbreviation' ? 'i' : (lastVowel(stem) ?? 'a');
+  const harmonySource = buffer === 'abbreviation' ? 'i' : (lastVowel(sound) ?? 'a');
   const back = isBackVowel(harmonySource);
   const wide = back ? 'a' : 'e';
   const narrow = getHarmonyVowel(harmonySource);
 
   const n = buffer ? 'n' : '';
   // Kaynaştırma 'n'sinden sonra ünsüz benzeşmesi olmaz: 'n' yumuşaktır, d kalır.
-  const d = buffer ? 'd' : endsWithHardConsonant(stem) ? 't' : 'd';
-  const vowelEnd = endsWithVowel(stem);
+  const d = buffer ? 'd' : endsWithHardConsonant(sound) ? 't' : 'd';
+  const vowelEnd = endsWithVowel(sound);
 
   switch (kind) {
     case 'loc':
