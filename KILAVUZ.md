@@ -660,6 +660,9 @@ text.properNounSuffix('Ziraat Bankası', 'loc') // → "Ziraat Bankası'nda"
 // Ad rakamla bitiyorsa ek sayının okunuşuna göre seçilir ("iki bin yirmi yedi" → 'ye')
 text.properNounSuffix('17 Şubat 2027', 'dat')  // → "17 Şubat 2027'ye"
 text.properNounSuffix('Madde 40', 'abl')       // → "Madde 40'tan"
+// Ünlüsüz kısaltma harf harf okunur (TDK: son harfin okunuşu) · kelime okunanlar okunuşuyla
+text.properNounSuffix('THY', 'loc')            // → "THY'de"
+text.properNounSuffix('NATO', 'abl')           // → "NATO'dan"
 text.suffix(2, 'percent', 'dat')      // → "%2'ye"
 text.suffix(150000, 'money', 'loc')   // → "₺1.500'da"
 text.suffix(-2, 'percent', 'dat')     // → "-%2'ye"

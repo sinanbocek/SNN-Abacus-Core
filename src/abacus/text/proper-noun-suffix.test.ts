@@ -68,11 +68,10 @@ describe('text.properNounSuffix', () => {
       expect(properNounSuffix(null as unknown as string, 'loc')).toBe('—');
     });
 
-    it('ünlüsüz ad çökmez', () => {
-      // NOT: doğru okunuş "be re te" -> ince olurdu ("BRT'de"). Kısaltma okunuşu
-      // yalnız listedeki kurum kısaltmaları için biliniyor; harf harf okunan
-      // kısaltmalar kapsam dışı (aşağıdaki bilinen sınır).
-      expect(properNounSuffix('BRT', 'loc')).toBe("BRT'ta");
+    it('ünlüsüz ad çökmez ve harf harf okunur', () => {
+      // TB-014 öncesi burada bilinen yanlış çivilenmişti ("BRT'ta"). Ünlüsüz kısaltma
+      // artık son harfin okunuşuna göre çekiliyor: "be re te" -> ince (TDK: THY'de).
+      expect(properNounSuffix('BRT', 'loc')).toBe("BRT'de");
     });
   });
 

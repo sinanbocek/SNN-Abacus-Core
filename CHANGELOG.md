@@ -8,7 +8,7 @@ sürümleme [Semantic Versioning](https://semver.org/lang/tr/) kurallarına uyar
 
 > `main`'de, henüz sürüm numarası almadı. Toplu sürüm kuralı (`AI-RULES §4.3`) gereği bir
 > sonraki pakette çıkar; 4.3.0 güncelleme PR'ları tüketicilerde hâlâ açık.
-> Karar: [`GERI-BILDIRIM-KAYDI.md`](GERI-BILDIRIM-KAYDI.md) madde 43 (talep #13, issue #51).
+> Karar: [`GERI-BILDIRIM-KAYDI.md`](GERI-BILDIRIM-KAYDI.md) madde 43 (talep #13, issue #51) ve madde 44 (TB-014).
 
 ### Düzeltilen — `text.properNounSuffix` rakamla biten adlarda yanlış ek seçiyordu
 
@@ -25,8 +25,43 @@ properNounSuffix('A4', 'loc')            'A4'da'              'A4'te'
 
 Binlik noktalı sayı bütün okunur (`2.000` → "iki bin" → `'e`), ondalıkta kesir kısmı okunur
 (`7,65` → "altmış beş" → `'te`). Harfle biten adlar **değişmedi**. Harf harf okunan
-kısaltmalardaki benzer kusur (`THY'da`, doğrusu `THY'de`) ayrı bir kayıttır:
-`docs/teknik-borc.md` TB-014.
+kısaltmalardaki benzer kusur aşağıda düzeltildi (TB-014).
+
+### Düzeltilen — "-aş" ile biten ad şirket kısaltması sanılıyordu (madde 44B)
+
+"AŞ" kısaltmasının noktasız yazımını tanıyan kural adın **sonuna** bakıyordu. "-aş" ile
+biten her ad (Aktaş, Karataş, Kocataş gibi yaygın soyadları, BOTAŞ) şirket kısaltması
+sanılıyor ve kaynaştırma "n"si alıyordu:
+
+```
+                                         önce                  sonra
+properNounSuffix('Ahmet Kocataş', 'dat') 'Ahmet Kocataş'ne'    'Ahmet Kocataş'a'
+properNounSuffix('Karataş', 'gen')       'Karataş'nin'         'Karataş'ın'
+properNounSuffix('BOTAŞ', 'gen')         'BOTAŞ'nin'           'BOTAŞ'ın'
+properNounSuffix('Koç AŞ', 'dat')        'Koç AŞ'ne'           'Koç AŞ'ne'   (değişmedi)
+```
+
+Kısaltma artık yalnız **ayrı kelime** olarak tanınıyor (`Koç AŞ`, `Sigorta A.Ş.`,
+`Ltd.Şti.`). v3.5.0'dan beri vardı. Bu işlevi müşteri adıyla çağıran ekranlar (ör. mesaj
+şablonları) bu hatayı müşteriye göstermiş olabilir.
+
+### Düzeltilen — ünlüsüz kısaltma harf harf okunur (TB-014, madde 44A)
+
+TDK: büyük harfli kısaltmaya ek, son harfin okunuşuna göre gelir.
+
+```
+                                   önce          sonra
+properNounSuffix('THY', 'loc')     'THY'da'      'THY'de'
+properNounSuffix('PTT', 'loc')     'PTT'ta'      'PTT'de'
+properNounSuffix('TDK', 'abl')     'TDK'dan'     'TDK'den'
+properNounSuffix('BMW', 'dat')     'BMW'a'       'BMW'ye'
+properNounSuffix('NATO', 'abl')    'NATO'dan'    'NATO'dan'   (kelime gibi okunur, değişmedi)
+```
+
+Yalnız **hiç ünlü içermeyen** büyük harf dizisi harf harf okunur; o kelime gibi okunamaz.
+Ünlü içeren ama harf harf okunan kısaltma (`ABD`, doğrusu `ABD'ye`) kelime okunuşlu
+kısaltmalarla (`AGİK`, `RTÜK`) aynı yazılır ve metinden ayırt edilemez. Bu **bilinen sınır**
+olarak kaldı (madde 44C).
 
 ---
 

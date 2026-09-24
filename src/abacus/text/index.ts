@@ -893,9 +893,50 @@ function trailingNumberReading(stem: string): string | null {
   return last ? last : null;
 }
 
+/**
+ * Harf harf okunan kısaltmanın son harfinin OKUNUŞU; ad öyle bitmiyorsa `null` (TB-014).
+ *
+ * TDK: büyük harfli kısaltmaya ek son harfin okunuşuna göre gelir (`THY'de`, `TDK'den`,
+ * `BDT'ye`); kelime gibi okunan kısaltmaya ise okunuşuna göre (`NATO'dan`, `AGİK'in`).
+ * İkisi aynı biçimde yazılır ve metinden ayırt edilemez. Kesin olan tek durum ele alınır:
+ * HİÇ ÜNLÜ İÇERMEYEN büyük harf dizisi kelime gibi okunamaz. Ünlü içeren ve harf harf
+ * okunan kısaltma (`ABD`, doğrusu `ABD'ye`) bilinen sınırdır; çekirdek tahmin etmez.
+ *
+ * Adın sonundaki EN UZUN büyük harf dizisine bakılır. Büyük harfle yazılmış bir kelime
+ * kendi ünlülerini de taşıdığı için (`SİGORTA`, `ASELSAN`) kısaltma sanılmaz.
+ */
+// Anahtarlar tanımlayıcı değil, harf VERİSİDİR; bu yüzden tırnak içinde.
+const LETTER_NAMES: Readonly<Record<string, string>> = {
+  'B': 'be', 'C': 'ce', 'Ç': 'çe', 'D': 'de', 'F': 'fe', 'G': 'ge', 'Ğ': 'ge', 'H': 'he',
+  'J': 'je', 'K': 'ke', 'L': 'le', 'M': 'me', 'N': 'ne', 'P': 'pe', 'R': 're', 'S': 'se',
+  'Ş': 'şe', 'T': 'te', 'V': 've', 'Y': 'ye', 'Z': 'ze',
+  // Türkçe alfabede yok; fiilî okunuş (§4.1 Sınır durumu 4).
+  'Q': 'kü', 'W': 've', 'X': 'iks',
+};
+
+function spelledLetterReading(stem: string): string | null {
+  const letters = /[A-ZÇĞİÖŞÜ]+$/.exec(stem)?.[0];
+  if (letters === undefined || /[AEIİOÖUÜ]/.test(letters)) return null;
+  return LETTER_NAMES[letters.slice(-1)] ?? null;
+}
+
+/**
+ * Okunuşu iyelik ekiyle biten kısaltma AYRI KELİME olarak mı duruyor?
+ *
+ * HATA DÜZELTMESİ (TB-014 çalışılırken ölçüldü): eskiden yalnız adın SONUNA bakılıyordu;
+ * noktasız `aş` yazımı yüzünden "-aş" ile biten her ad şirket kısaltması sanılıyordu:
+ * `Ahmet Kocataş'ne` (doğrusu `Kocataş'a`), `BOTAŞ'nin`. Artık kısaltmadan önce baş,
+ * boşluk ya da nokta gelmelidir: `Koç AŞ`, `Sigorta A.Ş.`, `Ltd.Şti.`.
+ */
+function endsWithStandaloneAbbreviation(folded: string): boolean {
+  return READING_ENDS_WITH_POSSESSIVE.some(
+    (abbr) => folded === abbr || folded.endsWith(` ${abbr}`) || folded.endsWith(`.${abbr}`)
+  );
+}
+
 function bufferKindOf(trimmed: string): BufferKind {
   const folded = toTrLower(trimmed).replace(/[\s.]+$/, '');
-  if (READING_ENDS_WITH_POSSESSIVE.some((abbr) => folded.endsWith(abbr))) return 'abbreviation';
+  if (endsWithStandaloneAbbreviation(folded)) return 'abbreviation';
   if (POSSESSIVE_ENDINGS.some((ending) => folded.endsWith(ending))) return 'possessive';
   return null;
 }
@@ -929,8 +970,9 @@ export function properNounSuffix(name: string, kind: SuffixCase): string {
   if (!stem) return '—';
 
   const buffer = bufferKindOf(trimmed);
-  // Ad rakamla bitiyorsa ses çözümlemesi harflere değil sayının okunuşuna bakar.
-  const sound = trailingNumberReading(stem) ?? stem;
+  // Ad rakamla ya da ünlüsüz bir kısaltmayla bitiyorsa ses çözümlemesi yazılan
+  // harflere değil OKUNUŞA bakar: `2027` -> "yedi", `THY` -> "ye".
+  const sound = trailingNumberReading(stem) ?? spelledLetterReading(stem) ?? stem;
 
   // Kısaltmada harfler yanıltır; okunuş ince bittiği için 'i' kabul edilir.
   const harmonySource = buffer === 'abbreviation' ? 'i' : (lastVowel(sound) ?? 'a');
