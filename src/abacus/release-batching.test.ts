@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 // @ts-expect-error — betik düz JS'tir, tip bildirimi yoktur.
-import { findPending } from '../../scripts/surum-toplu-dogrula.mjs';
+import { findPending } from '../../scripts/check-release-batching.mjs';
 
 /**
  * TOPLU SÜRÜM KURALI — ZORLAYICININ ZORLAYICISI (AI-RULES §4.3).
  *
- * `scripts/surum-toplu-dogrula.mjs`, kayıtta "bekliyor" durumunda kabul edilmiş madde
+ * `scripts/check-release-batching.mjs`, kayıtta "bekliyor" durumunda kabul edilmiş madde
  * varken sürüm çıkmasını durdurur (PR'da ve etiket anında). Bu test betiğin kayıt
  * tablosunu doğru okuduğunu ölçer; okuyamazsa kural sessizce ölür.
  */

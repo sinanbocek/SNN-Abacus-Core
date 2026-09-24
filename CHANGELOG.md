@@ -72,7 +72,7 @@ girdiler yalnız 1 trilyon ve üstü (varsayılan stil); eski çıktı yanlışt
 Her sürüm bütün tüketicilerde yeni bir güncelleme PR'ı açar. Artık aynı dönemde kabul
 edilen maddeler tek sürümde çıkar. Kayıtta "bekliyor" durumunda kabul edilmiş madde
 varken sürüm değiştiren PR'ın CI'ı kırılır ve etiket atılmaz
-(`scripts/surum-toplu-dogrula.mjs`).
+(`scripts/check-release-batching.mjs`).
 
 ---
 

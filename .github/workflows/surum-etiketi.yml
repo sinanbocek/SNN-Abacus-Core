@@ -76,7 +76,7 @@ jobs:
       # dakika sonra ikinci kez güncellemek zorunda kalır (2026-09-24: 4.2.0 → 4.3.0).
       - name: Bekleyen kabul var mı (toplu sürüm kuralı)
         if: steps.kontrol.outputs.var == 'hayir'
-        run: node scripts/surum-toplu-dogrula.mjs
+        run: node scripts/check-release-batching.mjs
 
       - name: Etiketi at ve gönder
         if: steps.kontrol.outputs.var == 'hayir'

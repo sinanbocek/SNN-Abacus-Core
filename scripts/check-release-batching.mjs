@@ -8,8 +8,8 @@
 // Tüketiciler iki kez güncellemek zorunda kaldı. Bu betik o durumu makinede durdurur.
 //
 // KULLANIM:
-//   node scripts/surum-toplu-dogrula.mjs                  -> bekleyen madde varsa hata (etiket anı)
-//   node scripts/surum-toplu-dogrula.mjs --base 4.2.0     -> yalnız sürüm DEĞİŞİYORSA denetler (PR)
+//   node scripts/check-release-batching.mjs                  -> bekleyen madde varsa hata (etiket anı)
+//   node scripts/check-release-batching.mjs --base 4.2.0     -> yalnız sürüm DEĞİŞİYORSA denetler (PR)
 //
 // "Bekliyor" = GERI-BILDIRIM-KAYDI.md durum tablosunda son sütunu (Sürüm) `bekliyor` olan satır.
 

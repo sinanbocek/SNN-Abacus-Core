@@ -60,7 +60,7 @@ Yazılı kural yetmez. Her katı kuralın otomatik zorlayıcısı vardır:
 - **CI kapısı (Node 22):** `npm ci → lint → tsc --noEmit → test:coverage`.
   Herhangi biri kırılırsa merge yok.
 - **Toplu sürüm kapısı (§4.3):** kayıtta "bekliyor" durumunda kabul edilmiş madde varken
-  sürüm değiştiren PR'ın CI'ı kırılır ve etiket atılmaz (`scripts/surum-toplu-dogrula.mjs`).
+  sürüm değiştiren PR'ın CI'ı kırılır ve etiket atılmaz (`scripts/check-release-batching.mjs`).
 
 Zorlanamayan madde "kural" değil "öneri"dir.
 
@@ -247,7 +247,7 @@ tüketici sayısı kadar ek iş yükü ve ek maliyettir.
 5. Bir madde hazır değilse (açık bir karar varsa) sürüm onun için bekletilmez. O madde
    gerekçesiyle "ertelendi" yapılır ve bir sonraki dönemin paketine kalır.
 
-**Makine zorlaması:** `scripts/surum-toplu-dogrula.mjs`. Durum tablosunda son sütunu
+**Makine zorlaması:** `scripts/check-release-batching.mjs`. Durum tablosunda son sütunu
 `bekliyor` olan satır varken:
 
 - sürümü değiştiren PR'ın CI'ı kırılır (`ci.yml` → "Toplu sürüm kuralı"),

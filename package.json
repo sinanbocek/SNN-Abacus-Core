@@ -37,7 +37,7 @@
     "test:coverage": "vitest run --coverage",
     "lint": "eslint .",
     "beceri:dogrula": "node scripts/beceri-dogrula.mjs",
-    "surum:toplu": "node scripts/surum-toplu-dogrula.mjs"
+    "surum:toplu": "node scripts/check-release-batching.mjs"
   },
   "dependencies": {
     "decimal.js": "^10.6.0"

@@ -662,7 +662,7 @@ gün iki kez güncellemek zorunda kaldı.
 **Sahip kararı:** "Aynı dönem içinde gelmiş talepler birden fazlaysa tek bir paket
 güncellemesiyle hepsi aynı pakete konur. Her yeni güncelleme ek iş yükü ve ek maliyettir."
 
-**Uygulama:** `AI-RULES §4.3`. Makine zorlaması `scripts/surum-toplu-dogrula.mjs`: kayıtta
+**Uygulama:** `AI-RULES §4.3`. Makine zorlaması `scripts/check-release-batching.mjs`: kayıtta
 son sütunu `bekliyor` olan satır varken sürüm değiştiren PR'ın CI'ı kırılır ve `main`'de
 etiket atılmaz. Geriye dönük sınandı: 4.2.0 çıkarken kapı olsaydı "39C, 39D, 39F bekliyor"
 diyerek sürümü durdururdu.
