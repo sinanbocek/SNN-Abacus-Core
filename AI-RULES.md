@@ -59,6 +59,8 @@ Yazılı kural yetmez. Her katı kuralın otomatik zorlayıcısı vardır:
   Kapsam düşerse CI kırılır; eşikler kapsam arttıkça yukarı çekilir.
 - **CI kapısı (Node 22):** `npm ci → lint → tsc --noEmit → test:coverage`.
   Herhangi biri kırılırsa merge yok.
+- **Toplu sürüm kapısı (§4.3):** kayıtta "bekliyor" durumunda kabul edilmiş madde varken
+  sürüm değiştiren PR'ın CI'ı kırılır ve etiket atılmaz (`scripts/surum-toplu-dogrula.mjs`).
 
 Zorlanamayan madde "kural" değil "öneri"dir.
 
@@ -217,6 +219,41 @@ koşul karşılanmadan yeniden tartışılmaz.
 - **Çekirdek sahibi bir §4.1 önerisini geçersiz kılarsa** karar uygulanır ve kayda
   "sahip kararıyla istisna — emsal değildir" diye işlenir. Kural sessizce
   esnetilmez; istisna görünür kılınır.
+
+### 4.3 Toplu sürüm — aynı dönemin talepleri TEK pakette çıkar
+
+**Her sürüm bir maliyettir.** Her etiket, çekirdeği kullanan **bütün** tüketicilerde yeni
+bir güncelleme PR'ı açar. Bir önceki PR "aşıldı" diye kapatılır ve tüketici süreci
+baştan başlatır: PR'ı okumak, CI'ı beklemek, birleştirmek, dağıtmak. Gereksiz her sürüm,
+tüketici sayısı kadar ek iş yükü ve ek maliyettir.
+
+> **Ölçüldü (2026-09-24):** talep #12 (issue #48) 4.2.0 olarak tek başına yayınlandı.
+> Aynı gün kabul edilen talep #11'in üç maddesi (39C/D/F) kayıtta "bekliyor"du ve
+> dakikalar sonra 4.3.0 gerekti. Tüketiciler aynı gün iki kez güncellemek zorunda kaldı.
+
+**Kural:**
+
+1. **Aynı dönemde kabul edilen maddelerin hepsi tek sürümde çıkar.** Bir talebi yayınlayıp
+   kısa süre sonra ötekini ayrı sürümle yayınlamak yasaktır.
+2. **Sürüm numarası değiştirilmeden önce** kayıttaki durum tablosuna bakılır. "Bekliyor"
+   durumunda kabul edilmiş madde varsa ya bu sürüme alınır ya da sahip kararıyla durumu
+   gerekçesiyle "ertelendi" yapılır. İkisi de değilse sürüm çıkmaz.
+3. **İş talep talep bölünmez.** "X'i uygula" talimatı gelmişse ama dönemin başka kabul
+   edilmiş maddeleri bekliyorsa, AI asistanı sürüme geçmeden önce sahibe sorar:
+   "Bekleyen başka maddeler de var (…); hepsini aynı sürüme koyayım mı?"
+   Varsayılan cevap: **hepsi birlikte.**
+4. **Tek istisna, canlıda zarar veren bir hatadır.** O durumda düzeltme tek başına
+   çıkabilir, ama yalnız sahibin açık onayıyla ve gerekçesi CHANGELOG'a yazılarak.
+5. Bir madde hazır değilse (açık bir karar varsa) sürüm onun için bekletilmez. O madde
+   gerekçesiyle "ertelendi" yapılır ve bir sonraki dönemin paketine kalır.
+
+**Makine zorlaması:** `scripts/surum-toplu-dogrula.mjs`. Durum tablosunda son sütunu
+`bekliyor` olan satır varken:
+
+- sürümü değiştiren PR'ın CI'ı kırılır (`ci.yml` → "Toplu sürüm kuralı"),
+- `main`'de etiket atılmaz (`surum-etiketi.yml` → "Bekleyen kabul var mı").
+
+Betiğin tabloyu doğru okuduğunu `release-batching.test.ts` ölçer.
 
 ---
 
