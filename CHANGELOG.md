@@ -4,6 +4,32 @@ Bu projedeki tüm önemli değişiklikler bu dosyada belgelenir.
 Format [Keep a Changelog](https://keepachangelog.com/tr/) temellidir;
 sürümleme [Semantic Versioning](https://semver.org/lang/tr/) kurallarına uyar.
 
+## [Yayınlanmadı]
+
+> `main`'de, henüz sürüm numarası almadı. Toplu sürüm kuralı (`AI-RULES §4.3`) gereği bir
+> sonraki pakette çıkar; 4.3.0 güncelleme PR'ları tüketicilerde hâlâ açık.
+> Karar: [`GERI-BILDIRIM-KAYDI.md`](GERI-BILDIRIM-KAYDI.md) madde 43 (talep #13, issue #51).
+
+### Düzeltilen — `text.properNounSuffix` rakamla biten adlarda yanlış ek seçiyordu
+
+Ek adın son **harfinden** alınıyor, sondaki rakamlar atlanıyordu. Doğrusu sayının
+**okunuşundan** almaktır (TDK); kural `text.suffix` ile aynıdır.
+
+```
+                                         önce                 sonra
+properNounSuffix('17 Şubat 2027', 'dat') '17 Şubat 2027'a'    '17 Şubat 2027'ye'
+properNounSuffix('Madde 40', 'abl')      'Madde 40'den'       'Madde 40'tan'
+properNounSuffix('Model 3', 'loc')       'Model 3'de'         'Model 3'te'
+properNounSuffix('A4', 'loc')            'A4'da'              'A4'te'
+```
+
+Binlik noktalı sayı bütün okunur (`2.000` → "iki bin" → `'e`), ondalıkta kesir kısmı okunur
+(`7,65` → "altmış beş" → `'te`). Harfle biten adlar **değişmedi**. Harf harf okunan
+kısaltmalardaki benzer kusur (`THY'da`, doğrusu `THY'de`) ayrı bir kayıttır:
+`docs/teknik-borc.md` TB-014.
+
+---
+
 ## [4.3.0] - 2026-09-24
 
 > Eklemeli: **seçenek verilmezse davranış değişmez** (tek istisna aşağıdaki hata düzeltmesi).
