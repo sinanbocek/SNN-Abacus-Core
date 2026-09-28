@@ -741,13 +741,21 @@ olarak saklanabilecek bir anahtar üretir.
 unit.convert(5000, 'm2', 'dönüm')    // → 5
 unit.convert(1, 'km', 'm')           // → 1000
 unit.convert(1, 'km', 'kg')          // → null
+unit.convert(750, 'ml', 'l')         // → 0.75
+unit.convert(1, 'm3', 'l')           // → 1000
+unit.convert(1, 'l', 'kg')           // → null
 unit.categoryOf('dekar')             // → 'area'
+unit.categoryOf('ml')                // → 'volume'
 unit.dataSize(5242880)               // → '5 MB'
 unit.dataSize(5242880, { digits: -1 })   // → '—'
 unit.ONS_TO_GRAM                     // → 31.1034768
 ```
 
-Farklı kategoriler arasında çevrim yapılmaz (`km` → `kg` `null`). `ONS_TO_GRAM` troy
+Farklı kategoriler arasında çevrim yapılmaz (`km` → `kg` `null`). Hacim de kütleye
+çevrilmez: `1 l` suyun kaç `kg` olduğu ürünün yoğunluğuna bağlıdır, çekirdek bunu varsaymaz.
+Hacim birimleri `mm3` `ml` `cm3` `l` `dm3` `m3`'tür; `lt`, `cl` ve galon tanınmaz.
+Ambalaj metnini (`"1.3LT"`, `"750 ML"`) sayı ve birime ayırmak çekirdeğin işi değildir
+(henüz); çağıran bunu yapıp `'l'` ya da `'ml'` verir. `ONS_TO_GRAM` troy
 onstur ve `gold`, `silver` ile aynı tek kaynaktan gelir:
 
 ```js

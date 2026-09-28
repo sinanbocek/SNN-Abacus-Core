@@ -222,6 +222,9 @@ describe('BELGE İDDİALARI — MOTOR-DETAYLARI: unit / silver / gold', () => {
     expect(unit.convert(1, 'ons', 'g')).toBe(31.1034768);
     expect(unit.convert(5000, 'm2', 'dönüm')).toBe(5);
     expect(unit.convert(5242880, 'B', 'MB')).toBe(5);
+    expect(unit.convert(750, 'ml', 'l')).toBe(0.75);
+    expect(unit.convert(1, 'm3', 'l')).toBe(1000);
+    expect(unit.convert(1, 'l', 'kg')).toBeNull();
     expect(unit.convert(NaN, 'm', 'km')).toBeNull();
     expect(unit.convert(-2, 'km', 'm')).toBe(-2000);
     expect(unit.dataSize(1536)).toBe('1,5 KB');

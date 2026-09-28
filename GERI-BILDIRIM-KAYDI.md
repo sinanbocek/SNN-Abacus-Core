@@ -137,6 +137,9 @@ birleştirir. Sabit etikete bağlı tüketicilere (`#vX.Y.Z`) hiç gelmez, elle 
 | 44C | Ünlü içeren harf harf kısaltma (`ABD'ye`) | TB-014 (sınır) | ❌ **Red** (ertelendi) — metinden ayırt edilemez; çekirdek tahmin etmez | — |
 | 44D | K harfi "ka" okunsun (`SGK'da`, `SGK'ya`) | Sahip (2026-09-24) | ⚠️ **Kabul — sahip kararıyla istisna** (TDK: "ke", `TDK'den`) | yayınlanmadı (main) |
 | 45 | `PlateResult.newRegistration` eklensin, `yeniKayit` eskisin (TB-013 adım 1) | TB-013 (iç denetim) | ✅ Kabul — **eklemeli**, kimse kırılmaz; silme bir sonraki MAJOR'da | yayınlanmadı (main) |
+| 47 | `unit` motoruna `volume` kategorisi (`mm3` `ml` `cm3` `l` `dm3` `m3`) — madde 30'un yeniden başvurusu | Talep #15 (Nakit Akış piyasa arşivi; İKN 2026/1666260 sepeti) | ✅ Kabul — **eklemeli**, kimse kırılmaz | yayınlanmadı (main) |
+| 47B | `cl` (santilitre) | Talep #15 (aday) | ❌ **Red** (ertelendi) — ölçümde görülmedi; sahip kararı | — |
+| 47C | Ambalaj metni ayrıştırma (`"1.3LT"` → `{ value, unit }`) | Talep #15 (aday) | ❌ **Red** (ertelendi) — biçim çeşitliliği ölçülmedi; tüketici kendisi erteledi | — |
 
 ---
 
@@ -225,6 +228,10 @@ hedefinden" türetti, sahadan ölçmedi.
 **Yeniden başvuru koşulu:** Hacim sürücüsüyle dağıtım yapan gerçek bir sepette birden çok
 hacim biriminin geldiğinin gösterilmesi. Önerilen tablo (`ml` tabanı; `cm3`, `l`, `dm3`,
 `m3`, `mm3`) ve İngiliz/ABD birimlerinin kapsam dışı tutulması kabul edilmiş sayılır.
+
+> **Yeniden başvuru kabul edildi → madde 47** (2026-09-28). Koşul dağıtım bağlamında
+> yazılmıştı; gelen olgu karşılaştırma fiyatı bağlamında, ama koşulun özü (tek gerçek
+> sepette birden çok hacim birimi) gösterildi.
 
 ### 31 · `allocate` eşitlikte büyük ağırlık öncelikli
 
@@ -657,6 +664,44 @@ bildirir:
   yazım tuzağı JS'te de vardır (`String(1e-7) === "1e-7"`); çekirdek bunu testle çiviledi.
 
 ---
+
+### Talep #15 — `unit` motoruna hacim (madde 47, madde 30'un yeniden başvurusu)
+
+**Kaynak.** SNN-Proje-ve-Nakit-Akış, "piyasa arşivi" tasarımı (`docs/analiz/piyasa-arsivi-tasarim.md`
+§4.4, §5): kamu ihalelerindeki geçmiş alım fiyatlarından **birim başına karşılaştırma fiyatı**
+(TL/litre). Talep issue olarak açılmadı; sahip bu oturumda doğrudan karar verdi (2026-09-28:
+"1a 2a 3b").
+
+**Olgu (tüketicinin okuması, ihalebul.com, 2026-09-27).** İKN 2026/1666260, 145 kalem:
+"Birimi" sütununda `litre` 23, `kilogram` 6; kalem adlarında `CAM TEMİZLEYİCİSİ 750 ML`,
+`ENFEKTE ATIK KUTUSU … 1.3LT`, `ÇÖP KOVASI … 40 LT`. İKN 2026/1711235'te `1 Lt`, `5 Lt`, `30 Lt`.
+Çekirdek EKAP'tan bağımsız doğrulamayı denedi, bağlantı reddedildi (HTTP 428); sayılar
+tüketicinin okumasıdır.
+
+**Ölçüm (çekirdek, `main` 79d94cc).** `convert(750,'ml','l')`, `convert(1.3,'l','ml')`,
+`convert(1,'m3','l')` → `null`; `categoryOf('ml')` → `null`; `convert(1000,'g','kg')` → `1`.
+Tüketicinin 4.1.1 ölçümüyle aynı.
+
+**İki zayıf nokta, kayda geçsin.**
+1. Ekran henüz yok; piyasa arşivi tasarım aşamasında. Veri gerçek.
+2. Sütundaki birim zaten tektir (`litre`); `ml` yalnız kalem adlarında. Ad metnini ayrıştırma
+   (47C) ertelendiği için `convert` bu veriye bugün yalnız kullanıcı girişinden ulaşır.
+
+Bu ikisi reddi haklı çıkarmadı: tablo SI ve sabit, madde 30'da zaten kabul edilmişti,
+kimseyi kırmıyor.
+
+**Kırılma ölçümü.** Kardeş projeler tarandı: çekirdeğin `unit` motorunu kullanan tüketici yok.
+`categoryOf` adıyla bulunan çağrılar GHS-Panel'in kendi işlevleri. `UnitCategory` türüne
+değer eklemek yalnız tüm değerleri tek tek kapsayan `switch` yazan kodu etkilerdi; yok.
+
+**Kapsam kararları.**
+- `lt` yazımı birim adı olarak **eklenmedi**. Birim adları SI simgesidir (`l`); EKAP yazımını
+  (`LT`, `Lt`, `litre`) okumak ayrıştırmanın (47C) işidir.
+- Hacim kütleye çevrilmez (`convert(1,'l','kg') → null`). Yoğunluk ürüne bağlıdır.
+- `cl` sahip kararıyla ertelendi (47B). Ölçümde görülmedi; `AI-RULES §4.1` Kural 3.
+
+**Sürüm.** Sahip kararı (2026-09-28): "yeni sürüm çıkartma, öncekiler gibi beklesin."
+`main`'e girer, `CHANGELOG.md` `[Yayınlanmadı]` altında bekler (madde 42, §4.3).
 
 ### Madde 45 — `yeniKayit` → `newRegistration`, iki adımda (TB-013)
 
