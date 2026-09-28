@@ -7,7 +7,7 @@ import { ONS_TO_GRAM } from '../internal/constants';
  *
  * Saf ve I/O'suz; tüm aritmetik `math` motoru üzerinden yürütülür.
  * Çevrim, birimin kendi kategorisindeki taban birime oranı üzerinden yapılır:
- *   uzunluk -> metre · ağırlık -> gram · alan -> metrekare · veri -> bayt
+ *   uzunluk -> metre · ağırlık -> gram · alan -> metrekare · hacim -> mililitre · veri -> bayt
  *
  * Kategoriler arası çevrim (ör. kg -> m) anlamsızdır ve `null` döner.
  * Geçersiz sayı veya tanınmayan birimde de `null` döner (sessiz 0 yoktur).
@@ -18,10 +18,11 @@ export { ONS_TO_GRAM };
 export type LengthUnit = 'mm' | 'cm' | 'm' | 'km';
 export type MassUnit = 'g' | 'kg' | 'ton' | 'ons';
 export type AreaUnit = 'm2' | 'dönüm' | 'dekar' | 'hektar' | 'km2';
+export type VolumeUnit = 'mm3' | 'ml' | 'cm3' | 'l' | 'dm3' | 'm3';
 export type DataUnit = 'B' | 'KB' | 'MB' | 'GB' | 'TB';
-export type Unit = LengthUnit | MassUnit | AreaUnit | DataUnit;
+export type Unit = LengthUnit | MassUnit | AreaUnit | VolumeUnit | DataUnit;
 
-export type UnitCategory = 'length' | 'mass' | 'area' | 'data';
+export type UnitCategory = 'length' | 'mass' | 'area' | 'volume' | 'data';
 
 interface UnitDef {
   category: UnitCategory;
@@ -35,6 +36,10 @@ interface UnitDef {
  * Alan birimleri Tapu ve Kadastro'nun metrik standardını izler:
  * 1 dönüm = 1 dekar = 1000 m². (Tarihî "eski dönüm" 919,3 m²'dir ve
  * KAPSAM DIŞIDIR; gerekirse ayrı bir birim adıyla eklenmelidir.)
+ *
+ * Hacim birimleri metrik SI'dır: 1 l = 1 dm³ = 1000 ml, 1 ml = 1 cm³. İngiliz/ABD
+ * birimleri (gallon, fl oz) ve `cl` KAPSAM DIŞIDIR (GERI-BILDIRIM-KAYDI madde 47).
+ * Hacim kütleye çevrilmez: yoğunluk ürüne bağlıdır, çekirdek varsayım yapmaz.
  *
  * Veri birimleri ikili tabandadır: 1 KB = 1024 B. (Ondalık taban 1 kB = 1000 B
  * kapsam dışıdır; gerekirse ayrı birim adlarıyla eklenmelidir.)
@@ -58,6 +63,14 @@ const UNITS: Record<Unit, UnitDef> = {
   dekar: { category: 'area', factor: 1000 },
   hektar: { category: 'area', factor: 10000 },
   km2: { category: 'area', factor: 1000000 },
+
+  // hacim — taban: mililitre
+  mm3: { category: 'volume', factor: 0.001 },
+  ml: { category: 'volume', factor: 1 },
+  cm3: { category: 'volume', factor: 1 },
+  l: { category: 'volume', factor: 1000 },
+  dm3: { category: 'volume', factor: 1000 },
+  m3: { category: 'volume', factor: 1000000 },
 
   // veri — taban: bayt (ikili)
   B: { category: 'data', factor: 1 },

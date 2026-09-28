@@ -1214,11 +1214,15 @@ kategorisindeki **taban birime** oranı üzerinden yapılır.
 | `length` | metre | `mm` (0.001) · `cm` (0.01) · `m` (1) · `km` (1000) |
 | `mass` | gram | `g` (1) · `kg` (1000) · `ton` (1e6) · `ons` (31.1034768, troy) |
 | `area` | metrekare | `m2` (1) · `dönüm` (1000) · `dekar` (1000) · `hektar` (10000) · `km2` (1e6) |
+| `volume` | mililitre | `mm3` (0.001) · `ml` (1) · `cm3` (1) · `l` (1000) · `dm3` (1000) · `m3` (1e6) |
 | `data` | bayt | `B` (1) · `KB` (1024) · `MB` (1024²) · `GB` (1024³) · `TB` (1024⁴) |
 
 **⚠️ Kapsam sınırları (bilinçli kararlar):**
 - `dönüm` = `dekar` = **1000 m²** (metrik / Tapu-Kadastro standardı). Tarihî
   "eski dönüm" (919,3 m²) **kapsam dışıdır**; gerekirse ayrı bir birim adıyla eklenir.
+- Hacim birimleri **metrik SI**'dır (madde 47). İngiliz/ABD birimleri
+  (gallon, fl oz) ve `cl` **kapsam dışıdır**. Hacim kütleye çevrilmez
+  (`convert(1,'l','kg') → null`): yoğunluk ürüne bağlıdır, çekirdek varsaymaz.
 - Veri birimleri **ikili tabandadır** (1 KB = 1024 B). Ondalık taban (1 kB = 1000 B)
   kapsam dışıdır; gerekirse ayrı birim adlarıyla eklenir.
 
@@ -1227,6 +1231,7 @@ Aynı kategorideki birimler arasında çevirir. **Kategori uyuşmazlığında, t
 birimde ve geçersiz sayıda `null`** (sessiz 0 yok).
 Örnekler: `convert(1,'km','m') → 1000` · `convert(5000,'m2','dönüm') → 5`
 · `convert(1,'ons','g') → 31.1034768` · `convert(5242880,'B','MB') → 5`
+· `convert(750,'ml','l') → 0.75` · `convert(1,'m3','l') → 1000`
 · `convert(1,'kg','m') → null` · `convert(NaN,'m','km') → null`.
 **Not:** `0` ve negatif değerler geçerlidir (gerçek değerdir, hata değil):
 `convert(-2,'km','m') → -2000`.

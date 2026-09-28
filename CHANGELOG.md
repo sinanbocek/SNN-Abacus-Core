@@ -8,10 +8,30 @@ sürümleme [Semantic Versioning](https://semver.org/lang/tr/) kurallarına uyar
 
 > `main`'de, henüz sürüm numarası almadı. Toplu sürüm kuralı (`AI-RULES §4.3`) gereği bir
 > sonraki pakette çıkar; 4.3.0 güncelleme PR'ları tüketicilerde hâlâ açık.
-> Karar: [`GERI-BILDIRIM-KAYDI.md`](GERI-BILDIRIM-KAYDI.md) madde 43 (talep #13, issue #51), madde 44 (TB-014)
-> ve madde 45 (TB-013 adım 1).
+> Karar: [`GERI-BILDIRIM-KAYDI.md`](GERI-BILDIRIM-KAYDI.md) madde 43 (talep #13, issue #51), madde 44 (TB-014),
+> madde 45 (TB-013 adım 1) ve madde 47 (hacim birimleri).
 >
-> ⚠️ **Bu paket bir alan EKLİYOR (`newRegistration`), yani sürüm en az MINOR olmalı (4.4.0).**
+> ⚠️ **Bu paket bir alan (`newRegistration`) ve bir birim kategorisi (`volume`) EKLİYOR,
+> yani sürüm en az MINOR olmalı (4.4.0).**
+
+### Eklenenler — `unit` motoruna hacim (madde 47)
+
+Yeni kategori `volume`, taban birimi mililitre. Birimler: `mm3` `ml` `cm3` `l` `dm3` `m3`.
+Kaynak: tek bir ihale malzeme listesinde `750 ML` ile `1.3LT` birlikte geliyor; aynı ürünün
+iki ambalajı ancak aynı birime çevrilince kıyaslanır.
+
+```
+unit.convert(750, 'ml', 'l')  -> 0.75
+unit.convert(1.3, 'l', 'ml')  -> 1300
+unit.convert(1, 'm3', 'l')    -> 1000
+unit.categoryOf('ml')         -> 'volume'
+unit.convert(1, 'l', 'kg')    -> null   (yoğunluk varsayılmaz)
+```
+
+Kapsam dışı: `cl`, galon, fl oz, `lt` yazımı. Ambalaj metnini (`"1.3LT"`) ayrıştırma bu
+sürümde yok. Kimse kırılmaz: `unit` motorunu kullanan tüketici yok (ölçüldü);
+`UnitCategory` türüne yeni değer eklenmesi yalnız tüm değerleri tek tek kapsayan bir
+`switch` yazan tüketiciyi etkilerdi, öyle bir kod bulunmadı.
 
 ### Eklenenler — `PlateResult.newRegistration` (TB-013 adım 1, madde 45)
 

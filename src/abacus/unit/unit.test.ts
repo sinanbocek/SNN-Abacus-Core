@@ -53,6 +53,40 @@ describe('ABACUS unit birim çevrim motoru', () => {
     it('5.242.880 B = 5 MB', () => expect(convert(5242880, 'B', 'MB')).toBe(5));
   });
 
+  // Madde 47 (madde 30'un yeniden başvurusu): tek ihale listesinde `750 ML` ile `1.3LT`
+  // birlikte geldi (İKN 2026/1666260). İngiliz/ABD birimleri ve `cl` kapsam dışıdır.
+  describe('hacim (metrik SI, taban: mililitre)', () => {
+    it('ihale sepetindeki ambalajlar aynı birime çevrilir', () => {
+      expect(convert(750, 'ml', 'l')).toBe(0.75);
+      expect(convert(1.3, 'l', 'ml')).toBe(1300);
+      expect(convert(5, 'l', 'ml')).toBe(5000);
+    });
+    it('1 m³ = 1000 l = 1.000.000 ml', () => {
+      expect(convert(1, 'm3', 'l')).toBe(1000);
+      expect(convert(1, 'm3', 'ml')).toBe(1000000);
+      expect(convert(2500, 'l', 'm3')).toBe(2.5);
+    });
+    it('1 dm³ = 1 l, 1 cm³ = 1 ml, 1 cm³ = 1000 mm³', () => {
+      expect(convert(1, 'dm3', 'l')).toBe(1);
+      expect(convert(1, 'cm3', 'ml')).toBe(1);
+      expect(convert(1, 'cm3', 'mm3')).toBe(1000);
+    });
+    it('küçük değerde float kaybı yoktur', () => {
+      expect(convert(0.1, 'l', 'ml')).toBe(100);
+      expect(convert(1, 'mm3', 'l')).toBe(0.000001);
+    });
+    it('hacim başka kategoriye çevrilmez; yoğunluk varsayılmaz', () => {
+      expect(convert(1, 'l', 'kg')).toBeNull();
+      expect(convert(1000, 'g', 'ml')).toBeNull();
+      expect(convert(1, 'm3', 'm2')).toBeNull();
+    });
+    it('kapsam dışı birimler tanınmaz', () => {
+      expect(convert(1, 'cl' as never, 'ml')).toBeNull();
+      expect(convert(1, 'gallon' as never, 'l')).toBeNull();
+      expect(convert(1, 'lt' as never, 'ml')).toBeNull();
+    });
+  });
+
   describe('kategori karışımı ve geçersiz girdi null döner (sessiz 0 yok)', () => {
     it('farklı kategoriler arası çevrimi reddeder', () => {
       expect(convert(1, 'kg', 'm')).toBeNull();
@@ -97,6 +131,9 @@ describe('ABACUS unit birim çevrim motoru', () => {
       expect(categoryOf('ons')).toBe('mass');
       expect(categoryOf('dönüm')).toBe('area');
       expect(categoryOf('GB')).toBe('data');
+      for (const u of ['ml', 'cm3', 'l', 'dm3', 'm3', 'mm3'] as const) {
+        expect(categoryOf(u)).toBe('volume');
+      }
     });
     it('tanınmayan birimde null döner', () => {
       expect(categoryOf('mil' as never)).toBeNull();

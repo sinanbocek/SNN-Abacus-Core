@@ -76,7 +76,7 @@ gerçekten çalıştırılır.
 | **`validate`** | `tckn` `vkn` `iban` `ikn` `email` | Resmî checksum doğrulamaları (TC kimlik, vergi no, TR IBAN) ve biçim denetimi. Hepsi `true`/`false`. |
 | **`mask`** | `money` `vkn` `iban` `phone` | Ekranda kişisel veriyi gizleme (`123****890`). Saklanan veriye dokunmaz. |
 | **`collate`** | `compare` `sortBy` `key` | Türkçe alfabetik sıralama: `ç`, `ğ`, `ı`, `ö`, `ş`, `ü` doğru yerde. |
-| **`unit`** | `convert` `categoryOf` `dataSize` `ONS_TO_GRAM` | Birim çevrimi (uzunluk, ağırlık, alan — dönüm/dekar dâhil) ve okunur dosya boyutu (`5 MB`). |
+| **`unit`** | `convert` `categoryOf` `dataSize` `ONS_TO_GRAM` | Birim çevrimi (uzunluk, ağırlık, alan — dönüm/dekar dâhil, hacim — ml/l/m³) ve okunur dosya boyutu (`5 MB`). |
 | **`gold`** | `gramGoldPrice` `ziynetPrice` `PURITY` `ZIYNET_GRAM` `ONS_TO_GRAM` | Ons fiyatı ve dolar kurundan gram altın (24/22/21/18 ayar) ve çeyrek/yarım/tam altın fiyatı, kuruş olarak. |
 | **`silver`** | `gramSilverPrice` `SILVER_PURITY` `ONS_TO_GRAM` | Ons fiyatı ve dolar kurundan gram gümüş fiyatı (999/925/800), kuruş olarak. |
 | **`tradingMath`** | `volumeFromQty` `qtyFromVolume` `leverage` · `validateTradeDirections` `computeRiskReward` `computePortfolioRatios` · `calculateThresholdDays` | BIST/VİOP işlem hesapları: pozisyon hacmi, kaldıraç, stop/hedef geçerliliği, risk-getiri oranı, portföy yoğunlaşması. |
