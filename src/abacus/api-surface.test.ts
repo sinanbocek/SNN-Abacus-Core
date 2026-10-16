@@ -32,7 +32,7 @@ const API_SURFACE: Record<string, string[]> = {
   money: [
     'compact', 'compactMajor', 'decimal', 'fmtDecimalGrouped', 'format', 'formatGroupedInput',
     'formatMajor', 'formatMinorInput', 'knownCurrencyCodes', 'parse',
-    'parseNumber', 'percent', 'ratio', 'toMinor', 'toWords',
+    'parseNumber', 'percent', 'ratio', 'taxFromGross', 'taxFromNet', 'toMinor', 'toWords',
   ],
   text: [
     'abbreviationSteps', 'company', 'email', 'endsWithHardConsonant', 'endsWithVowel', 'isBackVowel',

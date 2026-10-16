@@ -152,7 +152,7 @@ birleştirir. Sabit etikete bağlı tüketicilere (`#vX.Y.Z`) hiç gelmez, elle 
 | 48E | `math.median` | Talep #16 E (Nakit emsal arşivi tasarımı) | ✅ Kabul — **eklemeli**; üç yerel kopya ölçüldü (GHS-Panel, Portföy) | yayınlanmadı (main) |
 | 48F | Yüzdelik (`percentile`) | Talep #16 E | ❌ **Red** (ertelendi) — kod ve ekran yok; tanım bir tercihtir | — |
 | 48G | Başlık biçiminde kısaltma koruma (`productName`, sözlük parametresi) | Talep #16 F | ❌ **Red** (ertelendi) — tek tüketici; madde 46A ile birlikte tasarlanacak | — |
-| 48H | KDV dahil/hariç ayrıştırma — madde 48B'nin yeniden başvurusu | Nakit koordinatör oturumu (sahip talimatı, 2026-10-16) | ⏳ **Beklet** — kural nakit tarafında kararlaştırıldı (K17, iç yüzde); maliyet teyidi ve mali müşavir onayı bekleniyor | karar bekliyor |
+| 48H | KDV dahil/hariç ayrıştırma — madde 48B'nin yeniden başvurusu | Nakit koordinatör oturumu (sahip talimatı, 2026-10-16) | ✅ Kabul — `money.taxFromGross` / `money.taxFromNet`; kural K17 (iç yüzde), mali müşavir onaylı, iki tüketici kabul etti | yayınlanmadı (main) |
 
 ---
 
@@ -887,6 +887,30 @@ Yani iki projenin de değişmesi gerekiyor, ama farklı oranlarda.
 Bekleyenler: maliyet tarafının aynı kuralı kabul ettiğinin sahip teyidi ve mali müşavir onayı.
 İkisi gelince tek satırlık MINOR olarak alınır; o zaman testler bu tablodan değil, onaylanan
 kuralın elle hesaplanmış örneklerinden yazılır.
+
+**KABUL (2026-10-16).** İki şart karşılandı. Nakit koordinatör oturumu bildirdi, çekirdek sahibi
+bu oturumda doğrudan onayladı ("uygun"):
+1. Mali müşavir K17 kuralını onayladı (sahibin sözü: "kdv kuralı mm onay").
+2. Sahip (iki projenin de sahibi) maliyetin aynı kuralı kullanacağını teyit etti.
+
+Uygulama yukarıdaki imzayla yazıldı. Testler elle hesaplanmış örneklerden: 120,00 TL → 20,00;
+1.002,99 TL %20 → 16.716,5 → 167,17; 3 kuruş %20 → 1; 50 kuruş %1 → 0; hariç 7 kuruş → 1,
+8 kuruş → 2. `net + vergi = brüt` 4 oran × 5.000 tutarda denetlendi. Negatif tutar (iade) işaret
+korumalı yuvarlanır; oran 1'den büyük olabilir (ÖTV). Beş mutasyonun beşi kırmızı verdi; aralarında
+"önce net" yöntemine dönüş de var (üç test kırılıyor).
+
+**Tüketicilerin göçü.**
+
+| Yerel | Çekirdek | Davranış değişir mi |
+|---|---|---|
+| Nakit `MathEngine.calculateVat` `included` | `money.taxFromGross(tutar, oran / 100)` | Evet: %20'de altıda bir vakada 1 kuruş (nakit G2) |
+| Nakit `calculateVat` `excluded` | `money.taxFromNet(tutar, oran / 100)` | Hayır |
+| Maliyet `vat/` `netAmountMinor` + `vatOnMinor` (dahil girdi) | `money.taxFromGross(money.toMinor(brüt, cur), oran)` | Evet: %1 ve %10'da (maliyet Faz 3) |
+| Maliyet `vatOnMinor` (hariç tutar üstüne) | `money.taxFromNet` | Hayır |
+
+Nakit oranı yüzde (20), çekirdek ondalık (0,2) bekler. Maliyet'in `netUnitPrice` işlevi (birim
+fiyat yuvarlanmadan arındırma, ADR-0003) çekirdeğe girmedi; o bir tutar değil, ara değerdir.
+
 
 **Önerilen imza (taslak, yazılmadı).** Genel tüketim vergisi adıyla, `money` motorunda; oran
 ondalık (%20 = 0,2), tutar kuruş, ikisi birden döner ki `net + vergi = brüt` ayrı ayrı

@@ -447,6 +447,24 @@ money.knownCurrencyCodes()     // → ['EUR', 'GBP', 'TRY', 'USD']
 Listede olmayan bir birimi tanımıyla verebilirsiniz:
 `{ code: 'AZN', symbol: '₼', text: 'AZN', minorDigits: 2 }`.
 
+**Vergi dahil / hariç (KDV, ÖTV)**
+
+Vergi dahil tutarı ayırmak için `taxFromGross`, hariç tutara vergi bindirmek için `taxFromNet`.
+İkisi de net ile vergiyi **birlikte** döner ve `net + vergi` her zaman brüte eşittir. Vergiyi
+ayrıca `round(net × oran)` diye yeniden hesaplamayın: vergi dahil tutarda bir kuruş sapar.
+Oran ondalıktır (%20 = 0,2), tutar kuruştur.
+
+```js
+money.taxFromGross(12000, 0.2)     // → ({ net: 10000, tax: 2000 })
+money.taxFromGross(100299, 0.2)    // → ({ net: 83582, tax: 16717 })
+money.taxFromNet(10000, 0.2)       // → ({ tax: 2000, gross: 12000 })
+money.taxFromNet(7, 0.2)           // → ({ tax: 1, gross: 8 })
+money.taxFromGross(100, -0.1)      // → null
+```
+
+Kural: vergi dahil tutarda vergi "iç yüzde" ile bulunur (`brüt × oran ÷ (1 + oran)`) ve kuruşa
+yarım yukarı yuvarlanır; net, brütten vergi düşülerek çıkar.
+
 ---
 
 ## 5. `currency` — kur çevrimi

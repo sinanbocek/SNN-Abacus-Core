@@ -10,10 +10,10 @@ sürümleme [Semantic Versioning](https://semver.org/lang/tr/) kurallarına uyar
 > sonraki pakette çıkar; 4.3.0 güncelleme PR'ları tüketicilerde hâlâ açık.
 > Karar: [`GERI-BILDIRIM-KAYDI.md`](GERI-BILDIRIM-KAYDI.md) madde 43 (talep #13, issue #51), madde 44 (TB-014),
 > madde 45 (TB-013 adım 1), madde 46A (unvan kısaltma), madde 47 (hacim birimleri) ve
-> madde 48 (talep #16: tarihli değer çizelgesi, ortanca).
+> madde 48 (talep #16: tarihli değer çizelgesi, ortanca, vergi dahil/hariç).
 >
 > ⚠️ **Bu paket yeni fonksiyonlar (`period.valueAt`, `period.accrual`, `math.median`,
-> `text.abbreviationSteps`), bir alan
+> `text.abbreviationSteps`, `money.taxFromGross`, `money.taxFromNet`), bir alan
 > (`newRegistration`) ve bir birim kategorisi (`volume`) EKLİYOR, yani sürüm en az MINOR
 > olmalı (4.4.0).**
 
@@ -70,6 +70,26 @@ kısaltmalar (`İBB`, `DSİ`) çekirdekte yoktur; `{ extra: [['İstanbul Büyük
 ile verilir ve önce uygulanır.
 
 `text.company()` değişmedi. Onun düzeltmesi kırıcıdır ve bir sonraki ana sürümü bekler (TB-015).
+
+### Eklenenler — `money.taxFromGross`, `money.taxFromNet`: vergi dahil/hariç (madde 48H)
+
+KDV, ÖTV gibi genel tüketim vergisi için. İki işlev de net ile vergiyi **birlikte** döner;
+`net + vergi` her zaman brüte eşittir. Oran ondalık (%20 = 0,2), tutar kuruş.
+
+```
+money.taxFromGross(12000, 0.2)    -> { net: 10000, tax: 2000 }
+money.taxFromGross(100299, 0.2)   -> { net: 83582, tax: 16717 }
+money.taxFromNet(7, 0.2)          -> { tax: 1, gross: 8 }
+money.taxFromGross(100, -0.1)     -> null
+```
+
+Kural (mali müşavir onaylı): vergi dahil tutarda vergi "iç yüzde" ile bulunur,
+`round(brüt × oran ÷ (1 + oran))`, net ondan sonra `brüt − vergi` olur. Vergi hariç tutarda
+`round(net × oran)`. Yuvarlama yarım yukarı, işaret korumalı.
+
+**Yerel KDV kodundan geçen tüketici bir kuruşluk fark görebilir.** Önce neti bulan yöntem %20'de
+vakaların altıda birinde, `round(net × oran)` yöntemi %1 ve %10'da vergiyi 1 kuruş farklı
+buluyordu (1–200.000 kuruş tarandı; ayrıntı defter madde 48H). Çekirdeğin sonucu onaylanan kuraldır.
 
 ### Eklenenler — `math.median` (madde 48E)
 
