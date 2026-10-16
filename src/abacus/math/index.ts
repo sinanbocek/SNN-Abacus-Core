@@ -135,6 +135,29 @@ export function max(...values: number[]): number | null {
 }
 
 /**
+ * Ortanca: sıralı dizinin ortası; çift uzunlukta iki ortanın aritmetik ortalaması.
+ *
+ * Boş dizide ya da sonlu olmayan bir değer varsa `null` döner. `max`'tan farklı olarak
+ * geçersiz değer ATLANMAZ: atlamak eleman sayısını, dolayısıyla ortancayı sessizce kaydırır.
+ * Girdi dizisi değiştirilmez.
+ *
+ * @example math.median([3, 1, 2])     // 2
+ * @example math.median([4, 1, 3, 2])  // 2.5
+ * @example math.median([])            // null
+ */
+export function median(values: readonly number[]): number | null {
+  if (values.length === 0 || !values.every((v) => Number.isFinite(v))) return null;
+  const sorted = [...values].sort((a, b) => a - b);
+  const odd = sorted.length % 2;
+  // Tek uzunlukta ortadaki bir eleman, çift uzunlukta ortadaki iki eleman.
+  const middle = sorted.slice((sorted.length >> 1) - 1 + odd, (sorted.length >> 1) + 1);
+  return middle
+    .reduce((sum, v) => sum.plus(String(v)), new D(0))
+    .dividedBy(middle.length)
+    .toNumber();
+}
+
+/**
  * İki sayının verilen tolerans içinde eşit olup olmadığını söyler.
  *
  * Fark `abs(a - b)` olarak hesaplanır ve tolerans **dâhil** karşılaştırılır

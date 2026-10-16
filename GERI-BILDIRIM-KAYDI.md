@@ -140,6 +140,13 @@ birleştirir. Sabit etikete bağlı tüketicilere (`#vX.Y.Z`) hiç gelmez, elle 
 | 47 | `unit` motoruna `volume` kategorisi (`mm3` `ml` `cm3` `l` `dm3` `m3`) — madde 30'un yeniden başvurusu | Talep #15 (Nakit Akış piyasa arşivi; İKN 2026/1666260 sepeti) | ✅ Kabul — **eklemeli**, kimse kırılmaz | yayınlanmadı (main) |
 | 47B | `cl` (santilitre) | Talep #15 (aday) | ❌ **Red** (ertelendi) — ölçümde görülmedi; sahip kararı | — |
 | 47C | Ambalaj metni ayrıştırma (`"1.3LT"` → `{ value, unit }`) | Talep #15 (aday) | ❌ **Red** (ertelendi) — biçim çeşitliliği ölçülmedi; tüketici kendisi erteledi | — |
+| 48A | `period.valueAt` + `period.accrual` — tarihli değer çizelgesi, dilimlenmiş basit birikim | Talep #16 A (Maliyet `rates.ts`; Nakit Faz 3) | ✅ Kabul — **eklemeli**; ikinci ve üçüncü kullanım ölçüldü | yayınlanmadı (main) |
+| 48B | KDV dahil/hariç ayrıştırma (`grossToNet` / `taxOn`) | Talep #16 B | ❌ **Red** — tek satırlık bileşim; net + vergi = brüt politikası açık (madde 9, 10 emsali) | — |
+| 48C | Birim fiyat oturtma çekirdeği (`fitUnitPrices`) | Talep #16 C | ❌ **Red** (ertelendi) — `allocate` varyantı değil; politika parametreli, yerel en iyi; tek tüketici | — |
+| 48D | Genel kök bulucu (`solve`) | Talep #16 D | ❌ **Red** (ertelendi) — tek tüketici; çözücü alan sonucuna bağlı; talep #5 elemesi | — |
+| 48E | `math.median` | Talep #16 E (Nakit emsal arşivi tasarımı) | ✅ Kabul — **eklemeli**; üç yerel kopya ölçüldü (GHS-Panel, Portföy) | yayınlanmadı (main) |
+| 48F | Yüzdelik (`percentile`) | Talep #16 E | ❌ **Red** (ertelendi) — kod ve ekran yok; tanım bir tercihtir | — |
+| 48G | Başlık biçiminde kısaltma koruma (`productName`, sözlük parametresi) | Talep #16 F | ❌ **Red** (ertelendi) — tek tüketici; madde 46A ile birlikte tasarlanacak | — |
 
 ---
 
@@ -664,6 +671,167 @@ bildirir:
   yazım tuzağı JS'te de vardır (`String(1e-7) === "1e-7"`); çekirdek bunu testle çiviledi.
 
 ---
+
+### Talep #16 — Nakit Akış ve İhale Maliyet adına altı aday (madde 48)
+
+**Kaynak.** Sahip, SNN-Proje-ve-Nakit-Akış ("nakit") ve SNN-Ihale-Maliyet ("maliyet") adına
+(2026-10-16). Issue açılmadı; sahip bu oturumda elle yürüttü. Bağlam: maliyet motoru Faz 3'te
+nakit'e kopyalanacak, iki uygulama da yaşayacak. Kaynak kod maliyet `origin/main` b44c0c4'ten
+okundu. İki tüketici de `^4.3.0`'a bağlı (ölçüldü, `package.json`).
+
+**§4.1 sınavı (yazılı):**
+
+| Aday iş | İmzası | Başka alandaki uygulama aynen kullanır mıydı? | Karar |
+|---|---|---|---|
+| A. Tarihli oran çizelgesi | `valueAt(schedule, iso)`, `accrual(schedule, from, to, basis)` | **Evet** — kira artışı, kredi, gecikme faizi; yalnız tarih ve sayı biliyor | **Al** (48A) |
+| B. KDV dahil/hariç | `netAmountMinor(gross, rate, cur)`, `vatOnMinor(net, rate)` | Evet, ama çekirdekte zaten tek satırla yazılıyor | Reddet (48B) |
+| C. Birim fiyat oturtma | `fitUnitPrices(rows, ruleSet)` | `RuleSet` ile hayır; ayrıştırılmış hâli evet, ama politika taşıyor | Ertele (48C) |
+| D. Kök bulma | `solve(profitAt, current)` | Saf çözücü evet; bugünkü hâli kâr/zarar sonucuna bağlı | Ertele (48D) |
+| E1. Ortanca | `median(values)` | **Evet** — yalnız sayı biliyor | **Al** (48E) |
+| E2. Yüzdelik | — (kod yok) | Evet, ama tanımı bir tercih | Ertele (48F) |
+| F. Başlık biçimi + kısaltma | `productName(name)` | Sözlük parametre olursa belki | Ertele (48G) |
+
+**Elenenler (talep kendisi eledi, çekirdek katılıyor):** teklif bedeli çözücüsü
+(`outputSolver.ts`, "teklif bedeli" alan kavramı) · damga vergisi, karar pulu, KİK payı,
+teminat, gelir vergisi (mevzuat oranı, madde 10) · nakit döngüsü · gizli maliyet · revizyon
+farkı. `npv` yeniden açılmadı: madde 29'un koşulu (çalışan finansman ekranı, ölçülmüş fark)
+için yeni olgu yok.
+
+#### A — KABUL: `period.valueAt`, `period.accrual`
+
+**Ölçüm.** Maliyet'in `rateAt`/`accruedWeight` kodu çekirdek `date`/`math` üzerinde çalıştırıldı:
+kaynak testlerinin değerleri birebir (6/73 = 0,0821917808219178; 139/1825 = 0,07616438356164383).
+Kesirler ayrıca elle doğrulandı: 1 Eki → 15 Ara 2026 = 31 + 30 + 14 = 75 gün.
+
+**Kaynak kodda üç kusur ölçüldü; çekirdeğe taşınmadı.**
+1. Gün esası `0` → `ok(null)`; tip `number` dediği için çağıran `null`'u sayı sanar.
+2. Gün esası negatif → negatif ağırlık (`-0,0761…`).
+3. Sırasız çizelge sessizce okunuyor: `rateAt` doğrulamayı ayrı `validateRateSchedule`'a
+   bırakıyor. Çekirdek çizelgeyi her çağrıda denetler, bozuksa `null` döner.
+
+**Neden madde 9'un reddi burada geçerli değil.** Madde 9'u belirleyen, artık kuruşun hangi
+taksite bineceği politikasıydı. `accrual` yuvarlanmamış bir ağırlık döner; kuruş politikası yok.
+Gün esası parametredir. Geriye kalan iki kural standarttır: aralık `[from, to)`, değişim günü
+yeni orana ait.
+
+**İkinci ve üçüncü kullanım ölçüldü** (kardeş projeler, `origin/main`, salt okuma):
+- Nakit `src/domain/abacus/MathEngine.ts:431`: `(totalAdat / 36500) * interestRate` — tek oranlı
+  basit faiz; `accrual`'ın tek satırlık çizelgeli hâli. Bu, Faz 3 kopyasından bağımsız bir kullanım.
+- Portföy `src/lib/abacus/cashFlowAnalytics.ts` `getRateForDate`: "tarihte ya da öncesindeki son
+  değer" araması, `valueAt` ile aynı mekanizma. Fark: ilk satırdan önce en eski değere düşüyor.
+  Çekirdek `null` döner; eskiye düşmek tüketicinin bilinçli kararı olarak kalır.
+
+**Tasarım kararları.**
+- Ters aralık `null`, sıfır değil. Maliyet'in "ödeme tahsilattan sonraysa nakit bağlanmaz: 0"
+  kuralı iş kuralıdır; tüketicide bir satırla kalır.
+- Yer `period`: yeni motor açılmadı. `date` sorgular, `period` takvim aritmetiği yapar; birikim
+  takvim aritmetiğidir.
+- Ad `valueAt`, `rateAt` değil: satır değeri oran olmak zorunda değil (maliyet'in kendi türü de
+  "oran veya tutar (tavan)" diyor).
+
+**Mutasyon testi.** On bir mutasyon (sekizi çizelge, üçü ortanca); onu kırmızı verdi. Kalan
+`offset >= span` → `>` eşdeğer mutanttır (eşit günde eklenen dilim sıfır gündür); kırmayı tümden kaldırınca iki test kırılıyor.
+
+#### B — RED: KDV dahil/hariç
+
+**Ölçüm.** Çekirdek bileşimi kaynak testlerinin değerlerini birebir verdi:
+`money.toMinor(math.div(gross, math.add(1, rate)), cur)` ve `math.round(math.mul(net, rate), 0)`.
+Yani karşılığı çekirdekte zaten var (madde 33C/33D emsali).
+
+**Asıl belirleyici: bir politika açık.** 1–100.000 kuruş × %1, %10, %20 tarandı:
+300.000 vakanın **26.748'inde** `net + round(net × oran) ≠ brüt`. İlk vaka: 3 kuruş, %20 →
+net 3 + KDV 1 = 4. Vergiyi `brüt − net` diye mi, `net × oran` diye mi almak bir **tercihtir**.
+Tek tüketiciyle çivilenirse ikinci tüketici kırıcı sürüm ister (madde 9). Oran
+parametreye çevrilince geriye `math`'in çarpma ve bölmesi kalıyor (madde 10).
+
+**Yeniden başvuru koşulu:** İkinci bir tüketici aynı ayrıştırmayı gerçek bir ekranda yapıyor
+olsun ve `net + vergi = brüt` politikası iki tüketiciyle birlikte kararlaştırılsın. Ad o zaman
+genel tüketim vergisi olarak konur (`money.splitInclusive` gibi), "KDV" değil.
+
+#### C — RED (ertelendi): birim fiyat oturtma
+
+**`allocate`'ın varyantı değil, ayrı bir problem.** `allocate` bir tam sayıyı parçalara Σ tam
+tutacak biçimde böler. Oturtma her kalem için tam sayı birim fiyat `p` arar ki Σ `p × miktar`
+hedefe yaklaşsın. Tam tutmak çoğu zaman imkânsızdır: 1.000 kuruş, miktar 3 → `3p = 1000`'in
+tam sayı çözümü yok. Bu bir tam sayı yaklaştırma problemidir.
+
+**Ayrıştırılan çekirdek politika taşıyor.** `ruleSet`'ten iki şey gelir: kayma sınırı
+(`maxUnitPriceShiftMinor`) ve artık yönü (`below_target` / en yakın). İkisi de seçimdir. Yöntem
+yerel en iyiyi bulur; maliyet kendi kütüğünde (TB-014) ondalık miktarda genel en iyiden
+sapabildiğini yazmış. Bilinen sınırı olan sezgisel, tek tüketiciyle çekirdeğe çivilenmez.
+
+**Yeniden başvuru koşulu:** İkinci bir tüketici (Faz 3 kopyası değil, başka bir ekran) aynı
+problemi yaşasın ve artık yönü ile kayma sınırı parametre olarak birlikte kararlaştırılsın.
+
+#### D — RED (ertelendi): kök bulma
+
+**Ölçüm.** `fx-break-even/index.ts` `solve` ikiye bölme değil, kiriş yöntemidir; kök aralığı
+garantisi yok. Çözücü alan sonucuna bağlıdır (`loss_at_any_rate`, `profit_at_any_rate`) ve
+`NEAR_ZERO_FACTOR` değişkenin pozitif olduğunu varsayar (kur). Saf çözücü çıkarılabilir, ama
+tek tüketici var ve talep #5'te aynı aday ("başabaş çözücü") elenmişti.
+
+**Yeniden başvuru koşulu:** İkinci bir tüketici tek değişkenli tekdüze bir fonksiyonun kökünü
+arasın. O zaman çekirdek `irr`'in içindeki ikiye bölmeyi `math.solve(f, low, high)` olarak açar;
+aralık garantisi olan yöntem tercih edilir.
+
+#### E — ortanca KABUL, yüzdelik RED (ertelendi)
+
+**Talep reddi önerdi; ölçüm yeni olgu buldu.** Nakit'te kod yok, ama kardeş projelerde üç ayrı
+ortanca kopyası çalışıyor:
+
+| Yer | Çift uzunluk `[1, 2, 3, 4]` | Boş dizi |
+|---|---|---|
+| GHS-Panel `quoteReader/tableRegion.ts:16` | `3` (üst orta) | `0` |
+| GHS-Panel `quoteReader/vefaParser.ts:24` | `3` (üst orta) | `0` |
+| Portföy `lib/abacus/cashFlowAnalytics.ts:70` | `2.5` | `0` |
+| **Çekirdek `math.median`** | **`2.5`** | **`null`** |
+
+Bu madde 34'ün emsalidir: aynı iş bağımsız kopyalanmış ve kopyalar birbirini tutmuyor. Üç
+kopyada da boş dizi sessiz `0` veriyor (çekirdekte yasak). Ortancanın tanımı tektir; politika yok.
+
+**Yüzdelik reddedildi.** Hiçbir projede kodu yok. Tanımı tek değil: ara değerleme yöntemi
+(en yakın sıra, doğrusal…) bir tercihtir; çekirdek tahmin etmez.
+
+**Yeniden başvuru koşulu (yüzdelik):** Nakit emsal arşivinin ekranı çalışsın ve hangi yöntemin
+gerektiği o ekranın verisiyle gösterilsin.
+
+#### F — RED (ertelendi): başlık biçimi ve kısaltma koruma
+
+**Ölçüm.** `text.title` sözlüğünde olmayan kısaltmaları küçültüyor:
+`text.title('PVC BORU VE TSE BELGELİ')` → `'Pvc Boru ve Tse Belgeli'`;
+`'HDPE BORU DN 110'` → `'Hdpe Boru Dn 110'`. Boşluk gerçek.
+
+**Neden alınmadı.** Maliyet'in `productName`'i yalnız sözlük değil, ürün adı politikası da
+taşıyor: rakamlı kelime korunur, karışık harfli kelimeye dokunulmaz, başı işaretli kelime ayrı
+biçimlenir. Bunlar genel mi, tek tüketiciyle bilinmiyor. Ayrıca kısaltma sözlüğü madde 46A'nın
+(unvan kısaltma, kabul edildi, yazılmadı) da konusu; ikisi ayrı ayrı tasarlanırsa çekirdekte iki
+sözlük doğar. Talebin kendisi "belki" dedi; §4.1 Sınır durumu 3.
+
+**Yeniden başvuru koşulu:** İkinci bir tüketici büyük harf veriyi başlık biçimine çevirsin, ya
+da 46A yazılırken kısaltma sözlüğü tasarlansın. Önerilen biçim:
+`text.title(str, { preserve: Set<string> })`.
+
+#### Madde 37C — not (yeni olgu yok)
+
+Nakit `fmtDecimalGrouped`'ın eksi işaretini sildiği durumu yerelde koruyor (`MathEngine.ts`
+`formatDecimal`). Bugün nakit'te negatif değer gösteren ekran yok. Faz 3'te kâr/zarar ekranında
+küçük negatif değer çıkarsa ölçümle başvurulacak. 37C'nin koşulu değişmedi.
+
+#### Tüketicilerin göç adları
+
+| Yerel | Çekirdek | Dikkat |
+|---|---|---|
+| Maliyet `rates.ts` `rateAt(schedule, iso)` | `period.valueAt(schedule, iso)` | Sırasız çizelgede `null` |
+| Maliyet `rates.ts` `accruedWeight(...)` | `period.accrual(schedule, from, to, basis)` | `from ≥ to` için `0` kararı tüketicide kalır; `null` → `missing_parameter` eşlemesi tüketicide |
+| Maliyet `validateRateSchedule` | — (tüketicide kalır) | Ekran için hata kodları üretir; çekirdek yalnız `null` der |
+| GHS-Panel, Portföy yerel `median` | `math.median` | Çift uzunlukta ortalama; boş dizi `null` |
+| Maliyet `vat/`, `unit-price/`, `fx-break-even/` `solve`, `productName` | — | Tüketicide kalır |
+
+`RateSchedule` türü `period.Schedule` ile yapısal olarak uyumludur; `source` alanı okunmaz.
+
+**Sürüm.** Kod `main`'e girer, `CHANGELOG.md` `[Yayınlanmadı]` altında bekleyen 43, 44A, 44B,
+44D, 45 ve 47 ile birlikte çıkar (madde 42, `AI-RULES §4.3`). Sürüm numarası sahip onayıyla
+değişir.
 
 ### Talep #15 — `unit` motoruna hacim (madde 47, madde 30'un yeniden başvurusu)
 

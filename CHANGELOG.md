@@ -9,10 +9,59 @@ sürümleme [Semantic Versioning](https://semver.org/lang/tr/) kurallarına uyar
 > `main`'de, henüz sürüm numarası almadı. Toplu sürüm kuralı (`AI-RULES §4.3`) gereği bir
 > sonraki pakette çıkar; 4.3.0 güncelleme PR'ları tüketicilerde hâlâ açık.
 > Karar: [`GERI-BILDIRIM-KAYDI.md`](GERI-BILDIRIM-KAYDI.md) madde 43 (talep #13, issue #51), madde 44 (TB-014),
-> madde 45 (TB-013 adım 1) ve madde 47 (hacim birimleri).
+> madde 45 (TB-013 adım 1), madde 47 (hacim birimleri) ve madde 48 (talep #16: tarihli
+> değer çizelgesi, ortanca).
 >
-> ⚠️ **Bu paket bir alan (`newRegistration`) ve bir birim kategorisi (`volume`) EKLİYOR,
-> yani sürüm en az MINOR olmalı (4.4.0).**
+> ⚠️ **Bu paket yeni fonksiyonlar (`period.valueAt`, `period.accrual`, `math.median`), bir alan
+> (`newRegistration`) ve bir birim kategorisi (`volume`) EKLİYOR, yani sürüm en az MINOR
+> olmalı (4.4.0).**
+
+### Eklenenler — tarihli değer çizelgesi: `period.valueAt`, `period.accrual` (madde 48A)
+
+Faiz, kira, vergi oranı gibi zamanla değişen değerler için. Çizelge `{ from, value }`
+satırlarıdır ("şu günden itibaren şu değer"); değerleri çağıran verir, çekirdek yalnız
+mekanizmayı taşır.
+
+```
+const s = [{ from: '2026-01-01', value: 0.4 }, { from: '2026-11-01', value: 0.35 }];
+period.valueAt(s, '2026-10-31')                        -> 0.4
+period.valueAt(s, '2025-12-31')                        -> null   (ilk satırdan önce değer yok)
+period.accrual(s, '2026-10-01', '2026-12-15', 365)     -> 0.0761…  (31 × 0,4 + 44 × 0,35) ÷ 365
+period.accrual(s, '2026-12-15', '2026-10-01', 365)     -> null   (ters aralık)
+```
+
+`accrual` aralığı `from` dâhil `to` hariç sayar ve oranın değiştiği günlerde dilimler;
+değişim günü yeni orana aittir. Sonuç yuvarlanmaz. Bozuk çizelge (sırasız, tekrarlı tarih,
+sonlu olmayan değer) ve geçersiz gün esası `null` verir.
+
+**SNN-Ihale-Maliyet'in yerel kopyasından farkları** (`src/domain/rule-set/rates.ts`):
+
+| Durum | Yerel `rateAt` / `accruedWeight` | Çekirdek `valueAt` / `accrual` |
+|---|---|---|
+| Ters aralık (`from > to`) | `ok(0)` | `null` — sıfır kararı çağıranın iş kuralı |
+| Gün esası `0` | `ok(null)` (tipi `number` görünür) | `null` |
+| Gün esası negatif | negatif ağırlık | `null` |
+| Sırasız çizelge | sessizce yanlış değer | `null` |
+| Başta oran yok | `missing_parameter` hatası | `null` |
+
+Kaynak testlerindeki hesap değerleri (6/73, 139/1825, değişimin aralıktan sonra olduğu durum)
+çekirdekte birebir aynı çıktı; farklı olan yalnız yukarıdaki tablodur.
+
+### Eklenenler — `math.median` (madde 48E)
+
+```
+math.median([3, 1, 2])      -> 2
+math.median([4, 1, 3, 2])   -> 2.5
+math.median([0.1, 0.2])     -> 0.15
+math.median([])             -> null
+math.median([1, NaN])       -> null
+```
+
+Çift sayıda değerde iki ortanın ortalaması (istatistiğin tanımı); ortalama ondalık tamdır.
+Boş dizi `null` verir, `0` değil. `math.max`'tan farklı olarak geçersiz değer atlanmaz,
+çünkü atlamak ortancayı kaydırır. Kardeş projelerdeki üç yerel kopyanın ikisi çift
+uzunlukta üst ortayı döndürüyor (`[1, 2, 3, 4]` → `3`) ve boş dizide `0` veriyor; çekirdeğe
+geçen tüketici bu iki farkı bilmelidir.
 
 ### Eklenenler — `unit` motoruna hacim (madde 47)
 
