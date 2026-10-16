@@ -137,9 +137,22 @@ birleştirir. Sabit etikete bağlı tüketicilere (`#vX.Y.Z`) hiç gelmez, elle 
 | 44C | Ünlü içeren harf harf kısaltma (`ABD'ye`) | TB-014 (sınır) | ❌ **Red** (ertelendi) — metinden ayırt edilemez; çekirdek tahmin etmez | — |
 | 44D | K harfi "ka" okunsun (`SGK'da`, `SGK'ya`) | Sahip (2026-09-24) | ⚠️ **Kabul — sahip kararıyla istisna** (TDK: "ke", `TDK'den`) | yayınlanmadı (main) |
 | 45 | `PlateResult.newRegistration` eklensin, `yeniKayit` eskisin (TB-013 adım 1) | TB-013 (iç denetim) | ✅ Kabul — **eklemeli**, kimse kırılmaz; silme bir sonraki MAJOR'da | yayınlanmadı (main) |
+| 46A | Kurum ve şirket unvanını **gösterim için** adım adım kısaltan işlev (`… Başkanlığı` → `… Bşk.`, `Limited Şirketi` → `Ltd.Şti.`) | Talep #14 (sahip, üç tüketici taraması) | ✅ Kabul — **yalnız gösterim**; biçim TDK, TDK'da olmayan "fiilî uygulama"; `text.abbreviationSteps` | yayınlanmadı (main) |
+| 46B | `text.company()` bağlamsız kısaltıyor, bitişik yazımı ve büyük harf kısaltmayı bozuyor, tam unvanı saklamıyor | Talep #14 (tarama ölçümü) | ✅ Kabul — **kırıcı düzeltme**; sonraki MAJOR'a ertelendi (TB-015) | sonraki MAJOR |
+| 46C | Unvan eşleştirme anahtarı (`İBB` = `İstanbul Büyükşehir Belediyesi`, `Ltd. Şti.` = `Limited Şirketi`) | Talep #14 (aday) | ❌ **Red** (ertelendi) — tek somut kanıt var (Proje-Nakit) | — |
+| 46D | EKAP'ın kendi kısaltmalarını açma (`FAB.SAN.VE TİC.AŞ` → tam unvan) | Talep #14 (aday) | ❌ **Red** (ertelendi) — yalnız elle yapılmış örnek var | — |
+| 46E | Kuruma özgü kısaltmalar çekirdek sözlüğünde (`İBB`, `DSİ`, `Orman GM`) | Talep #14 (aday) | ❌ **Red** — §4.1: bunlar veri; tüketici kendi listesini seçenekle verir | — |
 | 47 | `unit` motoruna `volume` kategorisi (`mm3` `ml` `cm3` `l` `dm3` `m3`) — madde 30'un yeniden başvurusu | Talep #15 (Nakit Akış piyasa arşivi; İKN 2026/1666260 sepeti) | ✅ Kabul — **eklemeli**, kimse kırılmaz | yayınlanmadı (main) |
 | 47B | `cl` (santilitre) | Talep #15 (aday) | ❌ **Red** (ertelendi) — ölçümde görülmedi; sahip kararı | — |
 | 47C | Ambalaj metni ayrıştırma (`"1.3LT"` → `{ value, unit }`) | Talep #15 (aday) | ❌ **Red** (ertelendi) — biçim çeşitliliği ölçülmedi; tüketici kendisi erteledi | — |
+| 48A | `period.valueAt` + `period.accrual` — tarihli değer çizelgesi, dilimlenmiş basit birikim | Talep #16 A (Maliyet `rates.ts`; Nakit Faz 3) | ✅ Kabul — **eklemeli**; ikinci ve üçüncü kullanım ölçüldü | yayınlanmadı (main) |
+| 48B | KDV dahil/hariç ayrıştırma (`grossToNet` / `taxOn`) | Talep #16 B | ❌ **Red** — tek satırlık bileşim; net + vergi = brüt politikası açık (madde 9, 10 emsali) | — |
+| 48C | Birim fiyat oturtma çekirdeği (`fitUnitPrices`) | Talep #16 C | ❌ **Red** (ertelendi) — `allocate` varyantı değil; politika parametreli, yerel en iyi; tek tüketici | — |
+| 48D | Genel kök bulucu (`solve`) | Talep #16 D | ❌ **Red** (ertelendi) — tek tüketici; çözücü alan sonucuna bağlı; talep #5 elemesi | — |
+| 48E | `math.median` | Talep #16 E (Nakit emsal arşivi tasarımı) | ✅ Kabul — **eklemeli**; üç yerel kopya ölçüldü (GHS-Panel, Portföy) | yayınlanmadı (main) |
+| 48F | Yüzdelik (`percentile`) | Talep #16 E | ❌ **Red** (ertelendi) — kod ve ekran yok; tanım bir tercihtir | — |
+| 48G | Başlık biçiminde kısaltma koruma (`productName`, sözlük parametresi) | Talep #16 F | ❌ **Red** (ertelendi) — tek tüketici; madde 46A ile birlikte tasarlanacak | — |
+| 48H | KDV dahil/hariç ayrıştırma — madde 48B'nin yeniden başvurusu | Nakit koordinatör oturumu (sahip talimatı, 2026-10-16) | ✅ Kabul — `money.taxFromGross` / `money.taxFromNet`; kural K17 (iç yüzde), mali müşavir onaylı, iki tüketici kabul etti | yayınlanmadı (main) |
 
 ---
 
@@ -662,8 +675,274 @@ bildirir:
   yayımlanan ölçümleri etkilemiyor: `tam_dagitim` üslü yazımda (`1e-07`) ölçeği 0 alıyor;
   `basit_yuvarlama` ondalıklı ağırlık toplamında `InvalidOperation` fırlatıyor. Aynı üslü
   yazım tuzağı JS'te de vardır (`String(1e-7) === "1e-7"`); çekirdek bunu testle çiviledi.
+- **GHS-Panel: tedarikçi adı düzelticisi kelimenin içini değiştiriyor (talep #14 taraması).**
+  `src/pages/FinancialManagement/utils/nameNormalization.ts` sözlüğü kelime sınırı aramadan
+  uyguluyor (`new RegExp(pattern, 'gi')`). Aynı kural çekirdek dışında yeniden çalıştırılarak
+  ölçüldü: `KASAP AHMET` → `KA.Ş.AP AHMET`, `Pasta Evi` → `PA.Ş.ta Evi`, `Hasan Usta Kasası` →
+  `HA.Ş.an.Usta KA.Ş.A.Ş.ı`. Noktalı kelimeler sonradan harf düzenine girmediği için bozulma
+  kalıcıdır. Yol: fiş okuyucudan gelen ad → `normalizeSupplierData` →
+  `SupabaseFinanceRepository.findOrCreateSupplier` (tam ad eşleşmesiyle yeni tedarikçi açar).
+  Canlı veride kaç kayıtta tetiklendiği **ölçülmedi**. Tüketicinin kendi işidir.
+- **SNN-Proje-ve-Nakit-Akış: tam unvan kayıtta kısaltılıyor (talep #14 taraması).**
+  `LangEngine.normalizeCompanyName` müşteri ve tedarikçi formlarında kayıttan önce çalışıyor
+  (`ClientForm.tsx:42`, `SupplierForm.tsx:55`); `20260729220800_normalize_company_names.sql`
+  var olan adları yerinde güncelliyor. Projenin kendi tasarım notu (commit `42faa2f`) tersini
+  istiyor: "tam yasal ad saklanır, gösterimde kısaltılır". Çekirdekteki `company()` de aynı
+  hatayı taşıdığı için (TB-015) bugün çekirdeğe geçmek bunu çözmez; 46A gelince gösterim
+  kısaltması ondan alınabilir. Göçün canlıya uygulanıp uygulanmadığı **ölçülmedi**.
 
 ---
+
+### Talep #16 — Nakit Akış ve İhale Maliyet adına altı aday (madde 48)
+
+**Kaynak.** Sahip, SNN-Proje-ve-Nakit-Akış ("nakit") ve SNN-Ihale-Maliyet ("maliyet") adına
+(2026-10-16). Issue açılmadı; sahip bu oturumda elle yürüttü. Bağlam: maliyet motoru Faz 3'te
+nakit'e kopyalanacak, iki uygulama da yaşayacak. Kaynak kod maliyet `origin/main` b44c0c4'ten
+okundu. İki tüketici de `^4.3.0`'a bağlı (ölçüldü, `package.json`).
+
+**§4.1 sınavı (yazılı):**
+
+| Aday iş | İmzası | Başka alandaki uygulama aynen kullanır mıydı? | Karar |
+|---|---|---|---|
+| A. Tarihli oran çizelgesi | `valueAt(schedule, iso)`, `accrual(schedule, from, to, basis)` | **Evet** — kira artışı, kredi, gecikme faizi; yalnız tarih ve sayı biliyor | **Al** (48A) |
+| B. KDV dahil/hariç | `netAmountMinor(gross, rate, cur)`, `vatOnMinor(net, rate)` | Evet, ama çekirdekte zaten tek satırla yazılıyor | Reddet (48B) |
+| C. Birim fiyat oturtma | `fitUnitPrices(rows, ruleSet)` | `RuleSet` ile hayır; ayrıştırılmış hâli evet, ama politika taşıyor | Ertele (48C) |
+| D. Kök bulma | `solve(profitAt, current)` | Saf çözücü evet; bugünkü hâli kâr/zarar sonucuna bağlı | Ertele (48D) |
+| E1. Ortanca | `median(values)` | **Evet** — yalnız sayı biliyor | **Al** (48E) |
+| E2. Yüzdelik | — (kod yok) | Evet, ama tanımı bir tercih | Ertele (48F) |
+| F. Başlık biçimi + kısaltma | `productName(name)` | Sözlük parametre olursa belki | Ertele (48G) |
+
+**Elenenler (talep kendisi eledi, çekirdek katılıyor):** teklif bedeli çözücüsü
+(`outputSolver.ts`, "teklif bedeli" alan kavramı) · damga vergisi, karar pulu, KİK payı,
+teminat, gelir vergisi (mevzuat oranı, madde 10) · nakit döngüsü · gizli maliyet · revizyon
+farkı. `npv` yeniden açılmadı: madde 29'un koşulu (çalışan finansman ekranı, ölçülmüş fark)
+için yeni olgu yok.
+
+#### A — KABUL: `period.valueAt`, `period.accrual`
+
+**Ölçüm.** Maliyet'in `rateAt`/`accruedWeight` kodu çekirdek `date`/`math` üzerinde çalıştırıldı:
+kaynak testlerinin değerleri birebir (6/73 = 0,0821917808219178; 139/1825 = 0,07616438356164383).
+Kesirler ayrıca elle doğrulandı: 1 Eki → 15 Ara 2026 = 31 + 30 + 14 = 75 gün.
+
+**Kaynak kodda üç kusur ölçüldü; çekirdeğe taşınmadı.**
+1. Gün esası `0` → `ok(null)`; tip `number` dediği için çağıran `null`'u sayı sanar.
+2. Gün esası negatif → negatif ağırlık (`-0,0761…`).
+3. Sırasız çizelge sessizce okunuyor: `rateAt` doğrulamayı ayrı `validateRateSchedule`'a
+   bırakıyor. Çekirdek çizelgeyi her çağrıda denetler, bozuksa `null` döner.
+
+**Neden madde 9'un reddi burada geçerli değil.** Madde 9'u belirleyen, artık kuruşun hangi
+taksite bineceği politikasıydı. `accrual` yuvarlanmamış bir ağırlık döner; kuruş politikası yok.
+Gün esası parametredir. Geriye kalan iki kural standarttır: aralık `[from, to)`, değişim günü
+yeni orana ait.
+
+**İkinci ve üçüncü kullanım ölçüldü** (kardeş projeler, `origin/main`, salt okuma):
+- Nakit `src/domain/abacus/MathEngine.ts:431`: `(totalAdat / 36500) * interestRate` — tek oranlı
+  basit faiz; `accrual`'ın tek satırlık çizelgeli hâli. Bu, Faz 3 kopyasından bağımsız bir kullanım.
+- Portföy `src/lib/abacus/cashFlowAnalytics.ts` `getRateForDate`: "tarihte ya da öncesindeki son
+  değer" araması, `valueAt` ile aynı mekanizma. Fark: ilk satırdan önce en eski değere düşüyor.
+  Çekirdek `null` döner; eskiye düşmek tüketicinin bilinçli kararı olarak kalır.
+
+**Tasarım kararları.**
+- Ters aralık `null`, sıfır değil. Maliyet'in "ödeme tahsilattan sonraysa nakit bağlanmaz: 0"
+  kuralı iş kuralıdır; tüketicide bir satırla kalır.
+- Yer `period`: yeni motor açılmadı. `date` sorgular, `period` takvim aritmetiği yapar; birikim
+  takvim aritmetiğidir.
+- Ad `valueAt`, `rateAt` değil: satır değeri oran olmak zorunda değil (maliyet'in kendi türü de
+  "oran veya tutar (tavan)" diyor).
+
+**Mutasyon testi.** On bir mutasyon (sekizi çizelge, üçü ortanca); onu kırmızı verdi. Kalan
+`offset >= span` → `>` eşdeğer mutanttır (eşit günde eklenen dilim sıfır gündür); kırmayı tümden kaldırınca iki test kırılıyor.
+
+#### B — RED: KDV dahil/hariç
+
+**Ölçüm.** Çekirdek bileşimi kaynak testlerinin değerlerini birebir verdi:
+`money.toMinor(math.div(gross, math.add(1, rate)), cur)` ve `math.round(math.mul(net, rate), 0)`.
+Yani karşılığı çekirdekte zaten var (madde 33C/33D emsali).
+
+**Asıl belirleyici: bir politika açık.** 1–100.000 kuruş × %1, %10, %20 tarandı:
+300.000 vakanın **26.748'inde** `net + round(net × oran) ≠ brüt`. İlk vaka: 3 kuruş, %20 →
+net 3 + KDV 1 = 4. Vergiyi `brüt − net` diye mi, `net × oran` diye mi almak bir **tercihtir**.
+Tek tüketiciyle çivilenirse ikinci tüketici kırıcı sürüm ister (madde 9). Oran
+parametreye çevrilince geriye `math`'in çarpma ve bölmesi kalıyor (madde 10).
+
+**Yeniden başvuru koşulu:** İkinci bir tüketici aynı ayrıştırmayı gerçek bir ekranda yapıyor
+olsun ve `net + vergi = brüt` politikası iki tüketiciyle birlikte kararlaştırılsın. Ad o zaman
+genel tüketim vergisi olarak konur (`money.splitInclusive` gibi), "KDV" değil.
+
+#### C — RED (ertelendi): birim fiyat oturtma
+
+**`allocate`'ın varyantı değil, ayrı bir problem.** `allocate` bir tam sayıyı parçalara Σ tam
+tutacak biçimde böler. Oturtma her kalem için tam sayı birim fiyat `p` arar ki Σ `p × miktar`
+hedefe yaklaşsın. Tam tutmak çoğu zaman imkânsızdır: 1.000 kuruş, miktar 3 → `3p = 1000`'in
+tam sayı çözümü yok. Bu bir tam sayı yaklaştırma problemidir.
+
+**Ayrıştırılan çekirdek politika taşıyor.** `ruleSet`'ten iki şey gelir: kayma sınırı
+(`maxUnitPriceShiftMinor`) ve artık yönü (`below_target` / en yakın). İkisi de seçimdir. Yöntem
+yerel en iyiyi bulur; maliyet kendi kütüğünde (TB-014) ondalık miktarda genel en iyiden
+sapabildiğini yazmış. Bilinen sınırı olan sezgisel, tek tüketiciyle çekirdeğe çivilenmez.
+
+**Yeniden başvuru koşulu:** İkinci bir tüketici (Faz 3 kopyası değil, başka bir ekran) aynı
+problemi yaşasın ve artık yönü ile kayma sınırı parametre olarak birlikte kararlaştırılsın.
+
+#### D — RED (ertelendi): kök bulma
+
+**Ölçüm.** `fx-break-even/index.ts` `solve` ikiye bölme değil, kiriş yöntemidir; kök aralığı
+garantisi yok. Çözücü alan sonucuna bağlıdır (`loss_at_any_rate`, `profit_at_any_rate`) ve
+`NEAR_ZERO_FACTOR` değişkenin pozitif olduğunu varsayar (kur). Saf çözücü çıkarılabilir, ama
+tek tüketici var ve talep #5'te aynı aday ("başabaş çözücü") elenmişti.
+
+**Yeniden başvuru koşulu:** İkinci bir tüketici tek değişkenli tekdüze bir fonksiyonun kökünü
+arasın. O zaman çekirdek `irr`'in içindeki ikiye bölmeyi `math.solve(f, low, high)` olarak açar;
+aralık garantisi olan yöntem tercih edilir.
+
+#### E — ortanca KABUL, yüzdelik RED (ertelendi)
+
+**Talep reddi önerdi; ölçüm yeni olgu buldu.** Nakit'te kod yok, ama kardeş projelerde üç ayrı
+ortanca kopyası çalışıyor:
+
+| Yer | Çift uzunluk `[1, 2, 3, 4]` | Boş dizi |
+|---|---|---|
+| GHS-Panel `quoteReader/tableRegion.ts:16` | `3` (üst orta) | `0` |
+| GHS-Panel `quoteReader/vefaParser.ts:24` | `3` (üst orta) | `0` |
+| Portföy `lib/abacus/cashFlowAnalytics.ts:70` | `2.5` | `0` |
+| **Çekirdek `math.median`** | **`2.5`** | **`null`** |
+
+Bu madde 34'ün emsalidir: aynı iş bağımsız kopyalanmış ve kopyalar birbirini tutmuyor. Üç
+kopyada da boş dizi sessiz `0` veriyor (çekirdekte yasak). Ortancanın tanımı tektir; politika yok.
+
+**Yüzdelik reddedildi.** Hiçbir projede kodu yok. Tanımı tek değil: ara değerleme yöntemi
+(en yakın sıra, doğrusal…) bir tercihtir; çekirdek tahmin etmez.
+
+**Yeniden başvuru koşulu (yüzdelik):** Nakit emsal arşivinin ekranı çalışsın ve hangi yöntemin
+gerektiği o ekranın verisiyle gösterilsin.
+
+#### F — RED (ertelendi): başlık biçimi ve kısaltma koruma
+
+**Ölçüm.** `text.title` sözlüğünde olmayan kısaltmaları küçültüyor:
+`text.title('PVC BORU VE TSE BELGELİ')` → `'Pvc Boru ve Tse Belgeli'`;
+`'HDPE BORU DN 110'` → `'Hdpe Boru Dn 110'`. Boşluk gerçek.
+
+**Neden alınmadı.** Maliyet'in `productName`'i yalnız sözlük değil, ürün adı politikası da
+taşıyor: rakamlı kelime korunur, karışık harfli kelimeye dokunulmaz, başı işaretli kelime ayrı
+biçimlenir. Bunlar genel mi, tek tüketiciyle bilinmiyor. Ayrıca kısaltma sözlüğü madde 46A'nın
+(unvan kısaltma, kabul edildi, yazılmadı) da konusu; ikisi ayrı ayrı tasarlanırsa çekirdekte iki
+sözlük doğar. Talebin kendisi "belki" dedi; §4.1 Sınır durumu 3.
+
+**Yeniden başvuru koşulu:** İkinci bir tüketici büyük harf veriyi başlık biçimine çevirsin, ya
+da 46A yazılırken kısaltma sözlüğü tasarlansın. Önerilen biçim:
+`text.title(str, { preserve: Set<string> })`.
+
+#### 48H — B'nin yeniden başvurusu: ikinci ekran (2026-10-16)
+
+**Olgu (nakit bildirdi, çekirdek kodu okudu).** Nakit `ProjectSummaryTab.tsx:173` ihale tutarını
+KDV ve net olarak gösteriyor; hesap `MathEngine.ts` `calculateVat` (oran yüzde, tutar kuruş).
+KDV dahil girdide `net = round(brüt ÷ (1 + oran))`, **`KDV = brüt − net`**. Maliyet aynı girdide
+**`KDV = round(net × oran)`** alıyor (`vat/index.ts`; çağıranlar `tenderCalculation.ts:137, 215`,
+`manualUnitPrice.ts:70`). İki proje, iki ekran, iki kural; Faz 3'te aynı veride karşılaşacaklar.
+
+**Ölçüm (çekirdek, iki kodun aynen çoğaltılmasıyla).** 1–100.000 kuruş × %1, %10, %20 = 300.000 vaka:
+
+| | Maliyet | Nakit |
+|---|---|---|
+| Net tutar | aynı | aynı (300.000 / 300.000) |
+| KDV | `round(net × oran)` | `brüt − net` |
+| Net + KDV ≠ brüt | **26.748** | **0** |
+
+Farklı çıkan 26.748 vakanın hepsinde maliyet KDV'yi **1 kuruş fazla** buluyor; ters yönde fark yok.
+Oranlara göre: %1'de 990, %10'da 9.091, %20'de 16.667. İlk vaka: 50 kuruş, %1 → maliyet KDV 1,
+nakit KDV 0. Nakit tarafındaki `Decimal` varsayılan yuvarlaması (half-up) ile çekirdeğinki aynı;
+net tutarda hiç fark çıkmaması bunu doğruluyor.
+
+**Durum.** Madde 48B'nin yeniden başvuru koşulunun ilk yarısı (ikinci proje, gerçek ekran)
+karşılandı. İkinci yarısı (kuralın iki projeyle birlikte kararlaştırılması) karşılanmadı. Nakit,
+kuralın dayanağını resmî kaynaktan araştırıyor (GİB, e-Fatura/VUK yuvarlama). Sonuç gelince kural
+iki tüketiciyle kararlaştırılır; imza ondan sonra yazılır. Sahip kararıyla imza taslağı şimdi
+yazılmadı: kural belli olmadan taslak bir kuralı varsaymış olur.
+
+Bu satır kabul değildir; son sütunu "karar bekliyor"dur ve toplu sürüm kapısını tutmaz.
+
+**Kural kararı — nakit tarafı (2026-10-16, nakit K17, sahip).** Nakit resmî kaynak taradı:
+kuruş yuvarlaması için GİB e-Fatura/VUK kılavuzlarında kural yok (belirsiz). Yön belli: KDV dahil
+bedelde KDV "iç yüzde" ile bulunur, net ondan sonra çıkar (KDV Kanunu md. 20 matrah tanımı, GİB
+uygulama anlatımı; çekirdek bu kaynakları aslından okumadı). Karar:
+- KDV dahil: `KDV = yarımYukarı(brüt × oran ÷ (1 + oran))`, `net = brüt − KDV`.
+- KDV hariç: `KDV = yarımYukarı(net × oran)`, `brüt = net + KDV`.
+- İki durumda da `net + KDV = brüt` (kuruş).
+
+**Ölçüm (çekirdek, 1–200.000 kuruş, half-up).** KDV dahil girdide iç yüzde kuralı (K17) ile
+bugünkü iki kod karşılaştırıldı:
+
+| Oran | Nakit bugün (önce net) ≠ K17 | Maliyet bugün (`round(net × oran)`) ≠ K17 |
+|---|---|---|
+| %1 | 0 | 1.980 |
+| %10 | 0 | 18.182 |
+| %20 | 33.333 (altıda bir) | 0 |
+
+Nakit'in iddiası doğrulandı: %1 ve %10'da iki yöntem hep aynı, %20'de altıda birinde 1 kuruş
+farklı. Örnek de doğru: 1.002,99 TL dahil, %20 → önce net KDV 167,16 TL, iç yüzde 167,17 TL.
+Beklenmedik bulgu: maliyetin bugünkü kodu %20'de K17 ile birebir aynı, %1 ve %10'da ayrışıyor.
+Yani iki projenin de değişmesi gerekiyor, ama farklı oranlarda.
+
+**Karar: beklet.** Yeniden başvuru koşulunun ikinci yarısı yalnız nakit tarafında karşılandı.
+Bekleyenler: maliyet tarafının aynı kuralı kabul ettiğinin sahip teyidi ve mali müşavir onayı.
+İkisi gelince tek satırlık MINOR olarak alınır; o zaman testler bu tablodan değil, onaylanan
+kuralın elle hesaplanmış örneklerinden yazılır.
+
+**KABUL (2026-10-16).** İki şart karşılandı. Nakit koordinatör oturumu bildirdi, çekirdek sahibi
+bu oturumda doğrudan onayladı ("uygun"):
+1. Mali müşavir K17 kuralını onayladı (sahibin sözü: "kdv kuralı mm onay").
+2. Sahip (iki projenin de sahibi) maliyetin aynı kuralı kullanacağını teyit etti.
+
+Uygulama yukarıdaki imzayla yazıldı. Testler elle hesaplanmış örneklerden: 120,00 TL → 20,00;
+1.002,99 TL %20 → 16.716,5 → 167,17; 3 kuruş %20 → 1; 50 kuruş %1 → 0; hariç 7 kuruş → 1,
+8 kuruş → 2. `net + vergi = brüt` 4 oran × 5.000 tutarda denetlendi. Negatif tutar (iade) işaret
+korumalı yuvarlanır; oran 1'den büyük olabilir (ÖTV). Beş mutasyonun beşi kırmızı verdi; aralarında
+"önce net" yöntemine dönüş de var (üç test kırılıyor).
+
+**Tüketicilerin göçü.**
+
+| Yerel | Çekirdek | Davranış değişir mi |
+|---|---|---|
+| Nakit `MathEngine.calculateVat` `included` | `money.taxFromGross(tutar, oran / 100)` | Evet: %20'de altıda bir vakada 1 kuruş (nakit G2) |
+| Nakit `calculateVat` `excluded` | `money.taxFromNet(tutar, oran / 100)` | Hayır |
+| Maliyet `vat/` `netAmountMinor` + `vatOnMinor` (dahil girdi) | `money.taxFromGross(money.toMinor(brüt, cur), oran)` | Evet: %1 ve %10'da (maliyet Faz 3) |
+| Maliyet `vatOnMinor` (hariç tutar üstüne) | `money.taxFromNet` | Hayır |
+
+Nakit oranı yüzde (20), çekirdek ondalık (0,2) bekler. Maliyet'in `netUnitPrice` işlevi (birim
+fiyat yuvarlanmadan arındırma, ADR-0003) çekirdeğe girmedi; o bir tutar değil, ara değerdir.
+
+
+**Önerilen imza (taslak, yazılmadı).** Genel tüketim vergisi adıyla, `money` motorunda; oran
+ondalık (%20 = 0,2), tutar kuruş, ikisi birden döner ki `net + vergi = brüt` ayrı ayrı
+yuvarlanarak bozulamasın:
+- `money.taxFromGross(grossMinor, rate)` → `{ net, tax }` ya da `null`
+- `money.taxFromNet(netMinor, rate)` → `{ tax, gross }` ya da `null`
+
+Talepte önerilen `grossToNet` / `taxOn` alınmadı: tek sayı dönen iki işlev, çağıranı farkı
+yeniden hesaplamaya iter ve madde 48B'deki 1 kuruşluk ayrışma orada yeniden doğar. Geçersiz oran
+(negatif, sonlu değil) ve güvenli tam sayı olmayan tutar `null` döner.
+
+#### Madde 37C — not (yeni olgu yok)
+
+Nakit `fmtDecimalGrouped`'ın eksi işaretini sildiği durumu yerelde koruyor (`MathEngine.ts`
+`formatDecimal`). Bugün nakit'te negatif değer gösteren ekran yok. Faz 3'te kâr/zarar ekranında
+küçük negatif değer çıkarsa ölçümle başvurulacak. 37C'nin koşulu değişmedi.
+
+#### Tüketicilerin göç adları
+
+| Yerel | Çekirdek | Dikkat |
+|---|---|---|
+| Maliyet `rates.ts` `rateAt(schedule, iso)` | `period.valueAt(schedule, iso)` | Sırasız çizelgede `null` |
+| Maliyet `rates.ts` `accruedWeight(...)` | `period.accrual(schedule, from, to, basis)` | `from ≥ to` için `0` kararı tüketicide kalır; `null` → `missing_parameter` eşlemesi tüketicide |
+| Maliyet `validateRateSchedule` | — (tüketicide kalır) | Ekran için hata kodları üretir; çekirdek yalnız `null` der |
+| GHS-Panel, Portföy yerel `median` | `math.median` | Çift uzunlukta ortalama; boş dizi `null` |
+| Maliyet `vat/`, `unit-price/`, `fx-break-even/` `solve`, `productName` | — | Tüketicide kalır |
+
+`RateSchedule` türü `period.Schedule` ile yapısal olarak uyumludur; `source` alanı okunmaz.
+
+**Sürüm.** Kod `main`'e girer, `CHANGELOG.md` `[Yayınlanmadı]` altında bekleyen 43, 44A, 44B,
+44D, 45 ve 47 ile birlikte çıkar (madde 42, `AI-RULES §4.3`). Sürüm numarası sahip onayıyla
+değişir.
 
 ### Talep #15 — `unit` motoruna hacim (madde 47, madde 30'un yeniden başvurusu)
 
@@ -702,6 +981,137 @@ değer eklemek yalnız tüm değerleri tek tek kapsayan `switch` yazan kodu etki
 
 **Sürüm.** Sahip kararı (2026-09-28): "yeni sürüm çıkartma, öncekiler gibi beklesin."
 `main`'e girer, `CHANGELOG.md` `[Yayınlanmadı]` altında bekler (madde 42, §4.3).
+
+### Talep #14 — resmî kurum ve şirket unvanı kısaltması (madde 46)
+
+**Kaynak.** Çekirdek sahibinin talebi (2026-09-24): resmî kısaltmalar (`Bşk.`, `Md.`,
+`BŞB`) ve şirket unvanı kısaltması çekirdeğe girsin. Üç aday tüketici tarandı:
+GHS-Panel, SNN-İhale-Maliyet-Teklif, SNN-Proje-ve-Nakit-Akış. Sahibin örnekleri:
+`MANİSA BÜYÜKŞEHİR BELEDİYE BAŞKANLIĞI MEZARLIKLAR DAİRESİ BAŞKANLIĞI`,
+`İstanbul Büyükşehir Belediyesi` → `İstanbul BŞB`,
+`TYC Grup Yapı Peyzaj Orman Ürünleri Limited Şirketi` → `… Ltd.Şti.`
+
+**Tarama üç ayrı ihtiyaç buldu; bugünkü kod bunları karıştırıyor.**
+
+| İhtiyaç | Nerede görüldü | Karar |
+|---|---|---|
+| **Gösterimde kısaltma** — ad dar yere sığmıyor, kayıt değişmiyor | İhale: şartname özeti PDF'i (`print/abbreviate.ts`, 17 kural, sığana kadar adım adım). Proje-Nakit: dar sütunlar (`ProjectProfitRanking` 120px), veride elle yazılmış `Sakarya BŞB`, `Orman GM`. GHS-Panel: müşteri listesi 35, PDF raporu 27 karakterde kesiyor | 46A kabul |
+| **Kayıtta düzeltme** — ad kaydedilmeden tek yazıma çevriliyor | Proje-Nakit `LangEngine.normalizeCompanyName` (form kaydında + veritabanı kopyası). GHS-Panel `nameNormalization.ts` ve çekirdek `text.company()` (dekont adları) | 46B, TB-015 |
+| **Aynı adı tanıma** — eşleştirme anahtarı | Proje-Nakit belgesinde kritik risk: `İBB` ile tam adı iki ayrı müşteri kaydı oluyor. ihale-mcp yüklenici eşleştirmesi (Python; çekirdeği kullanamaz) | 46C ertelendi |
+
+Şirket eki kısaltması şu an **dört ayrı kopyada** yazılı: çekirdek `text.company()`,
+Proje-Nakit, GHS-Panel, ihale-mcp. Kurum kısaltması tek kopyada: İhale `abbreviate.ts`.
+
+**§4.1 sınavı**
+
+| Aday iş | İmzası | Başka alandaki uygulama aynen kullanır mıydı? | Karar |
+|---|---|---|---|
+| Unvanı gösterim için adım adım kısaltma | yalnız metin alır, metin döner | Evet — Türkçe kurum ve şirket unvanı dil kuralıdır; hiçbir iş kavramı bilmez | **46A kabul** |
+| `company()` düzeltmesi | var olan imza | Evet — zaten çekirdekte | **46B kabul, MAJOR** |
+| Eşleştirme anahtarı | metin → anahtar | Evet olabilir, ama tek somut ekran kanıtı var | **46C ertelendi** |
+| EKAP kısaltmalarını açma | metin → metin | Belirsiz — yalnız fixture'da elle yapılmış örnek | **46D ertelendi** |
+| `İBB`, `DSİ`, `Orman GM` sözlüğü | veri | Hayır — hangi kurumun hangi kısaltmayı aldığı veridir | **46E red** |
+
+**Ölçülen `company()` kusurları** (`main` 79d94cc, 13 adla; ayrıntı TB-015):
+`Sanayi Mahallesi Muhtarlığı` → `San. Mahallesi Muhtarlığı`, `Ticaret Odası` → `Tic. Odası`,
+`XYZ İNŞ.SAN.TİC.LTD.ŞTİ.` → `Xyz İnş.san.tic.ltd.şti.`, `T.C. …` → `T.c. …`, `ABC` → `Abc`.
+Sözlükte şirkete özgü `TYC` var. Kısaltılmış ad `stored` alanında dönüyor, tam unvan kayboluyor.
+Kurum kelimelerine (`Başkanlığı`, `Müdürlüğü`) hiç dokunmuyor.
+
+**46A — kabul edilen kapsam.** Sahip kararı (2026-09-24): "1a, 2a, 3 evet".
+
+- **Yalnız gösterim.** Sonuç saklanmaz. Kayıttaki tam unvan değişmez.
+- **Adım adım.** Kurallar sırayla uygulanır, her ara hâl döner (İhale `abbreviationSteps`
+  emsali). Genişliği ölçmek çekirdeğin işi değildir (ekran ve yazı tipi bilgisi); çağıran,
+  sığan ilk adımı seçer.
+- **Kelime sınırı zorunlu.** GHS-Panel'in yerel kopyası sınır aramadığı için `KASAP` →
+  `KA.Ş.AP` üretiyor (ölçüldü, aşağıdaki geri bildirim). Madde 44B'nin dersiyle aynı.
+- **Harf düzeni korunur.** Büyük harfli EKAP adı büyük harfli kısalır (İhale emsali).
+  Harf düzenini değiştirmek ayrı iştir (`title`).
+- **Tüketici ek sözlük verebilir** (46E'nin karşılığı).
+
+**Biçim kaynağı: TDK Kısaltmalar Dizini** (tdk.gov.tr, `Kısaltmalar_Dizini.pdf`, 24 sayfa;
+aslından okundu, 2026-09-24). Sahip kararı 1a: TDK'da olan TDK yazımıyla, olmayan "fiilî
+uygulama" etiketiyle (§4.1 Sınır durumu 4).
+
+- **TDK'da olanlar:** `Bşk.` (başkan, başkanlık, başkanı, başkanlığı), `Md.` (müdür, müdürlük,
+  müdürlüğü), `gn.` (genel), `Ltd.` (limitet), `AŞ` (anonim şirket), `tic.` (ticaret),
+  `Ort.` (ortaklık, ortaklığı), `Şb.` (şube), `Mah.` (mahalle, mahallesi), `Bul.` (bulvar,
+  bulvarı), `Fak.` (fakülte), `T.C.`
+- **TDK'da olmayanlar (fiilî uygulama):** `BŞB`, `Bld.`, `Şti.`, `San.`, `İnş.`, `Dai.`,
+  `Üniv.`, `Hiz.`
+- **`Bşk.lığı` yazılmaz.** TDK'da `Bşk.` zaten "başkanlığı" demektir. Sahibin ilk örneğindeki
+  `Belediye Bşk.lığı` bu yüzden `Belediye Bşk.` olur.
+- **`A.Ş.` kalır, TDK `AŞ` değil.** Çekirdek (`company`, `properNounSuffix`) ve üç tüketicinin
+  hepsi `A.Ş.` kullanıyor; değiştirmek tüketicinin gördüğü çıktıyı değiştirir. Fiilî uygulama
+  diye işlenir.
+
+**Uygulamada kesinleşecek sorular** (sahip kararı gerekirse o zaman sorulur): işlevin adı ve
+imzası; kuralların sırası (`Büyükşehir Belediye Başkanlığı` önce `… Belediye Bşk.` mı olur,
+yoksa doğrudan `BŞB` mi); `Genel Müdürlüğü` → `Gn. Md.` yazımında TDK'nın küçük harfli
+`gn.`'si ad içinde büyük mü yazılır; İhale'nin `Bulv.` yazımı TDK'nın `Bul.`'u ile çelişiyor.
+Beklenen değerler test olarak önce TDK'dan yazılır, sonra kod.
+
+**Sürüm.** Sahip kararı (2026-09-24): sürüm değişmez, acele yok. 46B, TB-013 adım 2 ile aynı
+ana sürümü bekler.
+
+#### 46A — uygulandı: `text.abbreviationSteps` (2026-10-16)
+
+**Açık soruların sahip kararları** (2026-10-16, "hepsi önerin"):
+1. Ad ve biçim: `text.abbreviationSteps(value, { extra })`, adım listesi döner. Ad İhale'nin
+   yerel işleviyle aynı; göç tek satır.
+2. Sıra: önce kalıplar, sonra tek kelimeler; `Büyükşehir Belediye Başkanlığı` doğrudan `BŞB`.
+3. `Genel Müdürlüğü` → `Gn. Md.` (unvan içinde baş harf büyük).
+4. TDK dizini yeniden aslından okundu (indirildi, 24 sayfa).
+5. `company()` düzeltmesi (46B) şimdi yapılmaz; ana sürümü bekler.
+
+**TDK'nın ikinci okuması iki düzeltme getirdi.**
+- Sokak TDK'da `Sok.`'tur, `Sk.` değil. İhale'nin yerel kodu `Sk.` yazıyordu; çekirdek `Sok.` yazar.
+- Yukarıdaki listede `Hiz.` "TDK'da olmayan" diye geçiyordu; yanlış. TDK'da hizmet `Hz.`'dir,
+  ama aynı kısaltma önce "Hazret" anlamındadır (`Hz. 1. Hazret, Hazreti 2. Hizmet`). `Defin Hz.`
+  yanlış okunur. **Sahip kararı (2026-10-16): `Hizmetleri` → `Hiz.`** Fiilî uygulama; TDK'dan
+  bilerek ayrılır. Bunu "TDK'ya uydurma" diye `Hz.`'e çevirmeyin.
+
+**Olası kısaltmalar tarandı** (sahip isteği: "ileride karşımıza gelebilecek olanlar").
+EKAP doğrudan denendi, yine reddetti (HTTP 428). Bunun yerine kardeş projelerdeki gerçek ihale
+verisi (SNN-ihale-ozet, ihale-mcp, İhale-Maliyet, Proje-Nakit; 1.603 dosya) tarandı: 612 ayrı
+idare ve firma adı. En sık kelimeler: `Müdürlüğü` 255, `Başkanlığı` 141, `Genel` 101,
+`Bakanlığı` 47, `Belediyesi` 38+26, `Büyükşehir` 30+12, `Üniversitesi` 27+20, `Rektörlüğü` 27,
+`Hizmetleri` 22, `Dairesi` 14+12, `Hastanesi` 14+12, `Şirketi` 14+13, `İnşaat` 12.
+
+**Ölçülen bulgu: büyük harfli EKAP adlarında `İ` yerine `I` yazılıyor** (`BELEDIYESI`,
+`BÜYÜKŞEHIR`, `DAIRESI`). Kural büyük harfte iki harfi de tanır; çıktı doğru `İ` ile yazılır.
+
+**Kural listesi** (40 kural; sıra kod içinde, `ABBREVIATION_RULES`):
+
+| Kaynak | Kısaltmalar |
+|---|---|
+| TDK | `Bşk.` `Md.` `Gn.` `Şb.` `Mah.` `Cad.` `Sok.` `Bul.` `Apt.` `Fak.` `Ens.` `Müh.` `Ort.` `Tic.` `T.C.` `Ltd.` |
+| Fiilî uygulama | `BŞB` `Bld.` `OSB` `A.Ş.` `Şti.` `Rekt.` `Üniv.` `Dai.` `Hiz.` `Koop.` `San.` `İnş.` `Taah.` `Dan.` `Mak.` `Nak.` `İth.` `İhr.` `Paz.` |
+
+**Bilerek alınmayanlar** (§4.1 Sınır durumu 3): `Bakanlığı`, `Hastanesi`, `Komutanlığı`,
+`Kaymakamlığı`, `Valiliği`, `Başhekimliği`, `Merkezi`. Sık geçiyorlar, ama TDK'da kısaltmaları
+yok ve yaygın tek bir yazım da yok. TDK'daki tek harfli `H` (hastane) ve `K` (komutanlık)
+belirsiz. Gerekirse tüketici `extra` ile verir.
+
+**`Ticaret Odası` → `Tic. Odası`.** Madde 46B'de bu `company()` için kusur sayılmıştı, çünkü
+oradaki sonuç kayda giriyordu. Burada yalnız gösterim adımıdır ve tam unvan saklıdır; kabul edilir.
+
+**Mutasyon testi.** Sekiz mutasyonun sekizi de kırmızı verdi: kelime sınırının iki yanı, `I`/`İ`
+toleransı, büyük harf kuralı, kısaltmayan kural elemesi, düzenli ifade kaçışı, `$` kaçışı ve
+`extra`'nın önce uygulanması. Testi kırmayan `long === ''` denetimi ölü koddu ve kaldırıldı.
+Boş kalıbı uzunluk denetimi zaten eliyor.
+
+**Tüketicilerin göçü.**
+
+| Yerel | Çekirdek |
+|---|---|
+| İhale `print/abbreviate.ts` `abbreviationSteps(value)` | `text.abbreviationSteps(value)`; `fitText` tüketicide kalır (`steps.find(fits)`) |
+| Proje-Nakit `LangEngine.normalizeCompanyName` (gösterim için kullanıldığı yerler) | `text.abbreviationSteps(ad).pop()` ya da sığan adım; kayıt için kullanımı 46B'yi bekler |
+| GHS-Panel `nameNormalization.ts` (gösterim için kullanıldığı yerler) | aynı |
+
+İhale'den farklar: `Bulv.` → `Bul.`, `Sk.` → `Sok.` (TDK); büyük harfte `I` toleransı; OSB, T.C.,
+`Limited Şirketi` ve şirket sektör kelimeleri eklendi; `Hizmetleri` → `Hiz.` aynı.
 
 ### Madde 45 — `yeniKayit` → `newRegistration`, iki adımda (TB-013)
 
@@ -994,3 +1404,4 @@ yazılmıştır.
 | #11 | 24 Eylül 2026 | GHS-Panel: para gösterimi, proje varsayılanı, elle simge ekleme (issue #47) | 4.1.1 → 4.3.0 |
 | #12 | 24 Eylül 2026 | GHS-Panel: `dotAsDecimal` kontrollü kutu hatası + hane sınırı (issue #48) | 4.1.1 → 4.2.0 |
 | #13 | 24 Eylül 2026 | TYC Grup şartname özeti (prototip): rakamla biten özel ada hâl eki (issue #51) | 4.3.0 → main (yayınlanmadı) |
+| #14 | 24 Eylül 2026 | Sahip: resmî kurum ve şirket unvanı kısaltması; GHS-Panel, SNN-İhale, SNN-Proje-Nakit ihtiyaç taraması (issue yok, sözlü) | main (yayınlanmadı) |

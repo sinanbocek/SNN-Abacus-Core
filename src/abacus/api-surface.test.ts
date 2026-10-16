@@ -27,15 +27,15 @@ import * as abacus from './index';
 const API_SURFACE: Record<string, string[]> = {
   math: [
     'abs', 'add', 'allocate', 'ceil', 'div', 'equals', 'floor', 'irr', 'log', 'log10',
-    'max', 'mod', 'mul', 'percent', 'percentChange', 'pow', 'ratio', 'round', 'sub',
+    'max', 'median', 'mod', 'mul', 'percent', 'percentChange', 'pow', 'ratio', 'round', 'sub',
   ],
   money: [
     'compact', 'compactMajor', 'decimal', 'fmtDecimalGrouped', 'format', 'formatGroupedInput',
     'formatMajor', 'formatMinorInput', 'knownCurrencyCodes', 'parse',
-    'parseNumber', 'percent', 'ratio', 'toMinor', 'toWords',
+    'parseNumber', 'percent', 'ratio', 'taxFromGross', 'taxFromNet', 'toMinor', 'toWords',
   ],
   text: [
-    'company', 'email', 'endsWithHardConsonant', 'endsWithVowel', 'isBackVowel',
+    'abbreviationSteps', 'company', 'email', 'endsWithHardConsonant', 'endsWithVowel', 'isBackVowel',
     'isRoundedVowel', 'join', 'lastVowel', 'lower', 'name', 'numberToWords',
     'digits', 'phone', 'plate', 'properNounSuffix', 'searchKey', 'suffix', 'title', 'toAsciiLower',
     'toAsciiUpper', 'toTrLower', 'upper',
@@ -57,8 +57,8 @@ const API_SURFACE: Record<string, string[]> = {
   silver: ['ONS_TO_GRAM', 'SILVER_PURITY', 'gramSilverPrice'],
   unit: ['ONS_TO_GRAM', 'categoryOf', 'convert', 'dataSize'],
   period: [
-    'addDays', 'addMonths', 'endOfMonth', 'isBetween', 'monthsBetween',
-    'quarterOf', 'quarterRange', 'startOfMonth',
+    'accrual', 'addDays', 'addMonths', 'endOfMonth', 'isBetween', 'monthsBetween',
+    'quarterOf', 'quarterRange', 'startOfMonth', 'valueAt',
   ],
   collate: ['compare', 'key', 'sortBy'],
 };

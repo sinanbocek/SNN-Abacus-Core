@@ -63,18 +63,18 @@ silver.gramSilverPrice(31, 34.20);        // 3405 (kuruş)
 
 | Motor | Dışa açılan fonksiyonlar (tam liste) | Not |
 |---|---|---|
-| `math` | `add`, `sub`, `mul`, `div`\|null, `round` (half-up), `abs`, `floor`, `ceil`, `mod`\|null, `ratio`\|null, `percent`\|null, **`percentChange`\|null**, **`equals`**, `pow`\|null, `log`\|null (doğal), `log10`\|null, `max`\|null, `irr`\|null (dönemsel), **`allocate`**\|null (dizi; Σ = total) | decimal.js kapsülü; `allocate` BigInt |
-| `money` | `format`, `parse`\|null, `formatMajor`, `toMinor`\|null, `formatMinorInput`, `decimal`, `ratio`, `percent`, `parseNumber`\|null, `fmtDecimalGrouped`, `formatGroupedInput`, `toWords`, `compact`, `compactMajor`, `knownCurrencyCodes` | alt birim ↔ metin |
+| `math` | `add`, `sub`, `mul`, `div`\|null, `round` (half-up), `abs`, `floor`, `ceil`, `mod`\|null, `ratio`\|null, `percent`\|null, **`percentChange`\|null**, **`equals`**, `pow`\|null, `log`\|null (doğal), `log10`\|null, `max`\|null, **`median`**\|null, `irr`\|null (dönemsel), **`allocate`**\|null (dizi; Σ = total) | decimal.js kapsülü; `allocate` BigInt |
+| `money` | `format`, `parse`\|null, `formatMajor`, `toMinor`\|null, `formatMinorInput`, `decimal`, `ratio`, `percent`, `parseNumber`\|null, `fmtDecimalGrouped`, `formatGroupedInput`, `toWords`, `compact`, `compactMajor`, `knownCurrencyCodes`, **`taxFromGross`**\|null, **`taxFromNet`**\|null | alt birim ↔ metin; vergi dahil/hariç ayrıştırma |
 | `currency` | `convert(minor, rate)`\|null, `cross(minor, from, to)`\|null | kur parametreyle gelir |
 | `date` | `format`, `parse`\|null, `monthName`, `daysBetween`\|null, `daysUntil`\|null, `relative`, `relativeTime`, `dayName`, `weekday`\|null, `isWeekend`\|null, **`isBefore`\|null**, **`isAfter`\|null**, **`isSameDay`\|null** | Intl'siz, TR, Europe/Istanbul; tarih SORGULAR |
-| `text` | `toAsciiLower`, **`toAsciiUpper`**, **`digits`**, `toTrLower`, `lower`, `upper`, `title`, `join`, **`searchKey`**, `phone`, `plate`, `whatsapp`, `email`, `website`, `websiteUrl`, `name`, `company`, `numberToWords`, `lastVowel`, `isBackVowel`, `isRoundedVowel`, `endsWithHardConsonant`, `endsWithVowel`, `suffix`, **`properNounSuffix`** | TR harf güvenli |
+| `text` | `toAsciiLower`, **`toAsciiUpper`**, **`digits`**, `toTrLower`, `lower`, `upper`, `title`, `join`, **`searchKey`**, `phone`, `plate`, `whatsapp`, `email`, `website`, `websiteUrl`, `name`, `company`, **`abbreviationSteps`**, `numberToWords`, `lastVowel`, `isBackVowel`, `isRoundedVowel`, `endsWithHardConsonant`, `endsWithVowel`, `suffix`, **`properNounSuffix`** | TR harf güvenli |
 | `validate` | `vkn`, `tckn`, `ikn`, `iban`, `email` | resmî checksum, hepsi `boolean` |
 | `mask` | `money`, `vkn`, `iban`, `phone` | PII gizleme |
 | `tradingMath` | `volumeFromQty`, `qtyFromVolume`, `leverage`\|null, `calculateThresholdDays`\|null, `validateTradeDirections`, `computeRiskReward`, `computePortfolioRatios` | ticari |
 | `gold` | `gramGoldPrice(onsUsd, usdTry, karat)`\|null, `ziynetPrice(type, onsUsd, usdTry)`\|null + `ONS_TO_GRAM`, `PURITY`, `ZIYNET_GRAM` | kuruş çıktı |
 | `silver` | `gramSilverPrice(onsUsd, usdTry, millesimal=999)`\|null + `ONS_TO_GRAM`, `SILVER_PURITY` | kuruş çıktı |
 | `unit` | `convert(value, from, to)`\|null, `categoryOf`\|null, `dataSize` + `ONS_TO_GRAM` | birim çevrimi |
-| `period` | `addDays`\|null, `addMonths`\|null, `startOfMonth`\|null, `endOfMonth`\|null, `quarterOf`\|null, `quarterRange`\|null, `monthsBetween`\|null, `isBetween`\|null | tarih ÜRETİR (`date` biçimlendirir) |
+| `period` | `addDays`\|null, `addMonths`\|null, `startOfMonth`\|null, `endOfMonth`\|null, `quarterOf`\|null, `quarterRange`\|null, `monthsBetween`\|null, `isBetween`\|null, **`valueAt`**\|null, **`accrual`**\|null | tarih ÜRETİR (`date` biçimlendirir); tarihli değer çizelgesi (`Schedule`) |
 | `collate` | `key`, `compare`, `sortBy` | Türkçe sıralama, `Intl.Collator` yok |
 
 ### 2.0 PARA BİRİMİ VERİDİR (normatif)
@@ -148,7 +148,7 @@ Motorlar tek bir hata dili kullanmaz; **hangi işin hangi sentineli döndürdü�
 `ceil` sonlu olmayan girdide sonlu olmayan çıktı üretir (`add(NaN, 1) → NaN`). Bu
 IEEE-754 yayılımıdır ve **bilinçlidir**: bu yedi fonksiyon `number` döner, tanımsızlık
 üretemez. Tanımsızlık üretebilenler (`div`, `mod`, `ratio`, `percent`, `percentChange`,
-`pow`, `log`, `log10`, `max`, `irr`, `allocate`) `null` döner. `allocate` dizi döndüren tek `math` fonksiyonudur; geçersiz girdide boş dizi değil `null` döner. Girdi doğrulaması **motor katmanının** sorumluluğudur; her genel
+`pow`, `log`, `log10`, `max`, `median`, `irr`, `allocate`) `null` döner. `allocate` dizi döndüren tek `math` fonksiyonudur; geçersiz girdide boş dizi değil `null` döner. Girdi doğrulaması **motor katmanının** sorumluluğudur; her genel
 motor kapısı `Number.isFinite` ile korunur. `NaN` hiçbir koşulda `0`'a çevrilmez.
 
 **Hane sayısı parametresi (v3.0.0):** `math.round(x, d)` ilkel katmandadır ve `d`'yi

@@ -9,10 +9,103 @@ sürümleme [Semantic Versioning](https://semver.org/lang/tr/) kurallarına uyar
 > `main`'de, henüz sürüm numarası almadı. Toplu sürüm kuralı (`AI-RULES §4.3`) gereği bir
 > sonraki pakette çıkar; 4.3.0 güncelleme PR'ları tüketicilerde hâlâ açık.
 > Karar: [`GERI-BILDIRIM-KAYDI.md`](GERI-BILDIRIM-KAYDI.md) madde 43 (talep #13, issue #51), madde 44 (TB-014),
-> madde 45 (TB-013 adım 1) ve madde 47 (hacim birimleri).
+> madde 45 (TB-013 adım 1), madde 46A (unvan kısaltma), madde 47 (hacim birimleri) ve
+> madde 48 (talep #16: tarihli değer çizelgesi, ortanca, vergi dahil/hariç).
 >
-> ⚠️ **Bu paket bir alan (`newRegistration`) ve bir birim kategorisi (`volume`) EKLİYOR,
-> yani sürüm en az MINOR olmalı (4.4.0).**
+> ⚠️ **Bu paket yeni fonksiyonlar (`period.valueAt`, `period.accrual`, `math.median`,
+> `text.abbreviationSteps`, `money.taxFromGross`, `money.taxFromNet`), bir alan
+> (`newRegistration`) ve bir birim kategorisi (`volume`) EKLİYOR, yani sürüm en az MINOR
+> olmalı (4.4.0).**
+
+### Eklenenler — tarihli değer çizelgesi: `period.valueAt`, `period.accrual` (madde 48A)
+
+Faiz, kira, vergi oranı gibi zamanla değişen değerler için. Çizelge `{ from, value }`
+satırlarıdır ("şu günden itibaren şu değer"); değerleri çağıran verir, çekirdek yalnız
+mekanizmayı taşır.
+
+```
+const s = [{ from: '2026-01-01', value: 0.4 }, { from: '2026-11-01', value: 0.35 }];
+period.valueAt(s, '2026-10-31')                        -> 0.4
+period.valueAt(s, '2025-12-31')                        -> null   (ilk satırdan önce değer yok)
+period.accrual(s, '2026-10-01', '2026-12-15', 365)     -> 0.0761…  (31 × 0,4 + 44 × 0,35) ÷ 365
+period.accrual(s, '2026-12-15', '2026-10-01', 365)     -> null   (ters aralık)
+```
+
+`accrual` aralığı `from` dâhil `to` hariç sayar ve oranın değiştiği günlerde dilimler;
+değişim günü yeni orana aittir. Sonuç yuvarlanmaz. Bozuk çizelge (sırasız, tekrarlı tarih,
+sonlu olmayan değer) ve geçersiz gün esası `null` verir.
+
+**SNN-Ihale-Maliyet'in yerel kopyasından farkları** (`src/domain/rule-set/rates.ts`):
+
+| Durum | Yerel `rateAt` / `accruedWeight` | Çekirdek `valueAt` / `accrual` |
+|---|---|---|
+| Ters aralık (`from > to`) | `ok(0)` | `null` — sıfır kararı çağıranın iş kuralı |
+| Gün esası `0` | `ok(null)` (tipi `number` görünür) | `null` |
+| Gün esası negatif | negatif ağırlık | `null` |
+| Sırasız çizelge | sessizce yanlış değer | `null` |
+| Başta oran yok | `missing_parameter` hatası | `null` |
+
+Kaynak testlerindeki hesap değerleri (6/73, 139/1825, değişimin aralıktan sonra olduğu durum)
+çekirdekte birebir aynı çıktı; farklı olan yalnız yukarıdaki tablodur.
+
+### Eklenenler — `text.abbreviationSteps`: unvanı gösterim için kısaltma (madde 46A)
+
+Kurum ve şirket unvanını dar yere sığdırmak için adım adım kısaltır. İlk adım metnin kendisi,
+her sonraki bir kural daha uygulanmış hâlidir; sığan adımı çağıran seçer. **Kayıt için
+değildir:** tam unvan saklanır, kısaltma yalnız gösterilir.
+
+```
+text.abbreviationSteps('Manisa Büyükşehir Belediye Başkanlığı Park Müdürlüğü')
+  -> ['Manisa Büyükşehir Belediye Başkanlığı Park Müdürlüğü', 'Manisa BŞB Park Müdürlüğü', 'Manisa BŞB Park Md.']
+text.abbreviationSteps('Örnek İnşaat Taahhüt Sanayi ve Ticaret Anonim Şirketi').pop()
+  -> 'Örnek İnş. Taah. San. ve Tic. A.Ş.'
+text.abbreviationSteps('ANKARA BÜYÜKŞEHIR BELEDIYESI').pop()   -> 'ANKARA BŞB'
+text.abbreviationSteps('Şubeler Birliği')                        -> ['Şubeler Birliği']
+```
+
+40 kural; biçimler TDK Kısaltmalar Dizini'nden, TDK'da olmayanlar yaygın kullanımdan
+(liste: `GERI-BILDIRIM-KAYDI.md` madde 46A). Yalnız kelime sınırında uygulanır. Büyük harfli
+metin büyük harfle kısalır; büyük harfte `İ` yerine yazılmış `I` da tanınır. Kuruma özgü
+kısaltmalar (`İBB`, `DSİ`) çekirdekte yoktur; `{ extra: [['İstanbul Büyükşehir Belediyesi', 'İBB']] }`
+ile verilir ve önce uygulanır.
+
+`text.company()` değişmedi. Onun düzeltmesi kırıcıdır ve bir sonraki ana sürümü bekler (TB-015).
+
+### Eklenenler — `money.taxFromGross`, `money.taxFromNet`: vergi dahil/hariç (madde 48H)
+
+KDV, ÖTV gibi genel tüketim vergisi için. İki işlev de net ile vergiyi **birlikte** döner;
+`net + vergi` her zaman brüte eşittir. Oran ondalık (%20 = 0,2), tutar kuruş.
+
+```
+money.taxFromGross(12000, 0.2)    -> { net: 10000, tax: 2000 }
+money.taxFromGross(100299, 0.2)   -> { net: 83582, tax: 16717 }
+money.taxFromNet(7, 0.2)          -> { tax: 1, gross: 8 }
+money.taxFromGross(100, -0.1)     -> null
+```
+
+Kural (mali müşavir onaylı): vergi dahil tutarda vergi "iç yüzde" ile bulunur,
+`round(brüt × oran ÷ (1 + oran))`, net ondan sonra `brüt − vergi` olur. Vergi hariç tutarda
+`round(net × oran)`. Yuvarlama yarım yukarı, işaret korumalı.
+
+**Yerel KDV kodundan geçen tüketici bir kuruşluk fark görebilir.** Önce neti bulan yöntem %20'de
+vakaların altıda birinde, `round(net × oran)` yöntemi %1 ve %10'da vergiyi 1 kuruş farklı
+buluyordu (1–200.000 kuruş tarandı; ayrıntı defter madde 48H). Çekirdeğin sonucu onaylanan kuraldır.
+
+### Eklenenler — `math.median` (madde 48E)
+
+```
+math.median([3, 1, 2])      -> 2
+math.median([4, 1, 3, 2])   -> 2.5
+math.median([0.1, 0.2])     -> 0.15
+math.median([])             -> null
+math.median([1, NaN])       -> null
+```
+
+Çift sayıda değerde iki ortanın ortalaması (istatistiğin tanımı); ortalama ondalık tamdır.
+Boş dizi `null` verir, `0` değil. `math.max`'tan farklı olarak geçersiz değer atlanmaz,
+çünkü atlamak ortancayı kaydırır. Kardeş projelerdeki üç yerel kopyanın ikisi çift
+uzunlukta üst ortayı döndürüyor (`[1, 2, 3, 4]` → `3`) ve boş dizide `0` veriyor; çekirdeğe
+geçen tüketici bu iki farkı bilmelidir.
 
 ### Eklenenler — `unit` motoruna hacim (madde 47)
 

@@ -1,4 +1,4 @@
-import { abs, div, floor, mod, mul, round } from '../math';
+import { abs, add, div, floor, mod, mul, round, sub } from '../math';
 import { numberToWords } from '../text';
 import { formatMoney, groupThousands } from '../internal/money-format';
 import { parseMoney } from '../internal/money-parse';
@@ -124,6 +124,58 @@ export function toMinor(major: number, currency?: CurrencyRef): number | null {
   const scaled = mul(major, minorFactor(cur));
   const result = round(scaled, 0);
   return Number.isSafeInteger(result) ? result : null;
+}
+
+/** `taxFromGross` sonucu: vergi dahil tutarın ayrışımı (alt birim). `net + tax === gross`. */
+export interface GrossTaxSplit {
+  readonly net: number;
+  readonly tax: number;
+}
+
+/** `taxFromNet` sonucu: vergi hariç tutara binen vergi ve toplam (alt birim). `net + tax === gross`. */
+export interface NetTaxSplit {
+  readonly tax: number;
+  readonly gross: number;
+}
+
+const isTaxInput = (amountMinor: number, rate: number): boolean =>
+  Number.isSafeInteger(amountMinor) && Number.isFinite(rate) && rate >= 0;
+
+/**
+ * Vergi DAHİL tutarı net ve vergiye ayırır (KDV, ÖTV gibi genel tüketim vergisi; madde 48H).
+ *
+ * Vergi "iç yüzde" ile bulunur ve alt birime yarım yukarı yuvarlanır; net, brütten vergi
+ * düşülerek çıkar: `tax = round(gross × rate ÷ (1 + rate))`, `net = gross − tax`. Böylece
+ * `net + tax` her zaman `gross`'tur. Oran ondalıktır (%20 = 0,2); tutar alt birim tam sayısıdır.
+ * Negatif tutar (iade) işaret korumalı yuvarlanır.
+ *
+ * Geçersiz oranda (negatif, sonlu değil) ve güvenli tam sayı olmayan tutarda `null` döner.
+ *
+ * @example money.taxFromGross(12000, 0.2)   // { net: 10000, tax: 2000 }
+ * @example money.taxFromGross(100299, 0.2)  // { net: 83582, tax: 16717 }
+ */
+export function taxFromGross(grossMinor: number, rate: number): GrossTaxSplit | null {
+  if (!isTaxInput(grossMinor, rate)) return null;
+  const share = div(mul(grossMinor, rate), add(1, rate));
+  // Tip düzeyinde zorunlu: oran negatif olamadığı için bölen en az 1'dir, null oluşmaz.
+  if (share === null) return null;
+  const tax = round(share, 0);
+  return { net: sub(grossMinor, tax), tax };
+}
+
+/**
+ * Vergi HARİÇ tutara binen vergiyi ve toplamı bulur (madde 48H).
+ *
+ * `tax = round(net × rate)` (alt birime yarım yukarı), `gross = net + tax`. Oran ondalıktır;
+ * 1'den büyük olabilir (ÖTV). Geçersiz girdide `null` döner (`taxFromGross` ile aynı kural).
+ *
+ * @example money.taxFromNet(10000, 0.2)  // { tax: 2000, gross: 12000 }
+ * @example money.taxFromNet(7, 0.2)      // { tax: 1, gross: 8 }
+ */
+export function taxFromNet(netMinor: number, rate: number): NetTaxSplit | null {
+  if (!isTaxInput(netMinor, rate)) return null;
+  const tax = round(mul(netMinor, rate), 0);
+  return { tax, gross: add(netMinor, tax) };
 }
 
 /**

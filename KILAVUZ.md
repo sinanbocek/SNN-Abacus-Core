@@ -163,6 +163,8 @@ math.div(math.log(1000), math.log(10))     // → 2.9999999999999996
 | Bir tarihe gün/ay eklemek | `period.addDays` / `period.addMonths` |
 | Ay başı / ay sonu | `period.startOfMonth` / `period.endOfMonth` |
 | Çeyrek | `period.quarterOf` / `period.quarterRange` |
+| Bir gündeki oran (tarihli çizelge) | `period.valueAt` |
+| Oran değişimlerinde basit faiz ağırlığı | `period.accrual` |
 
 ⚠️ İş kuralını **gün adına** bağlamayın (`dayName(iso) === 'Cts'`); ad bir gösterimdir.
 Karar için `weekday` veya `isWeekend` kullanın.
@@ -259,6 +261,19 @@ math.log10(1700000) > 6        // → true
 math.log(0)             // → null
 math.max(1, 5, 10, 3)   // → 10
 math.max()              // → null
+```
+
+**Ortanca**
+
+Uç değerden etkilenmeyen orta değer. Çift sayıda değerde iki ortanın ortalamasıdır.
+`max`'tan farklı olarak geçersiz değer atlanmaz; tek bir `NaN` sonucu `null` yapar.
+
+```js
+math.median([3, 1, 2])          // → 2
+math.median([4, 1, 3, 2])       // → 2.5
+math.median([0.1, 0.2])         // → 0.15
+math.median([])                 // → null
+math.median([1, NaN])           // → null
 ```
 
 **Toleranslı eşitlik**
@@ -432,6 +447,24 @@ money.knownCurrencyCodes()     // → ['EUR', 'GBP', 'TRY', 'USD']
 Listede olmayan bir birimi tanımıyla verebilirsiniz:
 `{ code: 'AZN', symbol: '₼', text: 'AZN', minorDigits: 2 }`.
 
+**Vergi dahil / hariç (KDV, ÖTV)**
+
+Vergi dahil tutarı ayırmak için `taxFromGross`, hariç tutara vergi bindirmek için `taxFromNet`.
+İkisi de net ile vergiyi **birlikte** döner ve `net + vergi` her zaman brüte eşittir. Vergiyi
+ayrıca `round(net × oran)` diye yeniden hesaplamayın: vergi dahil tutarda bir kuruş sapar.
+Oran ondalıktır (%20 = 0,2), tutar kuruştur.
+
+```js
+money.taxFromGross(12000, 0.2)     // → ({ net: 10000, tax: 2000 })
+money.taxFromGross(100299, 0.2)    // → ({ net: 83582, tax: 16717 })
+money.taxFromNet(10000, 0.2)       // → ({ tax: 2000, gross: 12000 })
+money.taxFromNet(7, 0.2)           // → ({ tax: 1, gross: 8 })
+money.taxFromGross(100, -0.1)      // → null
+```
+
+Kural: vergi dahil tutarda vergi "iç yüzde" ile bulunur (`brüt × oran ÷ (1 + oran)`) ve kuruşa
+yarım yukarı yuvarlanır; net, brütten vergi düşülerek çıkar.
+
 ---
 
 ## 5. `currency` — kur çevrimi
@@ -545,6 +578,31 @@ period.isBetween('2026-08-15', '2026-08-01', '2026-08-31')   // → true
 
 `addMonths` ay sonuna **kırpar**: 31 Ocak + 1 ay, 3 Mart değil 28 Şubat'tır.
 
+**Tarihli değer çizelgesi**
+
+Faiz, kira, vergi oranı gibi zamanla değişen bir değer, `{ from, value }` satırlarıyla
+verilir: "şu günden itibaren şu değer". Satırlar kesin artan tarihli olmalıdır; bozuk
+çizelge `null` verir. Değerler çekirdekte durmaz, siz verirsiniz.
+
+```js
+period.valueAt([{ from: '2026-01-01', value: 0.4 }, { from: '2026-11-01', value: 0.35 }], '2026-10-31')   // → 0.4
+period.valueAt([{ from: '2026-01-01', value: 0.4 }, { from: '2026-11-01', value: 0.35 }], '2026-11-01')   // → 0.35
+period.valueAt([{ from: '2026-01-01', value: 0.4 }], '2025-12-31')                                        // → null
+```
+
+`accrual` basit faiz ağırlığıdır: Σ (oran × gün) ÷ gün esası. Aralık `from` dâhil, `to`
+hariçtir ve oranın değiştiği günlerde dilimlenir. Sonuç yuvarlanmaz; tutarla çarpıp
+kuruşa inmek sizin işinizdir.
+
+```js
+period.accrual([{ from: '2026-01-01', value: 0.1 }], '2026-01-01', '2026-01-04', 1)   // → 0.3
+period.accrual([{ from: '2026-01-01', value: 0.4 }, { from: '2026-11-01', value: 0.35 }], '2026-10-01', '2026-12-15', 365)   // → 0.07616438356164383
+period.accrual([{ from: '2026-01-01', value: 0.4 }], '2026-12-15', '2026-10-01', 365)   // → null
+```
+
+Ters aralık `null` verir: "ödeme tahsilattan sonraysa faiz yok" gibi bir sıfır kararı
+sizin iş kuralınızdır, çekirdek onu varsaymaz.
+
 ---
 
 ## 8. `text` — Türkçe metin
@@ -625,6 +683,25 @@ text.websiteUrl('example.com')       // → 'https://example.com'
 text.name('  MEHMET   ali  ÖZ ').stored           // → 'Mehmet Ali Öz'
 text.company('xyz inşaat anonim şirketi').stored  // → 'Xyz İnş. A.Ş.'
 ```
+
+**Unvanı dar yere sığdırmak**
+
+`company` kayıt için tek yazıma çevirir. Gösterimde kısaltmak için `abbreviationSteps`
+kullanın: tam unvanı saklayın, yalnız dar yerde kısaltın. İşlev adımların listesini döner;
+ilk adım metnin kendisidir, her sonraki bir kural daha uygulanmış hâlidir. Sığan ilk adımı
+siz seçersiniz (genişlik ekrana ve yazı tipine bağlıdır).
+
+```js
+text.abbreviationSteps('Manisa Büyükşehir Belediye Başkanlığı Park Müdürlüğü')   // → ['Manisa Büyükşehir Belediye Başkanlığı Park Müdürlüğü', 'Manisa BŞB Park Müdürlüğü', 'Manisa BŞB Park Md.']
+text.abbreviationSteps('TYC Grup Orman Ürünleri Limited Şirketi').pop()          // → 'TYC Grup Orman Ürünleri Ltd.Şti.'
+text.abbreviationSteps('MANİSA BÜYÜKŞEHİR BELEDİYESİ MEZARLIKLAR DAİRESİ BAŞKANLIĞI').pop()   // → 'MANİSA BŞB MEZARLIKLAR DAİ. BŞK.'
+text.abbreviationSteps('Şubeler Birliği')                                          // → ['Şubeler Birliği']
+text.abbreviationSteps('İstanbul Büyükşehir Belediyesi Fen İşleri', { extra: [['İstanbul Büyükşehir Belediyesi', 'İBB']] }).pop()   // → 'İBB Fen İşleri'
+```
+
+Biçimler TDK Kısaltmalar Dizini'nden (`Bşk.`, `Md.`, `Gn.`, `Mah.`, `Cad.`, `Sok.`,
+`Bul.`); TDK'da olmayanlar yaygın kullanımdan (`BŞB`, `Bld.`, `Ltd.Şti.`, `A.Ş.`, `San.`).
+Kuruma özgü kısaltmalar (`İBB`, `DSİ`) çekirdekte yoktur; `extra` ile siz verirsiniz.
 
 **Araç plakası**
 

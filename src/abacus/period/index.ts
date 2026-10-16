@@ -1,4 +1,5 @@
 import { daysBetween, format } from '../date';
+import { add, div, mul, sub } from '../math';
 
 /**
  * ABACUS dönem / periyot aritmetiği motoru.
@@ -154,4 +155,86 @@ export function isBetween(iso: string, startIso: string, endIso: string): boolea
   const toEnd = daysBetween(iso, endIso);
   if (fromStart === null || toEnd === null) return null;
   return fromStart >= 0 && toEnd >= 0;
+}
+
+/**
+ * Tarihli değer çizelgesinin bir satırı: `from` gününden itibaren `value` geçerlidir.
+ * Satırda başka alanlar da olabilir (kaynak, not); okunmaz.
+ */
+export interface ScheduleEntry {
+  readonly from: string;
+  readonly value: number;
+}
+
+/**
+ * Tarihli değer çizelgesi: faiz, kira, vergi oranı gibi zamanla değişen bir değer.
+ * Satırlar `from` tarihine göre KESİN artan sırada olmalıdır; bugünkü tek değer tek
+ * satırlık çizelgedir. Çizelge değerleri çekirdekte durmaz, çağıran verir.
+ */
+export type Schedule = readonly ScheduleEntry[];
+
+/** Satır tarihleri geçerli ve kesin artan, değerler sonlu mu. */
+function isValidSchedule(schedule: Schedule): boolean {
+  let previous: string | null = null;
+  for (const entry of schedule) {
+    if (!Number.isFinite(entry.value) || parseDay(entry.from) === null) return false;
+    if (previous !== null) {
+      const gap = daysBetween(previous, entry.from);
+      if (gap === null || gap <= 0) return false;
+    }
+    previous = entry.from;
+  }
+  return true;
+}
+
+/**
+ * `iso` gününde yürürlükteki değer: başlangıcı o güne kadar olan son satır.
+ *
+ * `null` döner: ilk satırdan önceki tarihte (değer yoktur, sıfır değildir), geçersiz
+ * tarihte ve bozuk çizelgede (sırasız, tekrarlı tarih, geçersiz satır, sonlu olmayan
+ * değer). Çizelge her çağrıda bütünüyle denetlenir; bozuk çizelge sessizce okunmaz.
+ *
+ * @example period.valueAt([{ from: '2026-01-01', value: 0.4 }, { from: '2026-11-01', value: 0.35 }], '2026-10-31') // 0.4
+ */
+export function valueAt(schedule: Schedule, iso: string): number | null {
+  if (!isValidSchedule(schedule)) return null;
+  let value: number | null = null;
+  for (const entry of schedule) {
+    const sinceStart = daysBetween(entry.from, iso);
+    if (sinceStart === null || sinceStart < 0) break;
+    value = entry.value;
+  }
+  return value;
+}
+
+/**
+ * Basit birikim: Σ (değer × gün) ÷ gün esası, `from` dâhil `to` hariç aralıkta.
+ *
+ * Aralık, çizelgenin değişim tarihlerinde dilimlere bölünür; değişim günü yeni değere
+ * aittir. Gün esası (365, 360…) çağıranın kararıdır. Sonuç yuvarlanmaz; tutara çarpıp
+ * kuruşa inmek çağıranın işidir (`money.toMinor`, `math.round`).
+ *
+ * `from === to` ise 0. `null` döner: ters aralıkta, aralığın başında değer yoksa,
+ * gün esası pozitif sonlu sayı değilse, geçersiz tarihte ve bozuk çizelgede.
+ *
+ * @example period.accrual([{ from: '2026-01-01', value: 0.4 }], '2026-10-01', '2026-12-15', 365) // 6/73 ≈ 0.0822
+ */
+export function accrual(schedule: Schedule, from: string, to: string, basis: number): number | null {
+  if (!(Number.isFinite(basis) && basis > 0)) return null;
+  const startValue = valueAt(schedule, from);
+  const span = daysBetween(from, to);
+  if (startValue === null || span === null || span < 0) return null;
+
+  let total = 0;
+  let value = startValue;
+  let cursor = 0;
+  for (const entry of schedule) {
+    const offset = daysBetween(from, entry.from);
+    if (offset === null || offset <= 0) continue;
+    if (offset >= span) break;
+    total = add(total, mul(value, sub(offset, cursor)));
+    value = entry.value;
+    cursor = offset;
+  }
+  return div(add(total, mul(value, sub(span, cursor))), basis);
 }
