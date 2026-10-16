@@ -147,6 +147,7 @@ birleştirir. Sabit etikete bağlı tüketicilere (`#vX.Y.Z`) hiç gelmez, elle 
 | 48E | `math.median` | Talep #16 E (Nakit emsal arşivi tasarımı) | ✅ Kabul — **eklemeli**; üç yerel kopya ölçüldü (GHS-Panel, Portföy) | yayınlanmadı (main) |
 | 48F | Yüzdelik (`percentile`) | Talep #16 E | ❌ **Red** (ertelendi) — kod ve ekran yok; tanım bir tercihtir | — |
 | 48G | Başlık biçiminde kısaltma koruma (`productName`, sözlük parametresi) | Talep #16 F | ❌ **Red** (ertelendi) — tek tüketici; madde 46A ile birlikte tasarlanacak | — |
+| 48H | KDV dahil/hariç ayrıştırma — madde 48B'nin yeniden başvurusu | Nakit koordinatör oturumu (sahip talimatı, 2026-10-16) | ⏳ **Koşulun yarısı karşılandı** — ikinci ekran ölçüldü; kural kararı GİB araştırmasını bekliyor | karar bekliyor |
 
 ---
 
@@ -810,6 +811,35 @@ sözlük doğar. Talebin kendisi "belki" dedi; §4.1 Sınır durumu 3.
 **Yeniden başvuru koşulu:** İkinci bir tüketici büyük harf veriyi başlık biçimine çevirsin, ya
 da 46A yazılırken kısaltma sözlüğü tasarlansın. Önerilen biçim:
 `text.title(str, { preserve: Set<string> })`.
+
+#### 48H — B'nin yeniden başvurusu: ikinci ekran (2026-10-16)
+
+**Olgu (nakit bildirdi, çekirdek kodu okudu).** Nakit `ProjectSummaryTab.tsx:173` ihale tutarını
+KDV ve net olarak gösteriyor; hesap `MathEngine.ts` `calculateVat` (oran yüzde, tutar kuruş).
+KDV dahil girdide `net = round(brüt ÷ (1 + oran))`, **`KDV = brüt − net`**. Maliyet aynı girdide
+**`KDV = round(net × oran)`** alıyor (`vat/index.ts`; çağıranlar `tenderCalculation.ts:137, 215`,
+`manualUnitPrice.ts:70`). İki proje, iki ekran, iki kural; Faz 3'te aynı veride karşılaşacaklar.
+
+**Ölçüm (çekirdek, iki kodun aynen çoğaltılmasıyla).** 1–100.000 kuruş × %1, %10, %20 = 300.000 vaka:
+
+| | Maliyet | Nakit |
+|---|---|---|
+| Net tutar | aynı | aynı (300.000 / 300.000) |
+| KDV | `round(net × oran)` | `brüt − net` |
+| Net + KDV ≠ brüt | **26.748** | **0** |
+
+Farklı çıkan 26.748 vakanın hepsinde maliyet KDV'yi **1 kuruş fazla** buluyor; ters yönde fark yok.
+Oranlara göre: %1'de 990, %10'da 9.091, %20'de 16.667. İlk vaka: 50 kuruş, %1 → maliyet KDV 1,
+nakit KDV 0. Nakit tarafındaki `Decimal` varsayılan yuvarlaması (half-up) ile çekirdeğinki aynı;
+net tutarda hiç fark çıkmaması bunu doğruluyor.
+
+**Durum.** Madde 48B'nin yeniden başvuru koşulunun ilk yarısı (ikinci proje, gerçek ekran)
+karşılandı. İkinci yarısı (kuralın iki projeyle birlikte kararlaştırılması) karşılanmadı. Nakit,
+kuralın dayanağını resmî kaynaktan araştırıyor (GİB, e-Fatura/VUK yuvarlama). Sonuç gelince kural
+iki tüketiciyle kararlaştırılır; imza ondan sonra yazılır. Sahip kararıyla imza taslağı şimdi
+yazılmadı: kural belli olmadan taslak bir kuralı varsaymış olur.
+
+Bu satır kabul değildir; son sütunu "karar bekliyor"dur ve toplu sürüm kapısını tutmaz.
 
 #### Madde 37C — not (yeni olgu yok)
 
