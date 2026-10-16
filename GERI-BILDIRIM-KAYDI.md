@@ -152,7 +152,7 @@ birleştirir. Sabit etikete bağlı tüketicilere (`#vX.Y.Z`) hiç gelmez, elle 
 | 48E | `math.median` | Talep #16 E (Nakit emsal arşivi tasarımı) | ✅ Kabul — **eklemeli**; üç yerel kopya ölçüldü (GHS-Panel, Portföy) | yayınlanmadı (main) |
 | 48F | Yüzdelik (`percentile`) | Talep #16 E | ❌ **Red** (ertelendi) — kod ve ekran yok; tanım bir tercihtir | — |
 | 48G | Başlık biçiminde kısaltma koruma (`productName`, sözlük parametresi) | Talep #16 F | ❌ **Red** (ertelendi) — tek tüketici; madde 46A ile birlikte tasarlanacak | — |
-| 48H | KDV dahil/hariç ayrıştırma — madde 48B'nin yeniden başvurusu | Nakit koordinatör oturumu (sahip talimatı, 2026-10-16) | ⏳ **Koşulun yarısı karşılandı** — ikinci ekran ölçüldü; kural kararı GİB araştırmasını bekliyor | karar bekliyor |
+| 48H | KDV dahil/hariç ayrıştırma — madde 48B'nin yeniden başvurusu | Nakit koordinatör oturumu (sahip talimatı, 2026-10-16) | ⏳ **Beklet** — kural nakit tarafında kararlaştırıldı (K17, iç yüzde); maliyet teyidi ve mali müşavir onayı bekleniyor | karar bekliyor |
 
 ---
 
@@ -860,6 +860,43 @@ iki tüketiciyle kararlaştırılır; imza ondan sonra yazılır. Sahip kararıy
 yazılmadı: kural belli olmadan taslak bir kuralı varsaymış olur.
 
 Bu satır kabul değildir; son sütunu "karar bekliyor"dur ve toplu sürüm kapısını tutmaz.
+
+**Kural kararı — nakit tarafı (2026-10-16, nakit K17, sahip).** Nakit resmî kaynak taradı:
+kuruş yuvarlaması için GİB e-Fatura/VUK kılavuzlarında kural yok (belirsiz). Yön belli: KDV dahil
+bedelde KDV "iç yüzde" ile bulunur, net ondan sonra çıkar (KDV Kanunu md. 20 matrah tanımı, GİB
+uygulama anlatımı; çekirdek bu kaynakları aslından okumadı). Karar:
+- KDV dahil: `KDV = yarımYukarı(brüt × oran ÷ (1 + oran))`, `net = brüt − KDV`.
+- KDV hariç: `KDV = yarımYukarı(net × oran)`, `brüt = net + KDV`.
+- İki durumda da `net + KDV = brüt` (kuruş).
+
+**Ölçüm (çekirdek, 1–200.000 kuruş, half-up).** KDV dahil girdide iç yüzde kuralı (K17) ile
+bugünkü iki kod karşılaştırıldı:
+
+| Oran | Nakit bugün (önce net) ≠ K17 | Maliyet bugün (`round(net × oran)`) ≠ K17 |
+|---|---|---|
+| %1 | 0 | 1.980 |
+| %10 | 0 | 18.182 |
+| %20 | 33.333 (altıda bir) | 0 |
+
+Nakit'in iddiası doğrulandı: %1 ve %10'da iki yöntem hep aynı, %20'de altıda birinde 1 kuruş
+farklı. Örnek de doğru: 1.002,99 TL dahil, %20 → önce net KDV 167,16 TL, iç yüzde 167,17 TL.
+Beklenmedik bulgu: maliyetin bugünkü kodu %20'de K17 ile birebir aynı, %1 ve %10'da ayrışıyor.
+Yani iki projenin de değişmesi gerekiyor, ama farklı oranlarda.
+
+**Karar: beklet.** Yeniden başvuru koşulunun ikinci yarısı yalnız nakit tarafında karşılandı.
+Bekleyenler: maliyet tarafının aynı kuralı kabul ettiğinin sahip teyidi ve mali müşavir onayı.
+İkisi gelince tek satırlık MINOR olarak alınır; o zaman testler bu tablodan değil, onaylanan
+kuralın elle hesaplanmış örneklerinden yazılır.
+
+**Önerilen imza (taslak, yazılmadı).** Genel tüketim vergisi adıyla, `money` motorunda; oran
+ondalık (%20 = 0,2), tutar kuruş, ikisi birden döner ki `net + vergi = brüt` ayrı ayrı
+yuvarlanarak bozulamasın:
+- `money.taxFromGross(grossMinor, rate)` → `{ net, tax }` ya da `null`
+- `money.taxFromNet(netMinor, rate)` → `{ tax, gross }` ya da `null`
+
+Talepte önerilen `grossToNet` / `taxOn` alınmadı: tek sayı dönen iki işlev, çağıranı farkı
+yeniden hesaplamaya iter ve madde 48B'deki 1 kuruşluk ayrışma orada yeniden doğar. Geçersiz oran
+(negatif, sonlu değil) ve güvenli tam sayı olmayan tutar `null` döner.
 
 #### Madde 37C — not (yeni olgu yok)
 
