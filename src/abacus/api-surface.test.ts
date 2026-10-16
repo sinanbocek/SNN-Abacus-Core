@@ -35,7 +35,7 @@ const API_SURFACE: Record<string, string[]> = {
     'parseNumber', 'percent', 'ratio', 'toMinor', 'toWords',
   ],
   text: [
-    'company', 'email', 'endsWithHardConsonant', 'endsWithVowel', 'isBackVowel',
+    'abbreviationSteps', 'company', 'email', 'endsWithHardConsonant', 'endsWithVowel', 'isBackVowel',
     'isRoundedVowel', 'join', 'lastVowel', 'lower', 'name', 'numberToWords',
     'digits', 'phone', 'plate', 'properNounSuffix', 'searchKey', 'suffix', 'title', 'toAsciiLower',
     'toAsciiUpper', 'toTrLower', 'upper',

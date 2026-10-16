@@ -9,10 +9,11 @@ sürümleme [Semantic Versioning](https://semver.org/lang/tr/) kurallarına uyar
 > `main`'de, henüz sürüm numarası almadı. Toplu sürüm kuralı (`AI-RULES §4.3`) gereği bir
 > sonraki pakette çıkar; 4.3.0 güncelleme PR'ları tüketicilerde hâlâ açık.
 > Karar: [`GERI-BILDIRIM-KAYDI.md`](GERI-BILDIRIM-KAYDI.md) madde 43 (talep #13, issue #51), madde 44 (TB-014),
-> madde 45 (TB-013 adım 1), madde 47 (hacim birimleri) ve madde 48 (talep #16: tarihli
-> değer çizelgesi, ortanca).
+> madde 45 (TB-013 adım 1), madde 46A (unvan kısaltma), madde 47 (hacim birimleri) ve
+> madde 48 (talep #16: tarihli değer çizelgesi, ortanca).
 >
-> ⚠️ **Bu paket yeni fonksiyonlar (`period.valueAt`, `period.accrual`, `math.median`), bir alan
+> ⚠️ **Bu paket yeni fonksiyonlar (`period.valueAt`, `period.accrual`, `math.median`,
+> `text.abbreviationSteps`), bir alan
 > (`newRegistration`) ve bir birim kategorisi (`volume`) EKLİYOR, yani sürüm en az MINOR
 > olmalı (4.4.0).**
 
@@ -46,6 +47,29 @@ sonlu olmayan değer) ve geçersiz gün esası `null` verir.
 
 Kaynak testlerindeki hesap değerleri (6/73, 139/1825, değişimin aralıktan sonra olduğu durum)
 çekirdekte birebir aynı çıktı; farklı olan yalnız yukarıdaki tablodur.
+
+### Eklenenler — `text.abbreviationSteps`: unvanı gösterim için kısaltma (madde 46A)
+
+Kurum ve şirket unvanını dar yere sığdırmak için adım adım kısaltır. İlk adım metnin kendisi,
+her sonraki bir kural daha uygulanmış hâlidir; sığan adımı çağıran seçer. **Kayıt için
+değildir:** tam unvan saklanır, kısaltma yalnız gösterilir.
+
+```
+text.abbreviationSteps('Manisa Büyükşehir Belediye Başkanlığı Park Müdürlüğü')
+  -> ['Manisa Büyükşehir Belediye Başkanlığı Park Müdürlüğü', 'Manisa BŞB Park Müdürlüğü', 'Manisa BŞB Park Md.']
+text.abbreviationSteps('Örnek İnşaat Taahhüt Sanayi ve Ticaret Anonim Şirketi').pop()
+  -> 'Örnek İnş. Taah. San. ve Tic. A.Ş.'
+text.abbreviationSteps('ANKARA BÜYÜKŞEHIR BELEDIYESI').pop()   -> 'ANKARA BŞB'
+text.abbreviationSteps('Şubeler Birliği')                        -> ['Şubeler Birliği']
+```
+
+40 kural; biçimler TDK Kısaltmalar Dizini'nden, TDK'da olmayanlar yaygın kullanımdan
+(liste: `GERI-BILDIRIM-KAYDI.md` madde 46A). Yalnız kelime sınırında uygulanır. Büyük harfli
+metin büyük harfle kısalır; büyük harfte `İ` yerine yazılmış `I` da tanınır. Kuruma özgü
+kısaltmalar (`İBB`, `DSİ`) çekirdekte yoktur; `{ extra: [['İstanbul Büyükşehir Belediyesi', 'İBB']] }`
+ile verilir ve önce uygulanır.
+
+`text.company()` değişmedi. Onun düzeltmesi kırıcıdır ve bir sonraki ana sürümü bekler (TB-015).
 
 ### Eklenenler — `math.median` (madde 48E)
 

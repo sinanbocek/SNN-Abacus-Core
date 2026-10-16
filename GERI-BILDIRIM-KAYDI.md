@@ -137,6 +137,11 @@ birleştirir. Sabit etikete bağlı tüketicilere (`#vX.Y.Z`) hiç gelmez, elle 
 | 44C | Ünlü içeren harf harf kısaltma (`ABD'ye`) | TB-014 (sınır) | ❌ **Red** (ertelendi) — metinden ayırt edilemez; çekirdek tahmin etmez | — |
 | 44D | K harfi "ka" okunsun (`SGK'da`, `SGK'ya`) | Sahip (2026-09-24) | ⚠️ **Kabul — sahip kararıyla istisna** (TDK: "ke", `TDK'den`) | yayınlanmadı (main) |
 | 45 | `PlateResult.newRegistration` eklensin, `yeniKayit` eskisin (TB-013 adım 1) | TB-013 (iç denetim) | ✅ Kabul — **eklemeli**, kimse kırılmaz; silme bir sonraki MAJOR'da | yayınlanmadı (main) |
+| 46A | Kurum ve şirket unvanını **gösterim için** adım adım kısaltan işlev (`… Başkanlığı` → `… Bşk.`, `Limited Şirketi` → `Ltd.Şti.`) | Talep #14 (sahip, üç tüketici taraması) | ✅ Kabul — **yalnız gösterim**; biçim TDK, TDK'da olmayan "fiilî uygulama"; `text.abbreviationSteps` | yayınlanmadı (main) |
+| 46B | `text.company()` bağlamsız kısaltıyor, bitişik yazımı ve büyük harf kısaltmayı bozuyor, tam unvanı saklamıyor | Talep #14 (tarama ölçümü) | ✅ Kabul — **kırıcı düzeltme**; sonraki MAJOR'a ertelendi (TB-015) | sonraki MAJOR |
+| 46C | Unvan eşleştirme anahtarı (`İBB` = `İstanbul Büyükşehir Belediyesi`, `Ltd. Şti.` = `Limited Şirketi`) | Talep #14 (aday) | ❌ **Red** (ertelendi) — tek somut kanıt var (Proje-Nakit) | — |
+| 46D | EKAP'ın kendi kısaltmalarını açma (`FAB.SAN.VE TİC.AŞ` → tam unvan) | Talep #14 (aday) | ❌ **Red** (ertelendi) — yalnız elle yapılmış örnek var | — |
+| 46E | Kuruma özgü kısaltmalar çekirdek sözlüğünde (`İBB`, `DSİ`, `Orman GM`) | Talep #14 (aday) | ❌ **Red** — §4.1: bunlar veri; tüketici kendi listesini seçenekle verir | — |
 | 47 | `unit` motoruna `volume` kategorisi (`mm3` `ml` `cm3` `l` `dm3` `m3`) — madde 30'un yeniden başvurusu | Talep #15 (Nakit Akış piyasa arşivi; İKN 2026/1666260 sepeti) | ✅ Kabul — **eklemeli**, kimse kırılmaz | yayınlanmadı (main) |
 | 47B | `cl` (santilitre) | Talep #15 (aday) | ❌ **Red** (ertelendi) — ölçümde görülmedi; sahip kararı | — |
 | 47C | Ambalaj metni ayrıştırma (`"1.3LT"` → `{ value, unit }`) | Talep #15 (aday) | ❌ **Red** (ertelendi) — biçim çeşitliliği ölçülmedi; tüketici kendisi erteledi | — |
@@ -670,6 +675,21 @@ bildirir:
   yayımlanan ölçümleri etkilemiyor: `tam_dagitim` üslü yazımda (`1e-07`) ölçeği 0 alıyor;
   `basit_yuvarlama` ondalıklı ağırlık toplamında `InvalidOperation` fırlatıyor. Aynı üslü
   yazım tuzağı JS'te de vardır (`String(1e-7) === "1e-7"`); çekirdek bunu testle çiviledi.
+- **GHS-Panel: tedarikçi adı düzelticisi kelimenin içini değiştiriyor (talep #14 taraması).**
+  `src/pages/FinancialManagement/utils/nameNormalization.ts` sözlüğü kelime sınırı aramadan
+  uyguluyor (`new RegExp(pattern, 'gi')`). Aynı kural çekirdek dışında yeniden çalıştırılarak
+  ölçüldü: `KASAP AHMET` → `KA.Ş.AP AHMET`, `Pasta Evi` → `PA.Ş.ta Evi`, `Hasan Usta Kasası` →
+  `HA.Ş.an.Usta KA.Ş.A.Ş.ı`. Noktalı kelimeler sonradan harf düzenine girmediği için bozulma
+  kalıcıdır. Yol: fiş okuyucudan gelen ad → `normalizeSupplierData` →
+  `SupabaseFinanceRepository.findOrCreateSupplier` (tam ad eşleşmesiyle yeni tedarikçi açar).
+  Canlı veride kaç kayıtta tetiklendiği **ölçülmedi**. Tüketicinin kendi işidir.
+- **SNN-Proje-ve-Nakit-Akış: tam unvan kayıtta kısaltılıyor (talep #14 taraması).**
+  `LangEngine.normalizeCompanyName` müşteri ve tedarikçi formlarında kayıttan önce çalışıyor
+  (`ClientForm.tsx:42`, `SupplierForm.tsx:55`); `20260729220800_normalize_company_names.sql`
+  var olan adları yerinde güncelliyor. Projenin kendi tasarım notu (commit `42faa2f`) tersini
+  istiyor: "tam yasal ad saklanır, gösterimde kısaltılır". Çekirdekteki `company()` de aynı
+  hatayı taşıdığı için (TB-015) bugün çekirdeğe geçmek bunu çözmez; 46A gelince gösterim
+  kısaltması ondan alınabilir. Göçün canlıya uygulanıp uygulanmadığı **ölçülmedi**.
 
 ---
 
@@ -900,6 +920,137 @@ değer eklemek yalnız tüm değerleri tek tek kapsayan `switch` yazan kodu etki
 
 **Sürüm.** Sahip kararı (2026-09-28): "yeni sürüm çıkartma, öncekiler gibi beklesin."
 `main`'e girer, `CHANGELOG.md` `[Yayınlanmadı]` altında bekler (madde 42, §4.3).
+
+### Talep #14 — resmî kurum ve şirket unvanı kısaltması (madde 46)
+
+**Kaynak.** Çekirdek sahibinin talebi (2026-09-24): resmî kısaltmalar (`Bşk.`, `Md.`,
+`BŞB`) ve şirket unvanı kısaltması çekirdeğe girsin. Üç aday tüketici tarandı:
+GHS-Panel, SNN-İhale-Maliyet-Teklif, SNN-Proje-ve-Nakit-Akış. Sahibin örnekleri:
+`MANİSA BÜYÜKŞEHİR BELEDİYE BAŞKANLIĞI MEZARLIKLAR DAİRESİ BAŞKANLIĞI`,
+`İstanbul Büyükşehir Belediyesi` → `İstanbul BŞB`,
+`TYC Grup Yapı Peyzaj Orman Ürünleri Limited Şirketi` → `… Ltd.Şti.`
+
+**Tarama üç ayrı ihtiyaç buldu; bugünkü kod bunları karıştırıyor.**
+
+| İhtiyaç | Nerede görüldü | Karar |
+|---|---|---|
+| **Gösterimde kısaltma** — ad dar yere sığmıyor, kayıt değişmiyor | İhale: şartname özeti PDF'i (`print/abbreviate.ts`, 17 kural, sığana kadar adım adım). Proje-Nakit: dar sütunlar (`ProjectProfitRanking` 120px), veride elle yazılmış `Sakarya BŞB`, `Orman GM`. GHS-Panel: müşteri listesi 35, PDF raporu 27 karakterde kesiyor | 46A kabul |
+| **Kayıtta düzeltme** — ad kaydedilmeden tek yazıma çevriliyor | Proje-Nakit `LangEngine.normalizeCompanyName` (form kaydında + veritabanı kopyası). GHS-Panel `nameNormalization.ts` ve çekirdek `text.company()` (dekont adları) | 46B, TB-015 |
+| **Aynı adı tanıma** — eşleştirme anahtarı | Proje-Nakit belgesinde kritik risk: `İBB` ile tam adı iki ayrı müşteri kaydı oluyor. ihale-mcp yüklenici eşleştirmesi (Python; çekirdeği kullanamaz) | 46C ertelendi |
+
+Şirket eki kısaltması şu an **dört ayrı kopyada** yazılı: çekirdek `text.company()`,
+Proje-Nakit, GHS-Panel, ihale-mcp. Kurum kısaltması tek kopyada: İhale `abbreviate.ts`.
+
+**§4.1 sınavı**
+
+| Aday iş | İmzası | Başka alandaki uygulama aynen kullanır mıydı? | Karar |
+|---|---|---|---|
+| Unvanı gösterim için adım adım kısaltma | yalnız metin alır, metin döner | Evet — Türkçe kurum ve şirket unvanı dil kuralıdır; hiçbir iş kavramı bilmez | **46A kabul** |
+| `company()` düzeltmesi | var olan imza | Evet — zaten çekirdekte | **46B kabul, MAJOR** |
+| Eşleştirme anahtarı | metin → anahtar | Evet olabilir, ama tek somut ekran kanıtı var | **46C ertelendi** |
+| EKAP kısaltmalarını açma | metin → metin | Belirsiz — yalnız fixture'da elle yapılmış örnek | **46D ertelendi** |
+| `İBB`, `DSİ`, `Orman GM` sözlüğü | veri | Hayır — hangi kurumun hangi kısaltmayı aldığı veridir | **46E red** |
+
+**Ölçülen `company()` kusurları** (`main` 79d94cc, 13 adla; ayrıntı TB-015):
+`Sanayi Mahallesi Muhtarlığı` → `San. Mahallesi Muhtarlığı`, `Ticaret Odası` → `Tic. Odası`,
+`XYZ İNŞ.SAN.TİC.LTD.ŞTİ.` → `Xyz İnş.san.tic.ltd.şti.`, `T.C. …` → `T.c. …`, `ABC` → `Abc`.
+Sözlükte şirkete özgü `TYC` var. Kısaltılmış ad `stored` alanında dönüyor, tam unvan kayboluyor.
+Kurum kelimelerine (`Başkanlığı`, `Müdürlüğü`) hiç dokunmuyor.
+
+**46A — kabul edilen kapsam.** Sahip kararı (2026-09-24): "1a, 2a, 3 evet".
+
+- **Yalnız gösterim.** Sonuç saklanmaz. Kayıttaki tam unvan değişmez.
+- **Adım adım.** Kurallar sırayla uygulanır, her ara hâl döner (İhale `abbreviationSteps`
+  emsali). Genişliği ölçmek çekirdeğin işi değildir (ekran ve yazı tipi bilgisi); çağıran,
+  sığan ilk adımı seçer.
+- **Kelime sınırı zorunlu.** GHS-Panel'in yerel kopyası sınır aramadığı için `KASAP` →
+  `KA.Ş.AP` üretiyor (ölçüldü, aşağıdaki geri bildirim). Madde 44B'nin dersiyle aynı.
+- **Harf düzeni korunur.** Büyük harfli EKAP adı büyük harfli kısalır (İhale emsali).
+  Harf düzenini değiştirmek ayrı iştir (`title`).
+- **Tüketici ek sözlük verebilir** (46E'nin karşılığı).
+
+**Biçim kaynağı: TDK Kısaltmalar Dizini** (tdk.gov.tr, `Kısaltmalar_Dizini.pdf`, 24 sayfa;
+aslından okundu, 2026-09-24). Sahip kararı 1a: TDK'da olan TDK yazımıyla, olmayan "fiilî
+uygulama" etiketiyle (§4.1 Sınır durumu 4).
+
+- **TDK'da olanlar:** `Bşk.` (başkan, başkanlık, başkanı, başkanlığı), `Md.` (müdür, müdürlük,
+  müdürlüğü), `gn.` (genel), `Ltd.` (limitet), `AŞ` (anonim şirket), `tic.` (ticaret),
+  `Ort.` (ortaklık, ortaklığı), `Şb.` (şube), `Mah.` (mahalle, mahallesi), `Bul.` (bulvar,
+  bulvarı), `Fak.` (fakülte), `T.C.`
+- **TDK'da olmayanlar (fiilî uygulama):** `BŞB`, `Bld.`, `Şti.`, `San.`, `İnş.`, `Dai.`,
+  `Üniv.`, `Hiz.`
+- **`Bşk.lığı` yazılmaz.** TDK'da `Bşk.` zaten "başkanlığı" demektir. Sahibin ilk örneğindeki
+  `Belediye Bşk.lığı` bu yüzden `Belediye Bşk.` olur.
+- **`A.Ş.` kalır, TDK `AŞ` değil.** Çekirdek (`company`, `properNounSuffix`) ve üç tüketicinin
+  hepsi `A.Ş.` kullanıyor; değiştirmek tüketicinin gördüğü çıktıyı değiştirir. Fiilî uygulama
+  diye işlenir.
+
+**Uygulamada kesinleşecek sorular** (sahip kararı gerekirse o zaman sorulur): işlevin adı ve
+imzası; kuralların sırası (`Büyükşehir Belediye Başkanlığı` önce `… Belediye Bşk.` mı olur,
+yoksa doğrudan `BŞB` mi); `Genel Müdürlüğü` → `Gn. Md.` yazımında TDK'nın küçük harfli
+`gn.`'si ad içinde büyük mü yazılır; İhale'nin `Bulv.` yazımı TDK'nın `Bul.`'u ile çelişiyor.
+Beklenen değerler test olarak önce TDK'dan yazılır, sonra kod.
+
+**Sürüm.** Sahip kararı (2026-09-24): sürüm değişmez, acele yok. 46B, TB-013 adım 2 ile aynı
+ana sürümü bekler.
+
+#### 46A — uygulandı: `text.abbreviationSteps` (2026-10-16)
+
+**Açık soruların sahip kararları** (2026-10-16, "hepsi önerin"):
+1. Ad ve biçim: `text.abbreviationSteps(value, { extra })`, adım listesi döner. Ad İhale'nin
+   yerel işleviyle aynı; göç tek satır.
+2. Sıra: önce kalıplar, sonra tek kelimeler; `Büyükşehir Belediye Başkanlığı` doğrudan `BŞB`.
+3. `Genel Müdürlüğü` → `Gn. Md.` (unvan içinde baş harf büyük).
+4. TDK dizini yeniden aslından okundu (indirildi, 24 sayfa).
+5. `company()` düzeltmesi (46B) şimdi yapılmaz; ana sürümü bekler.
+
+**TDK'nın ikinci okuması iki düzeltme getirdi.**
+- Sokak TDK'da `Sok.`'tur, `Sk.` değil. İhale'nin yerel kodu `Sk.` yazıyordu; çekirdek `Sok.` yazar.
+- Yukarıdaki listede `Hiz.` "TDK'da olmayan" diye geçiyordu; yanlış. TDK'da hizmet `Hz.`'dir,
+  ama aynı kısaltma önce "Hazret" anlamındadır (`Hz. 1. Hazret, Hazreti 2. Hizmet`). `Defin Hz.`
+  yanlış okunur. Çekirdek fiilî `Hiz.`'i korudu. **Sahip onayı bekleyen tek nokta budur;**
+  TDK yazımı istenirse tek satırlık değişikliktir.
+
+**Olası kısaltmalar tarandı** (sahip isteği: "ileride karşımıza gelebilecek olanlar").
+EKAP doğrudan denendi, yine reddetti (HTTP 428). Bunun yerine kardeş projelerdeki gerçek ihale
+verisi (SNN-ihale-ozet, ihale-mcp, İhale-Maliyet, Proje-Nakit; 1.603 dosya) tarandı: 612 ayrı
+idare ve firma adı. En sık kelimeler: `Müdürlüğü` 255, `Başkanlığı` 141, `Genel` 101,
+`Bakanlığı` 47, `Belediyesi` 38+26, `Büyükşehir` 30+12, `Üniversitesi` 27+20, `Rektörlüğü` 27,
+`Hizmetleri` 22, `Dairesi` 14+12, `Hastanesi` 14+12, `Şirketi` 14+13, `İnşaat` 12.
+
+**Ölçülen bulgu: büyük harfli EKAP adlarında `İ` yerine `I` yazılıyor** (`BELEDIYESI`,
+`BÜYÜKŞEHIR`, `DAIRESI`). Kural büyük harfte iki harfi de tanır; çıktı doğru `İ` ile yazılır.
+
+**Kural listesi** (40 kural; sıra kod içinde, `ABBREVIATION_RULES`):
+
+| Kaynak | Kısaltmalar |
+|---|---|
+| TDK | `Bşk.` `Md.` `Gn.` `Şb.` `Mah.` `Cad.` `Sok.` `Bul.` `Apt.` `Fak.` `Ens.` `Müh.` `Ort.` `Tic.` `T.C.` `Ltd.` |
+| Fiilî uygulama | `BŞB` `Bld.` `OSB` `A.Ş.` `Şti.` `Rekt.` `Üniv.` `Dai.` `Hiz.` `Koop.` `San.` `İnş.` `Taah.` `Dan.` `Mak.` `Nak.` `İth.` `İhr.` `Paz.` |
+
+**Bilerek alınmayanlar** (§4.1 Sınır durumu 3): `Bakanlığı`, `Hastanesi`, `Komutanlığı`,
+`Kaymakamlığı`, `Valiliği`, `Başhekimliği`, `Merkezi`. Sık geçiyorlar, ama TDK'da kısaltmaları
+yok ve yaygın tek bir yazım da yok. TDK'daki tek harfli `H` (hastane) ve `K` (komutanlık)
+belirsiz. Gerekirse tüketici `extra` ile verir.
+
+**`Ticaret Odası` → `Tic. Odası`.** Madde 46B'de bu `company()` için kusur sayılmıştı, çünkü
+oradaki sonuç kayda giriyordu. Burada yalnız gösterim adımıdır ve tam unvan saklıdır; kabul edilir.
+
+**Mutasyon testi.** Sekiz mutasyonun sekizi de kırmızı verdi: kelime sınırının iki yanı, `I`/`İ`
+toleransı, büyük harf kuralı, kısaltmayan kural elemesi, düzenli ifade kaçışı, `$` kaçışı ve
+`extra`'nın önce uygulanması. Testi kırmayan `long === ''` denetimi ölü koddu ve kaldırıldı.
+Boş kalıbı uzunluk denetimi zaten eliyor.
+
+**Tüketicilerin göçü.**
+
+| Yerel | Çekirdek |
+|---|---|
+| İhale `print/abbreviate.ts` `abbreviationSteps(value)` | `text.abbreviationSteps(value)`; `fitText` tüketicide kalır (`steps.find(fits)`) |
+| Proje-Nakit `LangEngine.normalizeCompanyName` (gösterim için kullanıldığı yerler) | `text.abbreviationSteps(ad).pop()` ya da sığan adım; kayıt için kullanımı 46B'yi bekler |
+| GHS-Panel `nameNormalization.ts` (gösterim için kullanıldığı yerler) | aynı |
+
+İhale'den farklar: `Bulv.` → `Bul.`, `Sk.` → `Sok.` (TDK); büyük harfte `I` toleransı; OSB, T.C.,
+`Limited Şirketi` ve şirket sektör kelimeleri eklendi; `Hizmetleri` → `Hiz.` aynı.
 
 ### Madde 45 — `yeniKayit` → `newRegistration`, iki adımda (TB-013)
 
@@ -1192,3 +1343,4 @@ yazılmıştır.
 | #11 | 24 Eylül 2026 | GHS-Panel: para gösterimi, proje varsayılanı, elle simge ekleme (issue #47) | 4.1.1 → 4.3.0 |
 | #12 | 24 Eylül 2026 | GHS-Panel: `dotAsDecimal` kontrollü kutu hatası + hane sınırı (issue #48) | 4.1.1 → 4.2.0 |
 | #13 | 24 Eylül 2026 | TYC Grup şartname özeti (prototip): rakamla biten özel ada hâl eki (issue #51) | 4.3.0 → main (yayınlanmadı) |
+| #14 | 24 Eylül 2026 | Sahip: resmî kurum ve şirket unvanı kısaltması; GHS-Panel, SNN-İhale, SNN-Proje-Nakit ihtiyaç taraması (issue yok, sözlü) | main (yayınlanmadı) |

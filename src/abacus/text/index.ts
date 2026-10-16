@@ -480,6 +480,101 @@ export function name(raw: string): NormalizeResult {
   return { stored: titled, display: titled, raw, valid: true };
 }
 
+/** `abbreviationSteps` seçenekleri. */
+export interface AbbreviationOptions {
+  /**
+   * Tüketicinin kendi kısaltmaları (`['İstanbul Büyükşehir Belediyesi', 'İBB']`), çekirdek
+   * kurallarından ÖNCE uygulanır. Kuruma özgü kısaltmalar veri olduğu için çekirdekte durmaz.
+   */
+  extra?: readonly (readonly [string, string])[];
+}
+
+/**
+ * Unvan kısaltma kuralları, uygulanma sırasıyla: önce kalıp ifadeler, sonra tek kelimeler.
+ * Biçim kaynağı TDK Kısaltmalar Dizini; TDK'da olmayanlar fiilî uygulamadır (madde 46A,
+ * `GERI-BILDIRIM-KAYDI.md`'deki liste).
+ */
+const ABBREVIATION_RULES: readonly (readonly [string, string])[] = [
+  ['Büyükşehir Belediye Başkanlığı', 'BŞB'],
+  ['Büyükşehir Belediyesi', 'BŞB'],
+  ['Belediye Başkanlığı', 'Bld. Bşk.'],
+  ['Genel Müdürlüğü', 'Gn. Md.'],
+  ['Organize Sanayi Bölgesi', 'OSB'],
+  ['Türkiye Cumhuriyeti', 'T.C.'],
+  ['Anonim Şirketi', 'A.Ş.'],
+  ['Limited Şirketi', 'Ltd.Şti.'],
+  ['Başkanlığı', 'Bşk.'],
+  ['Müdürlüğü', 'Md.'],
+  ['Belediyesi', 'Bld.'],
+  ['Rektörlüğü', 'Rekt.'],
+  ['Üniversitesi', 'Üniv.'],
+  ['Fakültesi', 'Fak.'],
+  ['Enstitüsü', 'Ens.'],
+  ['Dairesi', 'Dai.'],
+  ['Hizmetleri', 'Hiz.'],
+  ['Şubesi', 'Şb.'],
+  ['Şube', 'Şb.'],
+  ['Mahallesi', 'Mah.'],
+  ['Caddesi', 'Cad.'],
+  ['Sokağı', 'Sok.'],
+  ['Sokak', 'Sok.'],
+  ['Bulvarı', 'Bul.'],
+  ['Apartmanı', 'Apt.'],
+  ['Kooperatifi', 'Koop.'],
+  ['Ortaklığı', 'Ort.'],
+  ['Sanayii', 'San.'],
+  ['Sanayi', 'San.'],
+  ['Ticaret', 'Tic.'],
+  ['İnşaat', 'İnş.'],
+  ['Taahhüt', 'Taah.'],
+  ['Mühendislik', 'Müh.'],
+  ['Danışmanlık', 'Dan.'],
+  ['Makina', 'Mak.'],
+  ['Makine', 'Mak.'],
+  ['Nakliyat', 'Nak.'],
+  ['İthalat', 'İth.'],
+  ['İhracat', 'İhr.'],
+  ['Pazarlama', 'Paz.'],
+];
+
+const escapeRegExp = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/** Kalıbı yalnız kelime sınırında bulan düzenli ifade (kelimenin parçası değil). */
+function wordPattern(source: string): RegExp {
+  return new RegExp(`(?<!\\p{L})${source}(?!\\p{L})`, 'gu');
+}
+
+/**
+ * Unvanı GÖSTERİM için adım adım kısaltır (madde 46A). İlk eleman metnin kendisidir; her
+ * sonraki eleman bir kural daha uygulanmış, daha kısa hâlidir. Sığan ilk adımı seçmek
+ * çağıranın işidir: genişlik ekrana ve yazı tipine bağlıdır.
+ *
+ * Kayıt için DEĞİLDİR: tam unvan saklanır, kısaltma yalnız dar yerde gösterilir.
+ * Kural yalnız kelime sınırında uygulanır (`Şubeler`'e dokunmaz). Harf düzeni korunur:
+ * kalıp yazıldığı gibi ya da tamamı büyük harfle aranır; büyük harfli metinde `İ` yerine
+ * yazılmış `I` da tanınır. Kısaltmayan (kısa hâli uzun olan) kural yok sayılır.
+ *
+ * @example text.abbreviationSteps('Manisa Büyükşehir Belediye Başkanlığı Park Müdürlüğü')
+ *   // ['Manisa Büyükşehir Belediye Başkanlığı Park Müdürlüğü', 'Manisa BŞB Park Müdürlüğü', 'Manisa BŞB Park Md.']
+ */
+export function abbreviationSteps(value: string, opts?: AbbreviationOptions): string[] {
+  const steps = [value];
+  let current = value;
+  for (const [long, short] of [...(opts?.extra ?? []), ...ABBREVIATION_RULES]) {
+    // Boş kalıp da burada elenir: kısa hâlin uzunluğu sıfırdan küçük olamaz.
+    if (short.length >= long.length) continue;
+    const upperSource = escapeRegExp(toTrUpper(long)).replace(/İ/g, '[İI]');
+    const next = current
+      .replace(wordPattern(escapeRegExp(long)), () => short)
+      .replace(wordPattern(upperSource), () => toTrUpper(short));
+    if (next !== current) {
+      steps.push(next);
+      current = next;
+    }
+  }
+  return steps;
+}
+
 /** Firma unvanı normalizasyonu (ABACUS-SPEC §3.5-e) */
 export function company(raw: string): NormalizeResult {
   if (!raw) return { stored: '', display: '', raw: raw ?? '', valid: false };

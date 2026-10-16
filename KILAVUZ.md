@@ -666,6 +666,25 @@ text.name('  MEHMET   ali  ÖZ ').stored           // → 'Mehmet Ali Öz'
 text.company('xyz inşaat anonim şirketi').stored  // → 'Xyz İnş. A.Ş.'
 ```
 
+**Unvanı dar yere sığdırmak**
+
+`company` kayıt için tek yazıma çevirir. Gösterimde kısaltmak için `abbreviationSteps`
+kullanın: tam unvanı saklayın, yalnız dar yerde kısaltın. İşlev adımların listesini döner;
+ilk adım metnin kendisidir, her sonraki bir kural daha uygulanmış hâlidir. Sığan ilk adımı
+siz seçersiniz (genişlik ekrana ve yazı tipine bağlıdır).
+
+```js
+text.abbreviationSteps('Manisa Büyükşehir Belediye Başkanlığı Park Müdürlüğü')   // → ['Manisa Büyükşehir Belediye Başkanlığı Park Müdürlüğü', 'Manisa BŞB Park Müdürlüğü', 'Manisa BŞB Park Md.']
+text.abbreviationSteps('TYC Grup Orman Ürünleri Limited Şirketi').pop()          // → 'TYC Grup Orman Ürünleri Ltd.Şti.'
+text.abbreviationSteps('MANİSA BÜYÜKŞEHİR BELEDİYESİ MEZARLIKLAR DAİRESİ BAŞKANLIĞI').pop()   // → 'MANİSA BŞB MEZARLIKLAR DAİ. BŞK.'
+text.abbreviationSteps('Şubeler Birliği')                                          // → ['Şubeler Birliği']
+text.abbreviationSteps('İstanbul Büyükşehir Belediyesi Fen İşleri', { extra: [['İstanbul Büyükşehir Belediyesi', 'İBB']] }).pop()   // → 'İBB Fen İşleri'
+```
+
+Biçimler TDK Kısaltmalar Dizini'nden (`Bşk.`, `Md.`, `Gn.`, `Mah.`, `Cad.`, `Sok.`,
+`Bul.`); TDK'da olmayanlar yaygın kullanımdan (`BŞB`, `Bld.`, `Ltd.Şti.`, `A.Ş.`, `San.`).
+Kuruma özgü kısaltmalar (`İBB`, `DSİ`) çekirdekte yoktur; `extra` ile siz verirsiniz.
+
 **Araç plakası**
 
 ```js
