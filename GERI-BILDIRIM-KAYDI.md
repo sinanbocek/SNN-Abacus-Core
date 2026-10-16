@@ -1008,8 +1008,8 @@ ana sürümü bekler.
 - Sokak TDK'da `Sok.`'tur, `Sk.` değil. İhale'nin yerel kodu `Sk.` yazıyordu; çekirdek `Sok.` yazar.
 - Yukarıdaki listede `Hiz.` "TDK'da olmayan" diye geçiyordu; yanlış. TDK'da hizmet `Hz.`'dir,
   ama aynı kısaltma önce "Hazret" anlamındadır (`Hz. 1. Hazret, Hazreti 2. Hizmet`). `Defin Hz.`
-  yanlış okunur. Çekirdek fiilî `Hiz.`'i korudu. **Sahip onayı bekleyen tek nokta budur;**
-  TDK yazımı istenirse tek satırlık değişikliktir.
+  yanlış okunur. **Sahip kararı (2026-10-16): `Hizmetleri` → `Hiz.`** Fiilî uygulama; TDK'dan
+  bilerek ayrılır. Bunu "TDK'ya uydurma" diye `Hz.`'e çevirmeyin.
 
 **Olası kısaltmalar tarandı** (sahip isteği: "ileride karşımıza gelebilecek olanlar").
 EKAP doğrudan denendi, yine reddetti (HTTP 428). Bunun yerine kardeş projelerdeki gerçek ihale
