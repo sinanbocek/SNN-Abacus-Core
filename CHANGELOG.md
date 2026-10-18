@@ -4,10 +4,11 @@ Bu projedeki tüm önemli değişiklikler bu dosyada belgelenir.
 Format [Keep a Changelog](https://keepachangelog.com/tr/) temellidir;
 sürümleme [Semantic Versioning](https://semver.org/lang/tr/) kurallarına uyar.
 
-## [Yayınlanmadı]
+## [4.4.0] - 2026-10-18
 
-> `main`'de, henüz sürüm numarası almadı. Toplu sürüm kuralı (`AI-RULES §4.3`) gereği bir
-> sonraki pakette çıkar; 4.3.0 güncelleme PR'ları tüketicilerde hâlâ açık.
+> Toplu sürüm (`AI-RULES §4.3`): 24 Eylül – 18 Ekim döneminin bütün kabulleri tek pakette.
+> **Kırıcı değişiklik yok**; seçenek verilmezse eski davranış sürer. Davranışı değişen yerler
+> yalnız hata düzeltmeleridir (madde 43, 44A/B/D, 49); her biri aşağıda önce/sonra tablosuyla.
 > Karar: [`GERI-BILDIRIM-KAYDI.md`](GERI-BILDIRIM-KAYDI.md) madde 43 (talep #13, issue #51), madde 44 (TB-014),
 > madde 45 (TB-013 adım 1), madde 46A (unvan kısaltma), madde 47 (hacim birimleri) ve
 > madde 48 (talep #16: tarihli değer çizelgesi, ortanca, vergi dahil/hariç),
