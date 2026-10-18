@@ -155,6 +155,10 @@ birleştirir. Sabit etikete bağlı tüketicilere (`#vX.Y.Z`) hiç gelmez, elle 
 | 48H | KDV dahil/hariç ayrıştırma — madde 48B'nin yeniden başvurusu | Nakit koordinatör oturumu (sahip talimatı, 2026-10-16) | ✅ Kabul — `money.taxFromGross` / `money.taxFromNet`; kural K17 (iç yüzde), mali müşavir onaylı, iki tüketici kabul etti | yayınlanmadı (main) |
 | 49 | `fmtDecimalGrouped` -1 ile 0 arasında eksiyi düşürüyor (`-0,5` → `0,5`) | Talep #17 (issue #59, SNN-UI) | ✅ Kabul — **hata düzeltmesi**; ikinci yerel yama Nakit'te (37C notu) | yayınlanmadı (main) |
 | 50 | Para birimsiz sayı kısaltma (`1,25Mn`) | Talep #18 (issue #60, SNN-UI) | ✅ Kabul — **eklemeli**; `money.compactNumber`, `compact` ile ortak çekirdek | yayınlanmadı (main) |
+| 51A | Eşit taksit tutarı (`annuityPayment`) — madde 9'un yeniden başvurusu | Talep #19 A (Nakit; Portföy ölçüldü) | ❌ **Red** — ayrı ad gereksiz; taksit `amortize` planının ilk satırıdır | — |
+| 51B | Ödeme planı (`math.amortize`), yalnız eşit taksit, `remainder: 'last'` zorunlu — madde 9'un yeniden başvurusu | Talep #19 B (Nakit; Portföy ölçüldü) | ✅ **Şartlı kabul** — şart: Nakit'in bağımsız cevap anahtarı; `equalPrincipal` ve `grace` ertelendi | bekliyor |
+| 51C | Zaman ağırlıklı bakiye (`period.balanceDays`, adat) | Talep #19 C | ❌ **Red** — zaten var: `period.accrual(bakiyeler, from, to, 1)`; kılavuza örnek | — |
+| 51D | Gün sayımı (`dayCount`), bileşik getiri, `npv`, kıst ilk dönem, KKDF/BSMV, kredi türleri | Talep #19 D–I (tüketicinin kendi elemesi) | ❌ **Red** — tüketicinin elemesine katılındı (madde 10, 11, 29, 48B, 48D emsali) | — |
 
 ---
 
@@ -694,6 +698,57 @@ bildirir:
   kısaltması ondan alınabilir. Göçün canlıya uygulanıp uygulanmadığı **ölçülmedi**.
 
 ---
+
+### Talep #19 — taksit planı ve zaman ağırlıklı bakiye (madde 51, madde 9'un yeniden başvurusu)
+
+**Kaynak.** SNN-Proje-ve-Nakit-Akış ("Nakit"), 2026-10-18; sahip aracılığıyla, issue açılmadı.
+Sahip Nakit'e bankacılık hesap makineleri modülü istedi (taksitli ticari kredi, BCH, KMH, spot
+kredi, vadeli mevduat); ihale fiyatlama masasının finansman motoru günlük net bakiyeden faiz
+hesaplayacak (Nakit kararı F-3). İkinci tüketici SNN-Portfoy-Yonetimi ("Portföy").
+
+**Doğrulama (salt okuma, `origin/main`).**
+- Portföy `src/services/loanCalculator.ts` (85ecd3c): yerel annüite formülü `Math.pow` ve
+  ondalıklı sayıyla; `addMonths` ve `daysBetween` yerel kopyaları; kıst dönem "yaklaşık". Doğru.
+- Nakit `src/domain/abacus/MathEngine.ts` 395–431 (8c29725): adat elle toplanıyor,
+  `(totalAdat / 36500) * interestRate`. Doğru. Yöntem gider–gelir eşleştirmesi (ilk giren ilk
+  çıkar); bakiye çizelgesi değil.
+- Taksit ölçümü Python `decimal` ile bağımsız tekrarlandı (taksit ve her dönem faizi kuruşa
+  yarım yukarı, oran × 1,30): artık kuruş 0, +33, +8, −2. Talepteki tablo birebir tuttu.
+
+**Talepteki yanlış iddia: C zaten var.** Talep "`period.accrual` değişken bakiyeyi çözmüyor"
+diyor. Çözüyor: çizelgeye oran yerine bakiye seviyesi verilip gün esası 1 yapılınca sonuç
+Σ bakiye × gün olur. Ölçüldü (`main` faf3d31): 10 gün 100, 10 gün 50, 10 gün 150 →
+`accrual(…, 1)` = `3000`; Nakit'in eşleştirme yöntemi aynı örnekte 3000. Negatif bakiye
+çalışır (`-1000`). Aralık `[from, to)`, değişim günü yeni bakiyeye ait; talebin istediği kural
+bu. Tüketicinin yapacağı tek iş hareketleri bakiye seviyesine çevirmek (yürüyen toplam) ve aynı
+günün hareketlerini birleştirmek (tekrarlı tarih `null`).
+
+**B neden şartlı kabul.** Madde 9'un yazılı koşulu "ikinci bir tüketici projede aynı ihtiyaç"tı;
+sahip Nakit'e modülü istedi, Portföy'de kod var. Zayıf nokta, kayda geçsin: Nakit'te kredi
+ekranının kodu yok; ölçülmüş kod Portföy'de. Madde 29'daki "çalışan ekran" şartı madde 9'da
+yoktu; şart konmadı. Yerine madde 28 emsali: bağımsız cevap anahtarı.
+
+**Kararlaştırılan kural (sahip, 2026-10-18: "önerin uygun").**
+1. İmza: `math.amortize(principalMinor, ratePerPeriod, periods, { remainder: 'last' })` →
+   satırlar `{ payment, interest, principal, balance }` (kuruş tam sayı) ya da geçersiz girdide `null`.
+2. Taksit annüite formülüyle bulunur, kuruşa yarım yukarı yuvarlanır.
+3. Faiz her dönem `kalan bakiye × oran`, kuruşa yarım yukarı.
+4. Artık kuruş zorunlu parametre; ilk sürümde tek değer `'last'`: son taksit, son bakiye ile o
+   dönemin faizi toplamıdır, plan sıfırda kapanır. `'first'` ölçülürse MINOR olarak eklenir.
+5. Oran dönemseldir, ondalık (%3,05 = 0,0305). Vergi (KKDF, BSMV) tüketici tarafından orana
+   katılır (Portföy bugün `r × (1 + vergi)` kullanıyor); çekirdek vergi bilmez (madde 10).
+6. Oran 0'da faiz 0, taksit `round(anapara ÷ dönem)`, artık son taksitte.
+
+**Ertelenenler ve yeniden başvuru koşulu.** `equalPrincipal` ve `grace` (yalnız faiz ödenen
+dönem): ikisinin de ölçülmüş kodu ya da ekranı yok. Bir ekran ya da kod bunları kullanınca
+ölçülmüş çıktıyla MINOR. `'first'` için de aynı koşul.
+
+**Şart (uygulamadan önce).** Nakit'in Python `decimal` ile hazırladığı cevap anahtarı: her vaka
+için girdiler ve her satırın beklenen dört değeri. En az: talepteki dört örnek, oran 0, tek dönem,
+büyük tutar (10^12 kuruş), artık kuruşun negatif çıktığı vaka. Testler bu anahtardan yazılır.
+
+**Sürüm.** 51B "bekliyor" kaldıkça toplu sürüm kapısı 4.4.0'ı tutar (madde 42). Cevap anahtarı
+gelince uygulanır ve 43–51 tek pakette çıkar.
 
 ### Talep #18 — para birimsiz sayı kısaltma (madde 50, issue #60)
 

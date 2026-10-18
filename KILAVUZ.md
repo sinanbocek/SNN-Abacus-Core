@@ -615,6 +615,16 @@ period.accrual([{ from: '2026-01-01', value: 0.4 }], '2026-12-15', '2026-10-01',
 Ters aralık `null` verir: "ödeme tahsilattan sonraysa faiz yok" gibi bir sıfır kararı
 sizin iş kuralınızdır, çekirdek onu varsaymaz.
 
+**Zaman ağırlıklı bakiye (adat).** Çizelgeye oran yerine **bakiye seviyesini** verin, gün
+esası `1` olsun: sonuç Σ bakiye × gündür; eksi bakiye de çalışır. Faiz için gün esası 365
+verin ve sonucu yıllık oranla çarpın. Hareketleri (giriş/çıkış) önce yürüyen toplamla bakiyeye çevirin; aynı günün
+hareketlerini tek satırda birleştirin, tekrarlı tarih `null` verir (madde 51C).
+
+```js
+period.accrual([{ from: '2026-01-01', value: 100 }, { from: '2026-01-11', value: 50 }, { from: '2026-01-21', value: 150 }], '2026-01-01', '2026-01-31', 1)   // → 3000
+period.accrual([{ from: '2026-01-01', value: -100 }], '2026-01-01', '2026-01-11', 1)   // → -1000
+```
+
 ---
 
 ## 8. `text` — Türkçe metin
