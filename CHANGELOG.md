@@ -10,12 +10,47 @@ sürümleme [Semantic Versioning](https://semver.org/lang/tr/) kurallarına uyar
 > sonraki pakette çıkar; 4.3.0 güncelleme PR'ları tüketicilerde hâlâ açık.
 > Karar: [`GERI-BILDIRIM-KAYDI.md`](GERI-BILDIRIM-KAYDI.md) madde 43 (talep #13, issue #51), madde 44 (TB-014),
 > madde 45 (TB-013 adım 1), madde 46A (unvan kısaltma), madde 47 (hacim birimleri) ve
-> madde 48 (talep #16: tarihli değer çizelgesi, ortanca, vergi dahil/hariç).
+> madde 48 (talep #16: tarihli değer çizelgesi, ortanca, vergi dahil/hariç),
+> madde 49 (talep #17, issue #59: eksi işareti) ve madde 50 (talep #18, issue #60: para birimsiz kısaltma).
 >
 > ⚠️ **Bu paket yeni fonksiyonlar (`period.valueAt`, `period.accrual`, `math.median`,
-> `text.abbreviationSteps`, `money.taxFromGross`, `money.taxFromNet`), bir alan
+> `text.abbreviationSteps`, `money.taxFromGross`, `money.taxFromNet`, `money.compactNumber`), bir alan
 > (`newRegistration`) ve bir birim kategorisi (`volume`) EKLİYOR, yani sürüm en az MINOR
 > olmalı (4.4.0).**
+
+### Düzeltilen — `money.fmtDecimalGrouped` -1 ile 0 arasında eksiyi düşürüyordu (madde 49)
+
+Negatif küçük değer pozitif görünüyordu; grafikte düşüş artış gibi okunuyordu (SNN-UI, issue #59).
+
+```
+                                   önce      sonra
+fmtDecimalGrouped(-0.5, 1)         '0,5'     '-0,5'
+fmtDecimalGrouped(-0.04, 2)        '0,04'    '-0,04'
+formatMinorInput(-50, 2)           '0,50'    '-0,50'
+fmtDecimalGrouped(-0.4, 0)         '0'       '0'       (sıfıra yuvarlanan değerde eksi yazılmaz)
+```
+
+-1 ve altındaki değerler zaten doğruydu, değişmedi. **Eksiyi elle ekleyen tüketici** (SNN-UI
+`chart-format.ts`, Nakit `MathEngine.formatDecimal`) sarmalayıcıyı kaldırabilir. Kaldırmadan
+önce sarmalayıcının mutlak değeri mi biçimlediğine bakılmalı; ham değeri biçimleyip eksi
+ekleyen bir sarmalayıcı artık çift eksi yazar.
+
+### Eklenenler — `money.compactNumber`: para birimsiz kısaltma (madde 50)
+
+Adet, ziyaretçi, istek sayısı gibi para olmayan büyük sayılar için. Simge ve `TL` yazmaz.
+`style`, `digits`, `minScale` ve ölçek kuralı `compact` ile aynıdır; iki işlev aynı kodu paylaşır.
+
+```
+money.compactNumber(1250000, { style: 'B/Mn/Mr' })    -> '1,25Mn'
+money.compactNumber(12500, { style: 'B/Mn/Mr' })      -> '12,5B'
+money.compactNumber(-1250000, { style: 'B/Mn/Mr' })   -> '-1,25Mn'
+money.compactNumber(999)                              -> '999'
+money.compactNumber(0.5)                              -> '0,5'
+```
+
+Ölçeğin altında sayı tam sayıya yuvarlanmaz (`compact` tutarı tam liraya yuvarlar): `digits`
+yoksa en çok 2 hane, varsa sabit hane. `compactMajor(...).replace('₺', '')` kullanan tüketici
+buna geçmeli; o yol `currency: 'USD'` ile `$`, `form: 'text'` ile ` TL` bırakıyordu.
 
 ### Eklenenler — tarihli değer çizelgesi: `period.valueAt`, `period.accrual` (madde 48A)
 

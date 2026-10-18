@@ -153,6 +153,8 @@ birleştirir. Sabit etikete bağlı tüketicilere (`#vX.Y.Z`) hiç gelmez, elle 
 | 48F | Yüzdelik (`percentile`) | Talep #16 E | ❌ **Red** (ertelendi) — kod ve ekran yok; tanım bir tercihtir | — |
 | 48G | Başlık biçiminde kısaltma koruma (`productName`, sözlük parametresi) | Talep #16 F | ❌ **Red** (ertelendi) — tek tüketici; madde 46A ile birlikte tasarlanacak | — |
 | 48H | KDV dahil/hariç ayrıştırma — madde 48B'nin yeniden başvurusu | Nakit koordinatör oturumu (sahip talimatı, 2026-10-16) | ✅ Kabul — `money.taxFromGross` / `money.taxFromNet`; kural K17 (iç yüzde), mali müşavir onaylı, iki tüketici kabul etti | yayınlanmadı (main) |
+| 49 | `fmtDecimalGrouped` -1 ile 0 arasında eksiyi düşürüyor (`-0,5` → `0,5`) | Talep #17 (issue #59, SNN-UI) | ✅ Kabul — **hata düzeltmesi**; ikinci yerel yama Nakit'te (37C notu) | yayınlanmadı (main) |
+| 50 | Para birimsiz sayı kısaltma (`1,25Mn`) | Talep #18 (issue #60, SNN-UI) | ✅ Kabul — **eklemeli**; `money.compactNumber`, `compact` ile ortak çekirdek | yayınlanmadı (main) |
 
 ---
 
@@ -692,6 +694,58 @@ bildirir:
   kısaltması ondan alınabilir. Göçün canlıya uygulanıp uygulanmadığı **ölçülmedi**.
 
 ---
+
+### Talep #18 — para birimsiz sayı kısaltma (madde 50, issue #60)
+
+**Kaynak.** SNN-UI grafik bileşenleri (2026-10-15); ölçüm ve iletim SNN-Standartlar ana oturumu.
+Eksen etiketi para olmayan sayıyı kısaltıyor ve bunu `compactMajor(v, { style: 'B/Mn/Mr' })
+.replace('₺', '')` ile yapıyor (`registry/components/lib/chart-format.ts` 22–31).
+
+**Ölçüm (çekirdek, `main` 4673d8f).** Tüketicinin çıktısı doğrulandı:
+`compactMajor(1250000, { style: 'B/Mn/Mr', currency: 'USD' })` → `$1,25Mn`, `form: 'text'` ile
+`1,25Mn TL`. Simge silme yolu kırılgan; iz kalıyor.
+
+**§4.1 sınavı.** Aday `compactNumber(value, { style, digits, minScale })` yalnız sayı bilir;
+başka alandaki uygulama aynen kullanır. **Zayıf nokta, kayda geçsin:** ölçülen tüketici tek
+(SNN-UI). Tek tüketici kuralı (33E/34C emsali) bu kez uygulanmadı, çünkü:
+1. Kuralın kendisi (ölçek eşikleri, harfler, `digits`, `minScale`, madde 41 terfi düzeltmesi)
+   zaten çekirdekte. Yerel kopya bunların ikinci kopyası olurdu (33C/33D emsali).
+2. SNN-UI aile kataloğudur; bileşenleri aile projelerine kurulur, kısaltma onlara da taşınır.
+3. Sahip talimatı (2026-10-18): "59 ve 60'ı hazırla".
+
+Tüketicinin elediği adaylar (`compact`'a `form: 'none'`, birim ekli kısaltma, SNN-UI
+`formatCompact` eşiği) aynı gerekçeyle elendi. `compactMajor`'a `form: 'none'` da düşünüldü:
+para işlevine para olmayan sayı vermek anlamı bozar ve ölçeğin altındaki tutar tam liraya
+yuvarlanır (`0,5` → `1`). Ayrı ad seçildi.
+
+**Uygulama.** `money.compactNumber`. Ölçekleme kodu `compact`'tan `scaleCompact` iç işlevine
+alındı; iki işlev onu paylaşır. Kısaltılmış kısmın `compactMajor` çıktısından simge silinmiş
+hâline birebir eşit olduğu testle çivili (`compact-number.test.ts`). Tek fark ölçeğin altında:
+sayı `digits` yoksa en çok 2 haneyle yazılır, sondaki sıfır atılır; varsa sabit hane.
+
+**Sürüm.** `main`'e girer, `[Yayınlanmadı]` altında bekler (madde 42). Sahip kararı
+(2026-10-18): Nakit'ten gelecek talep değerlendirilene kadar sürüm yok.
+
+### Talep #17 — `fmtDecimalGrouped` eksi işaretini düşürüyor (madde 49, issue #59)
+
+**Kaynak.** SNN-UI grafik bileşenleri (2026-10-15). `slope-chart` iki dönem farkını yazıyor;
+-0,5'lik düşüş "0,5" görünüyor, artış gibi okunuyor. SNN-UI sarmalayıcıyla yamıyor
+(`lib/chart-format.ts` 12–20).
+
+**Ölçüm (çekirdek, `main` 4673d8f).** Doğrulandı. Kök neden tüketicinin dediği gibi:
+`String(-0.5).split('.')` tam kısmı `"-0"` verir, `groupThousands(Number("-0"))` işareti
+kaybeder. `formatMinorInput` aynı işlevi çağırdığı için o da `-50` kuruşu `"0,50"` yazıyordu;
+bu tüketicinin görmediği ikinci belirti.
+
+**İkinci tüketici.** Nakit aynı hatayı yerelde yamıyor (`MathEngine.formatDecimal`, madde 37C
+notu). trade-kasa `ReadOnlyRate.tsx`'in negatif değer alıp almadığı ölçülmedi.
+
+**Karar.** Hata düzeltmesi. İşaret ayrı tutulur; sıfıra yuvarlanan değerde eksi yazılmaz
+(`-0,4`, `digits: 0` → `"0"`). -1 ve altındaki doğru çıktılar değişmez; testte hepsi var
+(`grouped-negative.test.ts`). Bu madde 37C'den (giriş kutusunda eksi, `parse` yönü) ayrıdır;
+37C'nin durumu değişmedi.
+
+**Sürüm.** `main`'e girer, `[Yayınlanmadı]` altında bekler (madde 42).
 
 ### Talep #16 — Nakit Akış ve İhale Maliyet adına altı aday (madde 48)
 

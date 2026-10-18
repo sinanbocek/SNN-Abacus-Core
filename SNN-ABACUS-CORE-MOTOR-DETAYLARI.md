@@ -467,6 +467,9 @@ Ondalıklı sayıyı binlik-ayraçlı (nokta) + ondalık (virgül) gösterir; so
 Örnek: `fmtDecimalGrouped(47.89, 4) → "47,8900"` · `fmtDecimalGrouped(34.5, 4) → "34,5000"`
 · `fmtDecimalGrouped(70000.5, 2) → "70.000,50"` · `fmtDecimalGrouped(0) → "0"` (gerçek sıfır)
 · `fmtDecimalGrouped(null) → "—"` · `fmtDecimalGrouped(NaN) → "—"`.
+**Eksi işareti (madde 49):** -1 ile 0 arasında da korunur: `fmtDecimalGrouped(-0.5, 1) → "-0,5"`.
+Sıfıra yuvarlanan değerde eksi yazılmaz: `fmtDecimalGrouped(-0.4, 0) → "0"`. Bu sürümden önce
+`"0,5"` yazıyordu; `formatMinorInput(-50, 2)` de aynı yoldan `"0,50"` veriyordu.
 **Hane sayısı (v3.0.0):** `digits` 0–20 arası bir tam sayı olmalıdır; aksi hâlde
 (`1.5`, `-1`, `NaN`, `Infinity`, `21`) **`'—'`** döner. v2.x bu değerlerde hata
 fırlatıyordu. `fmtDecimalGrouped(4.3, -1) → "—"`.
@@ -540,6 +543,16 @@ o `?? 0` kalıbı geçersiz girdiyi **sessizce sıfıra** çeviriyordu (ABACUS-S
 
 ⚠️ Eşik **ana birim** üzerindedir: `compactMajor(1500)` → `"₺1,5K"`, çünkü 1500
 lira 1.000 lirayı aşar. Aynı sayı `compact(1500)` ile 15 lira demektir → `"₺15"`.
+
+### `compactNumber(value, opts?): string` — madde 50
+PARA OLMAYAN sayıyı kısaltır (adet, ziyaretçi, istek sayısı). Simge ve `TL` yazmaz.
+Seçenekler `style`, `digits`, `minScale`; anlamları ve ölçek kuralı `compact` ile aynıdır,
+ortak kodu paylaşırlar. Ölçeğin altında sayı tam liraya yuvarlanmaz: `digits` yoksa en çok
+2 hane yazılır ve sondaki sıfır atılır, varsa sabit hane.
+
+- `compactNumber(1250000, { style: 'B/Mn/Mr' }) → "1,25Mn"` · `compactNumber(12500, { style: 'B/Mn/Mr' }) → "12,5B"`
+- `compactNumber(-1250000, { style: 'B/Mn/Mr' }) → "-1,25Mn"` · `compactNumber(999) → "999"` · `compactNumber(0.5) → "0,5"`
+- `compactNumber(null) → "—"` · `compactNumber(1000, { digits: -1 }) → "—"`
 
 ### `money` — entegrasyon notları
 - **Girdi kuruş, integer.** Float birim kullanan tüketici, `format`'a vermeden önce `×100` + `math.round`; çıktı zaten string.
