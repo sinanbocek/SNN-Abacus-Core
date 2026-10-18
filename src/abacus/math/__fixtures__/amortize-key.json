@@ -1,0 +1,1368 @@
+[
+  {
+    "id": "AM-01",
+    "title": "Talep örneği 1: 100.000 TL, %3,05 × 1,30, 12 ay",
+    "input": {
+      "principalMinor": 10000000,
+      "ratePerPeriod": "0.03965",
+      "periods": 12,
+      "remainder": "last"
+    },
+    "regularPayment": 1063359,
+    "lastPaymentDelta": 0,
+    "rows": [
+      {
+        "payment": 1063359,
+        "interest": 396500,
+        "principal": 666859,
+        "balance": 9333141
+      },
+      {
+        "payment": 1063359,
+        "interest": 370059,
+        "principal": 693300,
+        "balance": 8639841
+      },
+      {
+        "payment": 1063359,
+        "interest": 342570,
+        "principal": 720789,
+        "balance": 7919052
+      },
+      {
+        "payment": 1063359,
+        "interest": 313990,
+        "principal": 749369,
+        "balance": 7169683
+      },
+      {
+        "payment": 1063359,
+        "interest": 284278,
+        "principal": 779081,
+        "balance": 6390602
+      },
+      {
+        "payment": 1063359,
+        "interest": 253387,
+        "principal": 809972,
+        "balance": 5580630
+      },
+      {
+        "payment": 1063359,
+        "interest": 221272,
+        "principal": 842087,
+        "balance": 4738543
+      },
+      {
+        "payment": 1063359,
+        "interest": 187883,
+        "principal": 875476,
+        "balance": 3863067
+      },
+      {
+        "payment": 1063359,
+        "interest": 153171,
+        "principal": 910188,
+        "balance": 2952879
+      },
+      {
+        "payment": 1063359,
+        "interest": 117082,
+        "principal": 946277,
+        "balance": 2006602
+      },
+      {
+        "payment": 1063359,
+        "interest": 79562,
+        "principal": 983797,
+        "balance": 1022805
+      },
+      {
+        "payment": 1063359,
+        "interest": 40554,
+        "principal": 1022805,
+        "balance": 0
+      }
+    ]
+  },
+  {
+    "id": "AM-02",
+    "title": "Talep örneği 2: 250.000 TL, %2,89 × 1,30, 36 ay",
+    "input": {
+      "principalMinor": 25000000,
+      "ratePerPeriod": "0.03757",
+      "periods": 36,
+      "remainder": "last"
+    },
+    "regularPayment": 1278026,
+    "lastPaymentDelta": 33,
+    "rows": [
+      {
+        "payment": 1278026,
+        "interest": 939250,
+        "principal": 338776,
+        "balance": 24661224
+      },
+      {
+        "payment": 1278026,
+        "interest": 926522,
+        "principal": 351504,
+        "balance": 24309720
+      },
+      {
+        "payment": 1278026,
+        "interest": 913316,
+        "principal": 364710,
+        "balance": 23945010
+      },
+      {
+        "payment": 1278026,
+        "interest": 899614,
+        "principal": 378412,
+        "balance": 23566598
+      },
+      {
+        "payment": 1278026,
+        "interest": 885397,
+        "principal": 392629,
+        "balance": 23173969
+      },
+      {
+        "payment": 1278026,
+        "interest": 870646,
+        "principal": 407380,
+        "balance": 22766589
+      },
+      {
+        "payment": 1278026,
+        "interest": 855341,
+        "principal": 422685,
+        "balance": 22343904
+      },
+      {
+        "payment": 1278026,
+        "interest": 839460,
+        "principal": 438566,
+        "balance": 21905338
+      },
+      {
+        "payment": 1278026,
+        "interest": 822984,
+        "principal": 455042,
+        "balance": 21450296
+      },
+      {
+        "payment": 1278026,
+        "interest": 805888,
+        "principal": 472138,
+        "balance": 20978158
+      },
+      {
+        "payment": 1278026,
+        "interest": 788149,
+        "principal": 489877,
+        "balance": 20488281
+      },
+      {
+        "payment": 1278026,
+        "interest": 769745,
+        "principal": 508281,
+        "balance": 19980000
+      },
+      {
+        "payment": 1278026,
+        "interest": 750649,
+        "principal": 527377,
+        "balance": 19452623
+      },
+      {
+        "payment": 1278026,
+        "interest": 730835,
+        "principal": 547191,
+        "balance": 18905432
+      },
+      {
+        "payment": 1278026,
+        "interest": 710277,
+        "principal": 567749,
+        "balance": 18337683
+      },
+      {
+        "payment": 1278026,
+        "interest": 688947,
+        "principal": 589079,
+        "balance": 17748604
+      },
+      {
+        "payment": 1278026,
+        "interest": 666815,
+        "principal": 611211,
+        "balance": 17137393
+      },
+      {
+        "payment": 1278026,
+        "interest": 643852,
+        "principal": 634174,
+        "balance": 16503219
+      },
+      {
+        "payment": 1278026,
+        "interest": 620026,
+        "principal": 658000,
+        "balance": 15845219
+      },
+      {
+        "payment": 1278026,
+        "interest": 595305,
+        "principal": 682721,
+        "balance": 15162498
+      },
+      {
+        "payment": 1278026,
+        "interest": 569655,
+        "principal": 708371,
+        "balance": 14454127
+      },
+      {
+        "payment": 1278026,
+        "interest": 543042,
+        "principal": 734984,
+        "balance": 13719143
+      },
+      {
+        "payment": 1278026,
+        "interest": 515428,
+        "principal": 762598,
+        "balance": 12956545
+      },
+      {
+        "payment": 1278026,
+        "interest": 486777,
+        "principal": 791249,
+        "balance": 12165296
+      },
+      {
+        "payment": 1278026,
+        "interest": 457050,
+        "principal": 820976,
+        "balance": 11344320
+      },
+      {
+        "payment": 1278026,
+        "interest": 426206,
+        "principal": 851820,
+        "balance": 10492500
+      },
+      {
+        "payment": 1278026,
+        "interest": 394203,
+        "principal": 883823,
+        "balance": 9608677
+      },
+      {
+        "payment": 1278026,
+        "interest": 360998,
+        "principal": 917028,
+        "balance": 8691649
+      },
+      {
+        "payment": 1278026,
+        "interest": 326545,
+        "principal": 951481,
+        "balance": 7740168
+      },
+      {
+        "payment": 1278026,
+        "interest": 290798,
+        "principal": 987228,
+        "balance": 6752940
+      },
+      {
+        "payment": 1278026,
+        "interest": 253708,
+        "principal": 1024318,
+        "balance": 5728622
+      },
+      {
+        "payment": 1278026,
+        "interest": 215224,
+        "principal": 1062802,
+        "balance": 4665820
+      },
+      {
+        "payment": 1278026,
+        "interest": 175295,
+        "principal": 1102731,
+        "balance": 3563089
+      },
+      {
+        "payment": 1278026,
+        "interest": 133865,
+        "principal": 1144161,
+        "balance": 2418928
+      },
+      {
+        "payment": 1278026,
+        "interest": 90879,
+        "principal": 1187147,
+        "balance": 1231781
+      },
+      {
+        "payment": 1278059,
+        "interest": 46278,
+        "principal": 1231781,
+        "balance": 0
+      }
+    ]
+  },
+  {
+    "id": "AM-03",
+    "title": "Talep örneği 3: 1.000.000 TL, %3,49 × 1,30, 24 ay",
+    "input": {
+      "principalMinor": 100000000,
+      "ratePerPeriod": "0.04537",
+      "periods": 24,
+      "remainder": "last"
+    },
+    "regularPayment": 6924200,
+    "lastPaymentDelta": 8,
+    "rows": [
+      {
+        "payment": 6924200,
+        "interest": 4537000,
+        "principal": 2387200,
+        "balance": 97612800
+      },
+      {
+        "payment": 6924200,
+        "interest": 4428693,
+        "principal": 2495507,
+        "balance": 95117293
+      },
+      {
+        "payment": 6924200,
+        "interest": 4315472,
+        "principal": 2608728,
+        "balance": 92508565
+      },
+      {
+        "payment": 6924200,
+        "interest": 4197114,
+        "principal": 2727086,
+        "balance": 89781479
+      },
+      {
+        "payment": 6924200,
+        "interest": 4073386,
+        "principal": 2850814,
+        "balance": 86930665
+      },
+      {
+        "payment": 6924200,
+        "interest": 3944044,
+        "principal": 2980156,
+        "balance": 83950509
+      },
+      {
+        "payment": 6924200,
+        "interest": 3808835,
+        "principal": 3115365,
+        "balance": 80835144
+      },
+      {
+        "payment": 6924200,
+        "interest": 3667490,
+        "principal": 3256710,
+        "balance": 77578434
+      },
+      {
+        "payment": 6924200,
+        "interest": 3519734,
+        "principal": 3404466,
+        "balance": 74173968
+      },
+      {
+        "payment": 6924200,
+        "interest": 3365273,
+        "principal": 3558927,
+        "balance": 70615041
+      },
+      {
+        "payment": 6924200,
+        "interest": 3203804,
+        "principal": 3720396,
+        "balance": 66894645
+      },
+      {
+        "payment": 6924200,
+        "interest": 3035010,
+        "principal": 3889190,
+        "balance": 63005455
+      },
+      {
+        "payment": 6924200,
+        "interest": 2858557,
+        "principal": 4065643,
+        "balance": 58939812
+      },
+      {
+        "payment": 6924200,
+        "interest": 2674099,
+        "principal": 4250101,
+        "balance": 54689711
+      },
+      {
+        "payment": 6924200,
+        "interest": 2481272,
+        "principal": 4442928,
+        "balance": 50246783
+      },
+      {
+        "payment": 6924200,
+        "interest": 2279697,
+        "principal": 4644503,
+        "balance": 45602280
+      },
+      {
+        "payment": 6924200,
+        "interest": 2068975,
+        "principal": 4855225,
+        "balance": 40747055
+      },
+      {
+        "payment": 6924200,
+        "interest": 1848694,
+        "principal": 5075506,
+        "balance": 35671549
+      },
+      {
+        "payment": 6924200,
+        "interest": 1618418,
+        "principal": 5305782,
+        "balance": 30365767
+      },
+      {
+        "payment": 6924200,
+        "interest": 1377695,
+        "principal": 5546505,
+        "balance": 24819262
+      },
+      {
+        "payment": 6924200,
+        "interest": 1126050,
+        "principal": 5798150,
+        "balance": 19021112
+      },
+      {
+        "payment": 6924200,
+        "interest": 862988,
+        "principal": 6061212,
+        "balance": 12959900
+      },
+      {
+        "payment": 6924200,
+        "interest": 587991,
+        "principal": 6336209,
+        "balance": 6623691
+      },
+      {
+        "payment": 6924208,
+        "interest": 300517,
+        "principal": 6623691,
+        "balance": 0
+      }
+    ]
+  },
+  {
+    "id": "AM-04",
+    "title": "Talep örneği 4 (artık eksi): 47.500 TL, %4,25 × 1,30, 6 ay",
+    "input": {
+      "principalMinor": 4750000,
+      "ratePerPeriod": "0.05525",
+      "periods": 6,
+      "remainder": "last"
+    },
+    "regularPayment": 951604,
+    "lastPaymentDelta": -2,
+    "rows": [
+      {
+        "payment": 951604,
+        "interest": 262438,
+        "principal": 689166,
+        "balance": 4060834
+      },
+      {
+        "payment": 951604,
+        "interest": 224361,
+        "principal": 727243,
+        "balance": 3333591
+      },
+      {
+        "payment": 951604,
+        "interest": 184181,
+        "principal": 767423,
+        "balance": 2566168
+      },
+      {
+        "payment": 951604,
+        "interest": 141781,
+        "principal": 809823,
+        "balance": 1756345
+      },
+      {
+        "payment": 951604,
+        "interest": 97038,
+        "principal": 854566,
+        "balance": 901779
+      },
+      {
+        "payment": 951602,
+        "interest": 49823,
+        "principal": 901779,
+        "balance": 0
+      }
+    ]
+  },
+  {
+    "id": "AM-05",
+    "title": "Oran 0: 100.000 TL, 7 ay (bölünmeyen tutar)",
+    "input": {
+      "principalMinor": 10000000,
+      "ratePerPeriod": "0",
+      "periods": 7,
+      "remainder": "last"
+    },
+    "regularPayment": 1428571,
+    "lastPaymentDelta": 3,
+    "rows": [
+      {
+        "payment": 1428571,
+        "interest": 0,
+        "principal": 1428571,
+        "balance": 8571429
+      },
+      {
+        "payment": 1428571,
+        "interest": 0,
+        "principal": 1428571,
+        "balance": 7142858
+      },
+      {
+        "payment": 1428571,
+        "interest": 0,
+        "principal": 1428571,
+        "balance": 5714287
+      },
+      {
+        "payment": 1428571,
+        "interest": 0,
+        "principal": 1428571,
+        "balance": 4285716
+      },
+      {
+        "payment": 1428571,
+        "interest": 0,
+        "principal": 1428571,
+        "balance": 2857145
+      },
+      {
+        "payment": 1428571,
+        "interest": 0,
+        "principal": 1428571,
+        "balance": 1428574
+      },
+      {
+        "payment": 1428574,
+        "interest": 0,
+        "principal": 1428574,
+        "balance": 0
+      }
+    ]
+  },
+  {
+    "id": "AM-06",
+    "title": "Tek dönem: 50.000 TL, %3,5",
+    "input": {
+      "principalMinor": 5000000,
+      "ratePerPeriod": "0.035",
+      "periods": 1,
+      "remainder": "last"
+    },
+    "regularPayment": 5175000,
+    "lastPaymentDelta": 0,
+    "rows": [
+      {
+        "payment": 5175000,
+        "interest": 175000,
+        "principal": 5000000,
+        "balance": 0
+      }
+    ]
+  },
+  {
+    "id": "AM-07",
+    "title": "Büyük tutar: 10^12 kuruş, %2,5, 120 ay",
+    "input": {
+      "principalMinor": 1000000000000,
+      "ratePerPeriod": "0.025",
+      "periods": 120,
+      "remainder": "last"
+    },
+    "regularPayment": 26361793003,
+    "lastPaymentDelta": 341,
+    "rows": [
+      {
+        "payment": 26361793003,
+        "interest": 25000000000,
+        "principal": 1361793003,
+        "balance": 998638206997
+      },
+      {
+        "payment": 26361793003,
+        "interest": 24965955175,
+        "principal": 1395837828,
+        "balance": 997242369169
+      },
+      {
+        "payment": 26361793003,
+        "interest": 24931059229,
+        "principal": 1430733774,
+        "balance": 995811635395
+      },
+      {
+        "payment": 26361793003,
+        "interest": 24895290885,
+        "principal": 1466502118,
+        "balance": 994345133277
+      },
+      {
+        "payment": 26361793003,
+        "interest": 24858628332,
+        "principal": 1503164671,
+        "balance": 992841968606
+      },
+      {
+        "payment": 26361793003,
+        "interest": 24821049215,
+        "principal": 1540743788,
+        "balance": 991301224818
+      },
+      {
+        "payment": 26361793003,
+        "interest": 24782530620,
+        "principal": 1579262383,
+        "balance": 989721962435
+      },
+      {
+        "payment": 26361793003,
+        "interest": 24743049061,
+        "principal": 1618743942,
+        "balance": 988103218493
+      },
+      {
+        "payment": 26361793003,
+        "interest": 24702580462,
+        "principal": 1659212541,
+        "balance": 986444005952
+      },
+      {
+        "payment": 26361793003,
+        "interest": 24661100149,
+        "principal": 1700692854,
+        "balance": 984743313098
+      },
+      {
+        "payment": 26361793003,
+        "interest": 24618582827,
+        "principal": 1743210176,
+        "balance": 983000102922
+      },
+      {
+        "payment": 26361793003,
+        "interest": 24575002573,
+        "principal": 1786790430,
+        "balance": 981213312492
+      },
+      {
+        "payment": 26361793003,
+        "interest": 24530332812,
+        "principal": 1831460191,
+        "balance": 979381852301
+      },
+      {
+        "payment": 26361793003,
+        "interest": 24484546308,
+        "principal": 1877246695,
+        "balance": 977504605606
+      },
+      {
+        "payment": 26361793003,
+        "interest": 24437615140,
+        "principal": 1924177863,
+        "balance": 975580427743
+      },
+      {
+        "payment": 26361793003,
+        "interest": 24389510694,
+        "principal": 1972282309,
+        "balance": 973608145434
+      },
+      {
+        "payment": 26361793003,
+        "interest": 24340203636,
+        "principal": 2021589367,
+        "balance": 971586556067
+      },
+      {
+        "payment": 26361793003,
+        "interest": 24289663902,
+        "principal": 2072129101,
+        "balance": 969514426966
+      },
+      {
+        "payment": 26361793003,
+        "interest": 24237860674,
+        "principal": 2123932329,
+        "balance": 967390494637
+      },
+      {
+        "payment": 26361793003,
+        "interest": 24184762366,
+        "principal": 2177030637,
+        "balance": 965213464000
+      },
+      {
+        "payment": 26361793003,
+        "interest": 24130336600,
+        "principal": 2231456403,
+        "balance": 962982007597
+      },
+      {
+        "payment": 26361793003,
+        "interest": 24074550190,
+        "principal": 2287242813,
+        "balance": 960694764784
+      },
+      {
+        "payment": 26361793003,
+        "interest": 24017369120,
+        "principal": 2344423883,
+        "balance": 958350340901
+      },
+      {
+        "payment": 26361793003,
+        "interest": 23958758523,
+        "principal": 2403034480,
+        "balance": 955947306421
+      },
+      {
+        "payment": 26361793003,
+        "interest": 23898682661,
+        "principal": 2463110342,
+        "balance": 953484196079
+      },
+      {
+        "payment": 26361793003,
+        "interest": 23837104902,
+        "principal": 2524688101,
+        "balance": 950959507978
+      },
+      {
+        "payment": 26361793003,
+        "interest": 23773987699,
+        "principal": 2587805304,
+        "balance": 948371702674
+      },
+      {
+        "payment": 26361793003,
+        "interest": 23709292567,
+        "principal": 2652500436,
+        "balance": 945719202238
+      },
+      {
+        "payment": 26361793003,
+        "interest": 23642980056,
+        "principal": 2718812947,
+        "balance": 943000389291
+      },
+      {
+        "payment": 26361793003,
+        "interest": 23575009732,
+        "principal": 2786783271,
+        "balance": 940213606020
+      },
+      {
+        "payment": 26361793003,
+        "interest": 23505340151,
+        "principal": 2856452852,
+        "balance": 937357153168
+      },
+      {
+        "payment": 26361793003,
+        "interest": 23433928829,
+        "principal": 2927864174,
+        "balance": 934429288994
+      },
+      {
+        "payment": 26361793003,
+        "interest": 23360732225,
+        "principal": 3001060778,
+        "balance": 931428228216
+      },
+      {
+        "payment": 26361793003,
+        "interest": 23285705705,
+        "principal": 3076087298,
+        "balance": 928352140918
+      },
+      {
+        "payment": 26361793003,
+        "interest": 23208803523,
+        "principal": 3152989480,
+        "balance": 925199151438
+      },
+      {
+        "payment": 26361793003,
+        "interest": 23129978786,
+        "principal": 3231814217,
+        "balance": 921967337221
+      },
+      {
+        "payment": 26361793003,
+        "interest": 23049183431,
+        "principal": 3312609572,
+        "balance": 918654727649
+      },
+      {
+        "payment": 26361793003,
+        "interest": 22966368191,
+        "principal": 3395424812,
+        "balance": 915259302837
+      },
+      {
+        "payment": 26361793003,
+        "interest": 22881482571,
+        "principal": 3480310432,
+        "balance": 911778992405
+      },
+      {
+        "payment": 26361793003,
+        "interest": 22794474810,
+        "principal": 3567318193,
+        "balance": 908211674212
+      },
+      {
+        "payment": 26361793003,
+        "interest": 22705291855,
+        "principal": 3656501148,
+        "balance": 904555173064
+      },
+      {
+        "payment": 26361793003,
+        "interest": 22613879327,
+        "principal": 3747913676,
+        "balance": 900807259388
+      },
+      {
+        "payment": 26361793003,
+        "interest": 22520181485,
+        "principal": 3841611518,
+        "balance": 896965647870
+      },
+      {
+        "payment": 26361793003,
+        "interest": 22424141197,
+        "principal": 3937651806,
+        "balance": 893027996064
+      },
+      {
+        "payment": 26361793003,
+        "interest": 22325699902,
+        "principal": 4036093101,
+        "balance": 888991902963
+      },
+      {
+        "payment": 26361793003,
+        "interest": 22224797574,
+        "principal": 4136995429,
+        "balance": 884854907534
+      },
+      {
+        "payment": 26361793003,
+        "interest": 22121372688,
+        "principal": 4240420315,
+        "balance": 880614487219
+      },
+      {
+        "payment": 26361793003,
+        "interest": 22015362180,
+        "principal": 4346430823,
+        "balance": 876268056396
+      },
+      {
+        "payment": 26361793003,
+        "interest": 21906701410,
+        "principal": 4455091593,
+        "balance": 871812964803
+      },
+      {
+        "payment": 26361793003,
+        "interest": 21795324120,
+        "principal": 4566468883,
+        "balance": 867246495920
+      },
+      {
+        "payment": 26361793003,
+        "interest": 21681162398,
+        "principal": 4680630605,
+        "balance": 862565865315
+      },
+      {
+        "payment": 26361793003,
+        "interest": 21564146633,
+        "principal": 4797646370,
+        "balance": 857768218945
+      },
+      {
+        "payment": 26361793003,
+        "interest": 21444205474,
+        "principal": 4917587529,
+        "balance": 852850631416
+      },
+      {
+        "payment": 26361793003,
+        "interest": 21321265785,
+        "principal": 5040527218,
+        "balance": 847810104198
+      },
+      {
+        "payment": 26361793003,
+        "interest": 21195252605,
+        "principal": 5166540398,
+        "balance": 842643563800
+      },
+      {
+        "payment": 26361793003,
+        "interest": 21066089095,
+        "principal": 5295703908,
+        "balance": 837347859892
+      },
+      {
+        "payment": 26361793003,
+        "interest": 20933696497,
+        "principal": 5428096506,
+        "balance": 831919763386
+      },
+      {
+        "payment": 26361793003,
+        "interest": 20797994085,
+        "principal": 5563798918,
+        "balance": 826355964468
+      },
+      {
+        "payment": 26361793003,
+        "interest": 20658899112,
+        "principal": 5702893891,
+        "balance": 820653070577
+      },
+      {
+        "payment": 26361793003,
+        "interest": 20516326764,
+        "principal": 5845466239,
+        "balance": 814807604338
+      },
+      {
+        "payment": 26361793003,
+        "interest": 20370190108,
+        "principal": 5991602895,
+        "balance": 808816001443
+      },
+      {
+        "payment": 26361793003,
+        "interest": 20220400036,
+        "principal": 6141392967,
+        "balance": 802674608476
+      },
+      {
+        "payment": 26361793003,
+        "interest": 20066865212,
+        "principal": 6294927791,
+        "balance": 796379680685
+      },
+      {
+        "payment": 26361793003,
+        "interest": 19909492017,
+        "principal": 6452300986,
+        "balance": 789927379699
+      },
+      {
+        "payment": 26361793003,
+        "interest": 19748184492,
+        "principal": 6613608511,
+        "balance": 783313771188
+      },
+      {
+        "payment": 26361793003,
+        "interest": 19582844280,
+        "principal": 6778948723,
+        "balance": 776534822465
+      },
+      {
+        "payment": 26361793003,
+        "interest": 19413370562,
+        "principal": 6948422441,
+        "balance": 769586400024
+      },
+      {
+        "payment": 26361793003,
+        "interest": 19239660001,
+        "principal": 7122133002,
+        "balance": 762464267022
+      },
+      {
+        "payment": 26361793003,
+        "interest": 19061606676,
+        "principal": 7300186327,
+        "balance": 755164080695
+      },
+      {
+        "payment": 26361793003,
+        "interest": 18879102017,
+        "principal": 7482690986,
+        "balance": 747681389709
+      },
+      {
+        "payment": 26361793003,
+        "interest": 18692034743,
+        "principal": 7669758260,
+        "balance": 740011631449
+      },
+      {
+        "payment": 26361793003,
+        "interest": 18500290786,
+        "principal": 7861502217,
+        "balance": 732150129232
+      },
+      {
+        "payment": 26361793003,
+        "interest": 18303753231,
+        "principal": 8058039772,
+        "balance": 724092089460
+      },
+      {
+        "payment": 26361793003,
+        "interest": 18102302237,
+        "principal": 8259490766,
+        "balance": 715832598694
+      },
+      {
+        "payment": 26361793003,
+        "interest": 17895814967,
+        "principal": 8465978036,
+        "balance": 707366620658
+      },
+      {
+        "payment": 26361793003,
+        "interest": 17684165516,
+        "principal": 8677627487,
+        "balance": 698688993171
+      },
+      {
+        "payment": 26361793003,
+        "interest": 17467224829,
+        "principal": 8894568174,
+        "balance": 689794424997
+      },
+      {
+        "payment": 26361793003,
+        "interest": 17244860625,
+        "principal": 9116932378,
+        "balance": 680677492619
+      },
+      {
+        "payment": 26361793003,
+        "interest": 17016937315,
+        "principal": 9344855688,
+        "balance": 671332636931
+      },
+      {
+        "payment": 26361793003,
+        "interest": 16783315923,
+        "principal": 9578477080,
+        "balance": 661754159851
+      },
+      {
+        "payment": 26361793003,
+        "interest": 16543853996,
+        "principal": 9817939007,
+        "balance": 651936220844
+      },
+      {
+        "payment": 26361793003,
+        "interest": 16298405521,
+        "principal": 10063387482,
+        "balance": 641872833362
+      },
+      {
+        "payment": 26361793003,
+        "interest": 16046820834,
+        "principal": 10314972169,
+        "balance": 631557861193
+      },
+      {
+        "payment": 26361793003,
+        "interest": 15788946530,
+        "principal": 10572846473,
+        "balance": 620985014720
+      },
+      {
+        "payment": 26361793003,
+        "interest": 15524625368,
+        "principal": 10837167635,
+        "balance": 610147847085
+      },
+      {
+        "payment": 26361793003,
+        "interest": 15253696177,
+        "principal": 11108096826,
+        "balance": 599039750259
+      },
+      {
+        "payment": 26361793003,
+        "interest": 14975993756,
+        "principal": 11385799247,
+        "balance": 587653951012
+      },
+      {
+        "payment": 26361793003,
+        "interest": 14691348775,
+        "principal": 11670444228,
+        "balance": 575983506784
+      },
+      {
+        "payment": 26361793003,
+        "interest": 14399587670,
+        "principal": 11962205333,
+        "balance": 564021301451
+      },
+      {
+        "payment": 26361793003,
+        "interest": 14100532536,
+        "principal": 12261260467,
+        "balance": 551760040984
+      },
+      {
+        "payment": 26361793003,
+        "interest": 13794001025,
+        "principal": 12567791978,
+        "balance": 539192249006
+      },
+      {
+        "payment": 26361793003,
+        "interest": 13479806225,
+        "principal": 12881986778,
+        "balance": 526310262228
+      },
+      {
+        "payment": 26361793003,
+        "interest": 13157756556,
+        "principal": 13204036447,
+        "balance": 513106225781
+      },
+      {
+        "payment": 26361793003,
+        "interest": 12827655645,
+        "principal": 13534137358,
+        "balance": 499572088423
+      },
+      {
+        "payment": 26361793003,
+        "interest": 12489302211,
+        "principal": 13872490792,
+        "balance": 485699597631
+      },
+      {
+        "payment": 26361793003,
+        "interest": 12142489941,
+        "principal": 14219303062,
+        "balance": 471480294569
+      },
+      {
+        "payment": 26361793003,
+        "interest": 11787007364,
+        "principal": 14574785639,
+        "balance": 456905508930
+      },
+      {
+        "payment": 26361793003,
+        "interest": 11422637723,
+        "principal": 14939155280,
+        "balance": 441966353650
+      },
+      {
+        "payment": 26361793003,
+        "interest": 11049158841,
+        "principal": 15312634162,
+        "balance": 426653719488
+      },
+      {
+        "payment": 26361793003,
+        "interest": 10666342987,
+        "principal": 15695450016,
+        "balance": 410958269472
+      },
+      {
+        "payment": 26361793003,
+        "interest": 10273956737,
+        "principal": 16087836266,
+        "balance": 394870433206
+      },
+      {
+        "payment": 26361793003,
+        "interest": 9871760830,
+        "principal": 16490032173,
+        "balance": 378380401033
+      },
+      {
+        "payment": 26361793003,
+        "interest": 9459510026,
+        "principal": 16902282977,
+        "balance": 361478118056
+      },
+      {
+        "payment": 26361793003,
+        "interest": 9036952951,
+        "principal": 17324840052,
+        "balance": 344153278004
+      },
+      {
+        "payment": 26361793003,
+        "interest": 8603831950,
+        "principal": 17757961053,
+        "balance": 326395316951
+      },
+      {
+        "payment": 26361793003,
+        "interest": 8159882924,
+        "principal": 18201910079,
+        "balance": 308193406872
+      },
+      {
+        "payment": 26361793003,
+        "interest": 7704835172,
+        "principal": 18656957831,
+        "balance": 289536449041
+      },
+      {
+        "payment": 26361793003,
+        "interest": 7238411226,
+        "principal": 19123381777,
+        "balance": 270413067264
+      },
+      {
+        "payment": 26361793003,
+        "interest": 6760326682,
+        "principal": 19601466321,
+        "balance": 250811600943
+      },
+      {
+        "payment": 26361793003,
+        "interest": 6270290024,
+        "principal": 20091502979,
+        "balance": 230720097964
+      },
+      {
+        "payment": 26361793003,
+        "interest": 5768002449,
+        "principal": 20593790554,
+        "balance": 210126307410
+      },
+      {
+        "payment": 26361793003,
+        "interest": 5253157685,
+        "principal": 21108635318,
+        "balance": 189017672092
+      },
+      {
+        "payment": 26361793003,
+        "interest": 4725441802,
+        "principal": 21636351201,
+        "balance": 167381320891
+      },
+      {
+        "payment": 26361793003,
+        "interest": 4184533022,
+        "principal": 22177259981,
+        "balance": 145204060910
+      },
+      {
+        "payment": 26361793003,
+        "interest": 3630101523,
+        "principal": 22731691480,
+        "balance": 122472369430
+      },
+      {
+        "payment": 26361793003,
+        "interest": 3061809236,
+        "principal": 23299983767,
+        "balance": 99172385663
+      },
+      {
+        "payment": 26361793003,
+        "interest": 2479309642,
+        "principal": 23882483361,
+        "balance": 75289902302
+      },
+      {
+        "payment": 26361793003,
+        "interest": 1882247558,
+        "principal": 24479545445,
+        "balance": 50810356857
+      },
+      {
+        "payment": 26361793003,
+        "interest": 1270258921,
+        "principal": 25091534082,
+        "balance": 25718822775
+      },
+      {
+        "payment": 26361793344,
+        "interest": 642970569,
+        "principal": 25718822775,
+        "balance": 0
+      }
+    ]
+  },
+  {
+    "id": "AM-08",
+    "title": "Küçük tutar: 1 kuruş fazlası testi, 100,01 TL, %1, 3 ay",
+    "input": {
+      "principalMinor": 10001,
+      "ratePerPeriod": "0.01",
+      "periods": 3,
+      "remainder": "last"
+    },
+    "regularPayment": 3401,
+    "lastPaymentDelta": -1,
+    "rows": [
+      {
+        "payment": 3401,
+        "interest": 100,
+        "principal": 3301,
+        "balance": 6700
+      },
+      {
+        "payment": 3401,
+        "interest": 67,
+        "principal": 3334,
+        "balance": 3366
+      },
+      {
+        "payment": 3400,
+        "interest": 34,
+        "principal": 3366,
+        "balance": 0
+      }
+    ]
+  }
+]

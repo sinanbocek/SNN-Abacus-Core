@@ -156,7 +156,7 @@ birleştirir. Sabit etikete bağlı tüketicilere (`#vX.Y.Z`) hiç gelmez, elle 
 | 49 | `fmtDecimalGrouped` -1 ile 0 arasında eksiyi düşürüyor (`-0,5` → `0,5`) | Talep #17 (issue #59, SNN-UI) | ✅ Kabul — **hata düzeltmesi**; ikinci yerel yama Nakit'te (37C notu) | yayınlanmadı (main) |
 | 50 | Para birimsiz sayı kısaltma (`1,25Mn`) | Talep #18 (issue #60, SNN-UI) | ✅ Kabul — **eklemeli**; `money.compactNumber`, `compact` ile ortak çekirdek | yayınlanmadı (main) |
 | 51A | Eşit taksit tutarı (`annuityPayment`) — madde 9'un yeniden başvurusu | Talep #19 A (Nakit; Portföy ölçüldü) | ❌ **Red** — ayrı ad gereksiz; taksit `amortize` planının ilk satırıdır | — |
-| 51B | Ödeme planı (`math.amortize`), yalnız eşit taksit, `remainder: 'last'` zorunlu — madde 9'un yeniden başvurusu | Talep #19 B (Nakit; Portföy ölçüldü) | ✅ **Şartlı kabul** — şart: Nakit'in bağımsız cevap anahtarı; `equalPrincipal` ve `grace` ertelendi | bekliyor |
+| 51B | Ödeme planı (`math.amortize`), yalnız eşit taksit, `remainder: 'last'` zorunlu — madde 9'un yeniden başvurusu | Talep #19 B (Nakit; Portföy ölçüldü) | ✅ **Kabul** — şart karşılandı (Nakit cevap anahtarı, c9e8c0c); `equalPrincipal` ve `grace` ertelendi | yayınlanmadı (main) |
 | 51C | Zaman ağırlıklı bakiye (`period.balanceDays`, adat) | Talep #19 C | ❌ **Red** — zaten var: `period.accrual(bakiyeler, from, to, 1)`; kılavuza örnek | — |
 | 51D | Gün sayımı (`dayCount`), bileşik getiri, `npv`, kıst ilk dönem, KKDF/BSMV, kredi türleri | Talep #19 D–I (tüketicinin kendi elemesi) | ❌ **Red** — tüketicinin elemesine katılındı (madde 10, 11, 29, 48B, 48D emsali) | — |
 
@@ -749,6 +749,19 @@ büyük tutar (10^12 kuruş), artık kuruşun negatif çıktığı vaka. Testler
 
 **Sürüm.** 51B "bekliyor" kaldıkça toplu sürüm kapısı 4.4.0'ı tutar (madde 42). Cevap anahtarı
 gelince uygulanır ve 43–51 tek pakette çıkar.
+
+**Uygulandı (2026-10-18).** Nakit cevap anahtarını gönderdi (`scratch/abacus-amortize/anahtar.json`,
+commit c9e8c0c; 8 vaka). Çekirdek 8 vakayı ayrı bir Python `decimal` betiğiyle yeniden hesapladı,
+8'i de aynı çıktı. Anahtar `math/__fixtures__/amortize-key.json` olarak testlere girdi.
+
+- **Hassasiyet ölçüldü.** Çekirdeğin varsayılan 20 basamağı 2^53'e yakın tutarda kuruş kararını
+  saptırıyordu (300.000 rastgele vakada 4). Hesap yerel 40 basamaklı kopyayla yapılır; dönemsel
+  oran ≤ 0,1 ve ≤ 480 dönemde 20.000 rastgele vakada tam kesirli (`Fraction`) hesapla aynı çıktı.
+  Sapan vaka testte çivili; hassasiyeti 20'ye düşüren mutasyon kırmızı verir.
+- **Mutasyon:** artığı son taksite bindirmemek (10 test), faizi tabana yuvarlamak (6), sıfır
+  anaparaya izin vermek (2), hassasiyeti düşürmek (1) — dördü de kırmızı.
+- Dönem başına %100'ün üstündeki oranlarda tam ,5 sınırına düşen tutar vardır; gerçek kredide
+  oluşmaz, ölçüm kapsamı dışında bırakıldı.
 
 ### Talep #18 — para birimsiz sayı kısaltma (madde 50, issue #60)
 
