@@ -30,7 +30,7 @@ const API_SURFACE: Record<string, string[]> = {
     'max', 'median', 'mod', 'mul', 'percent', 'percentChange', 'pow', 'ratio', 'round', 'sub',
   ],
   money: [
-    'compact', 'compactMajor', 'decimal', 'fmtDecimalGrouped', 'format', 'formatGroupedInput',
+    'compact', 'compactMajor', 'compactNumber', 'decimal', 'fmtDecimalGrouped', 'format', 'formatGroupedInput',
     'formatMajor', 'formatMinorInput', 'knownCurrencyCodes', 'parse',
     'parseNumber', 'percent', 'ratio', 'taxFromGross', 'taxFromNet', 'toMinor', 'toWords',
   ],

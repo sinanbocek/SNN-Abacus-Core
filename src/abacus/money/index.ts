@@ -388,13 +388,17 @@ export function fmtDecimalGrouped(value: number | null | undefined, digits = 0):
   if (value === null || value === undefined || !Number.isFinite(value)) return '—';
   if (!isValidDigits(digits)) return '—';
   const rounded = round(value, digits);
-  const parts = String(rounded).split('.');
+  // HATA DÜZELTMESİ (madde 49, issue #59): işaret ayrı tutulur. Eskiden `-0,5`'in tam
+  // kısmı `"-0"` → `Number` → `0` olup eksi düşüyordu. Sıfıra yuvarlanan değerde
+  // (`-0,4` → `0`) eksi yazılmaz.
+  const sign = rounded < 0 ? '-' : '';
+  const parts = String(abs(rounded)).split('.');
   const intPart = parts[0] ? groupThousands(Number(parts[0])) : '0';
   if (digits > 0) {
     const decPart = (parts[1] || '').padEnd(digits, '0').slice(0, digits);
-    return `${intPart},${decPart}`;
+    return `${sign}${intPart},${decPart}`;
   }
-  return intPart;
+  return `${sign}${intPart}`;
 }
 
 /** Serbest ondalık giriş kutuları için CANLI biçimlendirme */
@@ -614,6 +618,63 @@ export function compact(kurus: number | null | undefined, opts?: CompactMoneyOpt
     return format(kurus, { form, kurus: false, currency: cur });
   }
 
+  const scaledWithUnit = scaleCompact(majorValue, firstScale, style, digits);
+  if (scaledWithUnit === null) return '—';
+  // v2.2.0: burada para birimi YOK SAYILIYORDU; compact(x, {currency:'USD'})
+  // bile '₺' basıyordu. Artık seçilen birim kullanılıyor.
+  const resultWithForm =
+    form === 'symbol' ? `${cur.symbol}${scaledWithUnit}` : `${scaledWithUnit} ${cur.text}`;
+
+  return isNegative ? `-${resultWithForm}` : resultWithForm;
+}
+
+/** Para birimsiz kısaltma seçenekleri; anlamları `CompactMoneyOptions` ile aynıdır. */
+export type CompactNumberOptions = Pick<CompactMoneyOptions, 'style' | 'digits' | 'minScale'>;
+
+/**
+ * PARA OLMAYAN sayıyı kısaltır (madde 50, issue #60): ziyaretçi, adet, istek sayısı.
+ * Para simgesi ve `TL` yazmaz. Ölçek eşikleri, `style`, `digits` ve `minScale`
+ * `compact` ile aynı kuralla çalışır.
+ *
+ * Tek fark ölçeğin altında: `compact` tutarı tam liraya yuvarlar, bu işlev sayıyı
+ * kısaltılmış kısımla aynı hane kuralıyla yazar (`digits` yoksa en çok 2 hane,
+ * sondaki sıfır atılır; varsa sabit hane). Grafik ekseninde `0,5` kaybolmasın diye.
+ *
+ * @example money.compactNumber(1250000, { style: 'B/Mn/Mr' })  // "1,25Mn"
+ * @example money.compactNumber(999)                            // "999"
+ */
+export function compactNumber(
+  value: number | null | undefined,
+  opts?: CompactNumberOptions
+): string {
+  if (value === null || value === undefined || !Number.isFinite(value)) return '—';
+  const digits = opts?.digits;
+  if (digits !== undefined && !isValidDigits(digits)) return '—';
+  const firstScale = COMPACT_SCALES.findIndex((s) => s.name === (opts?.minScale ?? 'thousand'));
+  const floorScale = COMPACT_SCALES[firstScale];
+  if (floorScale === undefined) return '—';
+
+  const absValue = abs(value);
+  if (absValue < floorScale.divisor) {
+    if (digits !== undefined) return fmtDecimalGrouped(value, digits);
+    // Sondaki sıfırlar atılır: "12,50" -> "12,5", "12,00" -> "12".
+    return fmtDecimalGrouped(value, 2).replace(/,?0+$/, '');
+  }
+  const scaled = scaleCompact(absValue, firstScale, opts?.style ?? 'K/M', digits);
+  if (scaled === null) return '—';
+  return value < 0 ? `-${scaled}` : scaled;
+}
+
+/**
+ * `compact` ve `compactNumber`'ın ortak çekirdeği: ölçek eşiğini aşmış POZİTİF değeri
+ * ölçeğe böler ve birim harfiyle yazar (`1,25Mn`). İşaret ve para birimi çağıranındır.
+ */
+function scaleCompact(
+  majorValue: number,
+  firstScale: number,
+  style: 'K/M' | 'B/Mn/Mr',
+  digits: number | undefined
+): string | null {
   // HATA DÜZELTMESİ (v4.3.0, madde 41): terfi kararı eskiden birim HARFİNE bakıyordu;
   // varsayılan stilde 'B' milyar olduğu için 2 trilyon '₺2M' yazılıyordu. Artık sıraya
   // bakılır ve en üst ölçek (milyar) aşılmaz.
@@ -639,7 +700,7 @@ export function compact(kurus: number | null | undefined, opts?: CompactMoneyOpt
     roundedVal = roundAt(index);
   }
   const scale = COMPACT_SCALES[index];
-  if (roundedVal === null || scale === undefined) return '—';
+  if (roundedVal === null || scale === undefined) return null;
   const unit = style === 'K/M' ? scale.km : scale.tr;
 
   const [intText, fracText = ''] = String(roundedVal).split('.');
@@ -650,11 +711,5 @@ export function compact(kurus: number | null | undefined, opts?: CompactMoneyOpt
         ? `${intText}`
         : `${intText},${fracText.padEnd(digits, '0')}`;
 
-  const scaledWithUnit = `${numStr}${unit}`;
-  // v2.2.0: burada para birimi YOK SAYILIYORDU; compact(x, {currency:'USD'})
-  // bile '₺' basıyordu. Artık seçilen birim kullanılıyor.
-  const resultWithForm =
-    form === 'symbol' ? `${cur.symbol}${scaledWithUnit}` : `${scaledWithUnit} ${cur.text}`;
-
-  return isNegative ? `-${resultWithForm}` : resultWithForm;
+  return `${numStr}${unit}`;
 }

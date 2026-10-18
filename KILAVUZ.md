@@ -81,6 +81,7 @@ date.format('2026-08-15T21:30:00Z')   // → '16.08.2026'
 | Lira, büyük tutar | `₺1,5M` | `money.compactMajor` |
 | Kuruş, giriş kutusu için | `1.500` (simgesiz) | `money.formatMinorInput` |
 | Sıradan sayı | `1.234,5` | `money.fmtDecimalGrouped` / `money.decimal` |
+| Para olmayan büyük sayı (adet, ziyaretçi) | `1,25Mn` | `money.compactNumber` |
 
 ```js
 money.format(150000)          // → '₺1.500'
@@ -378,6 +379,17 @@ money.compact(150000000, { style: 'B/Mn/Mr' })        // → '₺1,5Mn'
 money.compactMajor(1500000, { style: 'B/Mn/Mr' })     // → '₺1,5Mn'
 money.compactMajor(1200000, { style: 'B/Mn/Mr', digits: 2 })           // → '₺1,20Mn'
 money.compactMajor(1500, { style: 'B/Mn/Mr', minScale: 'million' })    // → '₺1.500'
+```
+
+Para olmayan sayıyı (adet, ziyaretçi, istek) kısaltmak için `compactNumber`. Simge ve `TL`
+yazmaz; `style`, `digits`, `minScale` aynı kuralla çalışır. `compactMajor` çıktısından `₺`
+silmeyin: başka para biriminde ya da metin biçiminde iz kalır.
+
+```js
+money.compactNumber(1250000, { style: 'B/Mn/Mr' })    // → '1,25Mn'
+money.compactNumber(-1250000, { style: 'B/Mn/Mr' })   // → '-1,25Mn'
+money.compactNumber(999)                              // → '999'
+money.compactNumber(0.5)                              // → '0,5'
 ```
 
 Tablo sütununda `digits` verin, hepsi aynı hanede yazılır. `'B'` harfi varsayılan stilde
