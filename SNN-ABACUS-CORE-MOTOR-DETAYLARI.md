@@ -8,7 +8,7 @@
 > **karar vermek** için önce [KILAVUZ.md](KILAVUZ.md). Kenar durumları, sürüm geçmişi ve
 > tasarım gerekçeleri için bu belge. Bağlayıcı kurallar için [ABACUS-SPEC.md](ABACUS-SPEC.md).
 >
-> **Sürüm:** v4.3 serisi · **Kod dili:** İngilizce · **Bağımlılık:** yalnız `decimal.js` (yalnız `math` içinde)
+> **Sürüm:** v4.4 serisi · **Kod dili:** İngilizce · **Bağımlılık:** yalnız `decimal.js` (yalnız `math` içinde)
 
 ---
 
@@ -197,6 +197,33 @@ sırada önce gelir.
 ⚠️ **Havuz büyüyünce bir kalemin payı azalabilir** (Alabama paradoksu). Yöntemin
 bilinen özelliğidir, hata değildir. Monotonluk garantisi **tek dağıtım içindir**;
 farklı havuz tutarları arasında yoktur.
+
+### `amortize(principalMinor, ratePerPeriod, periods, opts): AmortizationRow[] | null` — madde 51B
+
+**Eşit taksitli (annüite) ödeme planı.**
+
+```ts
+type AmortizeRemainder = 'last';
+interface AmortizeOptions { remainder: AmortizeRemainder }   // zorunlu, varsayılan YOK
+interface AmortizationRow { payment: number; interest: number; principal: number; balance: number }
+```
+
+- Taksit `P × r(1+r)^n ÷ ((1+r)^n − 1)`, kuruşa yarım yukarı; oran 0'da `P ÷ n`.
+- Faiz her dönem `kalan bakiye × r`, kuruşa yarım yukarı.
+- `'last'`: son taksit = son bakiye + o dönemin faizi; artık eksi de olabilir.
+- Oran dönemsel ondalık. Vergi orana çağıran tarafından katılır (madde 10).
+
+**Garantiler:** `Σ principal === principalMinor` · son `balance === 0` · her satırda
+`payment === interest + principal`. Testler tüketicinin bağımsız cevap anahtarından
+(8 vaka, Python `decimal`) yazıldı.
+
+**Hassasiyet:** hesap 40 basamakla yapılır. 20 basamak büyük tutarda kuruş kararını
+saptırıyordu (`amortize(3834990626521159, 0.00001, 4, …)` → `…549`, doğrusu `…548`).
+40 basamak, dönemsel oran ≤ 0,1 ve ≤ 480 dönemde 20.000 rastgele vakada tam kesirli hesapla
+aynı çıktı (ölçüldü).
+
+`null`: anapara pozitif güvenli tam sayı değil · oran negatif ya da sonlu değil · dönem
+1'den küçük ya da kesirli · politika tanınmıyor · bir tutar güvenli tam sayıyı aşıyor.
 
 **`null` döner:** `total` güvenli tam sayı değilse · ağırlık sonlu değil ya da
 negatifse · politika tanınmıyorsa · ağırlık toplamı 0 ise (boş dizi dahil — tek kapı;

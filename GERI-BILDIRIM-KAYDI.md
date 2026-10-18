@@ -130,33 +130,33 @@ birleştirir. Sabit etikete bağlı tüketicilere (`#vX.Y.Z`) hiç gelmez, elle 
 | 40C | `parse` ile `parseNumber` hizalansın | Talep #12 aday 3 | ❌ **Red** — fark bilinçli; KILAVUZ'a "hangi okuyucu" notu eklendi | 4.2.0 (belge) |
 | 41 | `compact` 1 trilyon ve üstünü milyona "terfi" ettiriyordu (`2e12` → `₺2M`) | 4.3.0 hazırlığı (ölçüm) | ✅ Kabul — **hata düzeltmesi**; en üst ölçek milyar | 4.3.0 |
 | 42 | Aynı dönemin kabulleri tek sürümde çıksın (toplu sürüm) | Sahip (2026-09-24) | ✅ Kabul — `AI-RULES §4.3`, CI ve etiket kapısı | 4.3.0 |
-| 43 | `properNounSuffix` rakamla biten adda eki sayının okunuşundan alsın (`2027'ye`) | Talep #13 (issue #51) | ✅ Kabul — **hata düzeltmesi**; `text.suffix` ile aynı kural | yayınlanmadı (main) |
+| 43 | `properNounSuffix` rakamla biten adda eki sayının okunuşundan alsın (`2027'ye`) | Talep #13 (issue #51) | ✅ Kabul — **hata düzeltmesi**; `text.suffix` ile aynı kural | 4.4.0 |
 | 43B | `date.suffix(iso, kind)` | Talep #13 (elenen aday) | ❌ **Red** — `properNounSuffix` düzelince tarih metni de doğru çekiliyor | — |
-| 44A | Ünlüsüz kısaltma harf harf okunsun (`THY'de`, `TRT'den`) | TB-014 (iç bulgu) | ✅ Kabul — **hata düzeltmesi**; otorite TDK "Kısaltmalar" | yayınlanmadı (main) |
-| 44B | "-aş" ile biten ad "AŞ" kısaltması sanılıyordu (`Kocataş'ne`) | TB-014 çalışılırken ölçüldü | ✅ Kabul — **hata düzeltmesi**; kısaltma yalnız ayrı kelime | yayınlanmadı (main) |
+| 44A | Ünlüsüz kısaltma harf harf okunsun (`THY'de`, `TRT'den`) | TB-014 (iç bulgu) | ✅ Kabul — **hata düzeltmesi**; otorite TDK "Kısaltmalar" | 4.4.0 |
+| 44B | "-aş" ile biten ad "AŞ" kısaltması sanılıyordu (`Kocataş'ne`) | TB-014 çalışılırken ölçüldü | ✅ Kabul — **hata düzeltmesi**; kısaltma yalnız ayrı kelime | 4.4.0 |
 | 44C | Ünlü içeren harf harf kısaltma (`ABD'ye`) | TB-014 (sınır) | ❌ **Red** (ertelendi) — metinden ayırt edilemez; çekirdek tahmin etmez | — |
-| 44D | K harfi "ka" okunsun (`SGK'da`, `SGK'ya`) | Sahip (2026-09-24) | ⚠️ **Kabul — sahip kararıyla istisna** (TDK: "ke", `TDK'den`) | yayınlanmadı (main) |
-| 45 | `PlateResult.newRegistration` eklensin, `yeniKayit` eskisin (TB-013 adım 1) | TB-013 (iç denetim) | ✅ Kabul — **eklemeli**, kimse kırılmaz; silme bir sonraki MAJOR'da | yayınlanmadı (main) |
-| 46A | Kurum ve şirket unvanını **gösterim için** adım adım kısaltan işlev (`… Başkanlığı` → `… Bşk.`, `Limited Şirketi` → `Ltd.Şti.`) | Talep #14 (sahip, üç tüketici taraması) | ✅ Kabul — **yalnız gösterim**; biçim TDK, TDK'da olmayan "fiilî uygulama"; `text.abbreviationSteps` | yayınlanmadı (main) |
+| 44D | K harfi "ka" okunsun (`SGK'da`, `SGK'ya`) | Sahip (2026-09-24) | ⚠️ **Kabul — sahip kararıyla istisna** (TDK: "ke", `TDK'den`) | 4.4.0 |
+| 45 | `PlateResult.newRegistration` eklensin, `yeniKayit` eskisin (TB-013 adım 1) | TB-013 (iç denetim) | ✅ Kabul — **eklemeli**, kimse kırılmaz; silme bir sonraki MAJOR'da | 4.4.0 |
+| 46A | Kurum ve şirket unvanını **gösterim için** adım adım kısaltan işlev (`… Başkanlığı` → `… Bşk.`, `Limited Şirketi` → `Ltd.Şti.`) | Talep #14 (sahip, üç tüketici taraması) | ✅ Kabul — **yalnız gösterim**; biçim TDK, TDK'da olmayan "fiilî uygulama"; `text.abbreviationSteps` | 4.4.0 |
 | 46B | `text.company()` bağlamsız kısaltıyor, bitişik yazımı ve büyük harf kısaltmayı bozuyor, tam unvanı saklamıyor | Talep #14 (tarama ölçümü) | ✅ Kabul — **kırıcı düzeltme**; sonraki MAJOR'a ertelendi (TB-015) | sonraki MAJOR |
 | 46C | Unvan eşleştirme anahtarı (`İBB` = `İstanbul Büyükşehir Belediyesi`, `Ltd. Şti.` = `Limited Şirketi`) | Talep #14 (aday) | ❌ **Red** (ertelendi) — tek somut kanıt var (Proje-Nakit) | — |
 | 46D | EKAP'ın kendi kısaltmalarını açma (`FAB.SAN.VE TİC.AŞ` → tam unvan) | Talep #14 (aday) | ❌ **Red** (ertelendi) — yalnız elle yapılmış örnek var | — |
 | 46E | Kuruma özgü kısaltmalar çekirdek sözlüğünde (`İBB`, `DSİ`, `Orman GM`) | Talep #14 (aday) | ❌ **Red** — §4.1: bunlar veri; tüketici kendi listesini seçenekle verir | — |
-| 47 | `unit` motoruna `volume` kategorisi (`mm3` `ml` `cm3` `l` `dm3` `m3`) — madde 30'un yeniden başvurusu | Talep #15 (Nakit Akış piyasa arşivi; İKN 2026/1666260 sepeti) | ✅ Kabul — **eklemeli**, kimse kırılmaz | yayınlanmadı (main) |
+| 47 | `unit` motoruna `volume` kategorisi (`mm3` `ml` `cm3` `l` `dm3` `m3`) — madde 30'un yeniden başvurusu | Talep #15 (Nakit Akış piyasa arşivi; İKN 2026/1666260 sepeti) | ✅ Kabul — **eklemeli**, kimse kırılmaz | 4.4.0 |
 | 47B | `cl` (santilitre) | Talep #15 (aday) | ❌ **Red** (ertelendi) — ölçümde görülmedi; sahip kararı | — |
 | 47C | Ambalaj metni ayrıştırma (`"1.3LT"` → `{ value, unit }`) | Talep #15 (aday) | ❌ **Red** (ertelendi) — biçim çeşitliliği ölçülmedi; tüketici kendisi erteledi | — |
-| 48A | `period.valueAt` + `period.accrual` — tarihli değer çizelgesi, dilimlenmiş basit birikim | Talep #16 A (Maliyet `rates.ts`; Nakit Faz 3) | ✅ Kabul — **eklemeli**; ikinci ve üçüncü kullanım ölçüldü | yayınlanmadı (main) |
+| 48A | `period.valueAt` + `period.accrual` — tarihli değer çizelgesi, dilimlenmiş basit birikim | Talep #16 A (Maliyet `rates.ts`; Nakit Faz 3) | ✅ Kabul — **eklemeli**; ikinci ve üçüncü kullanım ölçüldü | 4.4.0 |
 | 48B | KDV dahil/hariç ayrıştırma (`grossToNet` / `taxOn`) | Talep #16 B | ❌ **Red** — tek satırlık bileşim; net + vergi = brüt politikası açık (madde 9, 10 emsali) | — |
 | 48C | Birim fiyat oturtma çekirdeği (`fitUnitPrices`) | Talep #16 C | ❌ **Red** (ertelendi) — `allocate` varyantı değil; politika parametreli, yerel en iyi; tek tüketici | — |
 | 48D | Genel kök bulucu (`solve`) | Talep #16 D | ❌ **Red** (ertelendi) — tek tüketici; çözücü alan sonucuna bağlı; talep #5 elemesi | — |
-| 48E | `math.median` | Talep #16 E (Nakit emsal arşivi tasarımı) | ✅ Kabul — **eklemeli**; üç yerel kopya ölçüldü (GHS-Panel, Portföy) | yayınlanmadı (main) |
+| 48E | `math.median` | Talep #16 E (Nakit emsal arşivi tasarımı) | ✅ Kabul — **eklemeli**; üç yerel kopya ölçüldü (GHS-Panel, Portföy) | 4.4.0 |
 | 48F | Yüzdelik (`percentile`) | Talep #16 E | ❌ **Red** (ertelendi) — kod ve ekran yok; tanım bir tercihtir | — |
 | 48G | Başlık biçiminde kısaltma koruma (`productName`, sözlük parametresi) | Talep #16 F | ❌ **Red** (ertelendi) — tek tüketici; madde 46A ile birlikte tasarlanacak | — |
-| 48H | KDV dahil/hariç ayrıştırma — madde 48B'nin yeniden başvurusu | Nakit koordinatör oturumu (sahip talimatı, 2026-10-16) | ✅ Kabul — `money.taxFromGross` / `money.taxFromNet`; kural K17 (iç yüzde), mali müşavir onaylı, iki tüketici kabul etti | yayınlanmadı (main) |
-| 49 | `fmtDecimalGrouped` -1 ile 0 arasında eksiyi düşürüyor (`-0,5` → `0,5`) | Talep #17 (issue #59, SNN-UI) | ✅ Kabul — **hata düzeltmesi**; ikinci yerel yama Nakit'te (37C notu) | yayınlanmadı (main) |
-| 50 | Para birimsiz sayı kısaltma (`1,25Mn`) | Talep #18 (issue #60, SNN-UI) | ✅ Kabul — **eklemeli**; `money.compactNumber`, `compact` ile ortak çekirdek | yayınlanmadı (main) |
+| 48H | KDV dahil/hariç ayrıştırma — madde 48B'nin yeniden başvurusu | Nakit koordinatör oturumu (sahip talimatı, 2026-10-16) | ✅ Kabul — `money.taxFromGross` / `money.taxFromNet`; kural K17 (iç yüzde), mali müşavir onaylı, iki tüketici kabul etti | 4.4.0 |
+| 49 | `fmtDecimalGrouped` -1 ile 0 arasında eksiyi düşürüyor (`-0,5` → `0,5`) | Talep #17 (issue #59, SNN-UI) | ✅ Kabul — **hata düzeltmesi**; ikinci yerel yama Nakit'te (37C notu) | 4.4.0 |
+| 50 | Para birimsiz sayı kısaltma (`1,25Mn`) | Talep #18 (issue #60, SNN-UI) | ✅ Kabul — **eklemeli**; `money.compactNumber`, `compact` ile ortak çekirdek | 4.4.0 |
 | 51A | Eşit taksit tutarı (`annuityPayment`) — madde 9'un yeniden başvurusu | Talep #19 A (Nakit; Portföy ölçüldü) | ❌ **Red** — ayrı ad gereksiz; taksit `amortize` planının ilk satırıdır | — |
-| 51B | Ödeme planı (`math.amortize`), yalnız eşit taksit, `remainder: 'last'` zorunlu — madde 9'un yeniden başvurusu | Talep #19 B (Nakit; Portföy ölçüldü) | ✅ **Şartlı kabul** — şart: Nakit'in bağımsız cevap anahtarı; `equalPrincipal` ve `grace` ertelendi | bekliyor |
+| 51B | Ödeme planı (`math.amortize`), yalnız eşit taksit, `remainder: 'last'` zorunlu — madde 9'un yeniden başvurusu | Talep #19 B (Nakit; Portföy ölçüldü) | ✅ **Kabul** — şart karşılandı (Nakit cevap anahtarı, c9e8c0c); `equalPrincipal` ve `grace` ertelendi | 4.4.0 |
 | 51C | Zaman ağırlıklı bakiye (`period.balanceDays`, adat) | Talep #19 C | ❌ **Red** — zaten var: `period.accrual(bakiyeler, from, to, 1)`; kılavuza örnek | — |
 | 51D | Gün sayımı (`dayCount`), bileşik getiri, `npv`, kıst ilk dönem, KKDF/BSMV, kredi türleri | Talep #19 D–I (tüketicinin kendi elemesi) | ❌ **Red** — tüketicinin elemesine katılındı (madde 10, 11, 29, 48B, 48D emsali) | — |
 
@@ -749,6 +749,19 @@ büyük tutar (10^12 kuruş), artık kuruşun negatif çıktığı vaka. Testler
 
 **Sürüm.** 51B "bekliyor" kaldıkça toplu sürüm kapısı 4.4.0'ı tutar (madde 42). Cevap anahtarı
 gelince uygulanır ve 43–51 tek pakette çıkar.
+
+**Uygulandı (2026-10-18).** Nakit cevap anahtarını gönderdi (`scratch/abacus-amortize/anahtar.json`,
+commit c9e8c0c; 8 vaka). Çekirdek 8 vakayı ayrı bir Python `decimal` betiğiyle yeniden hesapladı,
+8'i de aynı çıktı. Anahtar `math/__fixtures__/amortize-key.json` olarak testlere girdi.
+
+- **Hassasiyet ölçüldü.** Çekirdeğin varsayılan 20 basamağı 2^53'e yakın tutarda kuruş kararını
+  saptırıyordu (300.000 rastgele vakada 4). Hesap yerel 40 basamaklı kopyayla yapılır; dönemsel
+  oran ≤ 0,1 ve ≤ 480 dönemde 20.000 rastgele vakada tam kesirli (`Fraction`) hesapla aynı çıktı.
+  Sapan vaka testte çivili; hassasiyeti 20'ye düşüren mutasyon kırmızı verir.
+- **Mutasyon:** artığı son taksite bindirmemek (10 test), faizi tabana yuvarlamak (6), sıfır
+  anaparaya izin vermek (2), hassasiyeti düşürmek (1) — dördü de kırmızı.
+- Dönem başına %100'ün üstündeki oranlarda tam ,5 sınırına düşen tutar vardır; gerçek kredide
+  oluşmaz, ölçüm kapsamı dışında bırakıldı.
 
 ### Talep #18 — para birimsiz sayı kısaltma (madde 50, issue #60)
 
@@ -1512,5 +1525,10 @@ yazılmıştır.
 | #10 | 19 Eylül 2026 | trade-kasa: `dotAsDecimal` karışık biçim hatası (issue #42) | 4.1.0 → 4.1.1 |
 | #11 | 24 Eylül 2026 | GHS-Panel: para gösterimi, proje varsayılanı, elle simge ekleme (issue #47) | 4.1.1 → 4.3.0 |
 | #12 | 24 Eylül 2026 | GHS-Panel: `dotAsDecimal` kontrollü kutu hatası + hane sınırı (issue #48) | 4.1.1 → 4.2.0 |
-| #13 | 24 Eylül 2026 | TYC Grup şartname özeti (prototip): rakamla biten özel ada hâl eki (issue #51) | 4.3.0 → main (yayınlanmadı) |
-| #14 | 24 Eylül 2026 | Sahip: resmî kurum ve şirket unvanı kısaltması; GHS-Panel, SNN-İhale, SNN-Proje-Nakit ihtiyaç taraması (issue yok, sözlü) | main (yayınlanmadı) |
+| #13 | 24 Eylül 2026 | TYC Grup şartname özeti (prototip): rakamla biten özel ada hâl eki (issue #51) | 4.3.0 → 4.4.0 |
+| #14 | 24 Eylül 2026 | Sahip: resmî kurum ve şirket unvanı kısaltması; GHS-Panel, SNN-İhale, SNN-Proje-Nakit ihtiyaç taraması (issue yok, sözlü) | 4.3.0 → 4.4.0 |
+| #15 | 28 Eylül 2026 | SNN-Proje-ve-Nakit-Akış: piyasa arşivi, hacim birimleri (issue yok, sözlü) | 4.3.0 → 4.4.0 |
+| #16 | 16 Ekim 2026 | Nakit Akış ve İhale Maliyet: tarihli değer çizelgesi, ortanca, vergi dahil/hariç (issue yok, sözlü) | 4.3.0 → 4.4.0 |
+| #17 | 15 Ekim 2026 | SNN-UI: `fmtDecimalGrouped` eksi işareti (issue #59) | 4.3.0 → 4.4.0 |
+| #18 | 15 Ekim 2026 | SNN-UI: para birimsiz kısaltma (issue #60) | 4.3.0 → 4.4.0 |
+| #19 | 18 Ekim 2026 | Nakit Akış (Portföy ölçüldü): taksit planı, adat (issue yok) | 4.3.0 → 4.4.0 |

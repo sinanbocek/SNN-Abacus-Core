@@ -26,7 +26,7 @@ import * as abacus from './index';
 /** v3.3.0 itibarıyla dışa açık yüzey. Motor -> dışa açılan adlar. */
 const API_SURFACE: Record<string, string[]> = {
   math: [
-    'abs', 'add', 'allocate', 'ceil', 'div', 'equals', 'floor', 'irr', 'log', 'log10',
+    'abs', 'add', 'allocate', 'amortize', 'ceil', 'div', 'equals', 'floor', 'irr', 'log', 'log10',
     'max', 'median', 'mod', 'mul', 'percent', 'percentChange', 'pow', 'ratio', 'round', 'sub',
   ],
   money: [

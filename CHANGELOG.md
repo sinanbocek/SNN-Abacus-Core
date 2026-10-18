@@ -4,19 +4,47 @@ Bu projedeki tüm önemli değişiklikler bu dosyada belgelenir.
 Format [Keep a Changelog](https://keepachangelog.com/tr/) temellidir;
 sürümleme [Semantic Versioning](https://semver.org/lang/tr/) kurallarına uyar.
 
-## [Yayınlanmadı]
+## [4.4.0] - 2026-10-18
 
-> `main`'de, henüz sürüm numarası almadı. Toplu sürüm kuralı (`AI-RULES §4.3`) gereği bir
-> sonraki pakette çıkar; 4.3.0 güncelleme PR'ları tüketicilerde hâlâ açık.
+> Toplu sürüm (`AI-RULES §4.3`): 24 Eylül – 18 Ekim döneminin bütün kabulleri tek pakette.
+> **Kırıcı değişiklik yok**; seçenek verilmezse eski davranış sürer. Davranışı değişen yerler
+> yalnız hata düzeltmeleridir (madde 43, 44A/B/D, 49); her biri aşağıda önce/sonra tablosuyla.
 > Karar: [`GERI-BILDIRIM-KAYDI.md`](GERI-BILDIRIM-KAYDI.md) madde 43 (talep #13, issue #51), madde 44 (TB-014),
 > madde 45 (TB-013 adım 1), madde 46A (unvan kısaltma), madde 47 (hacim birimleri) ve
 > madde 48 (talep #16: tarihli değer çizelgesi, ortanca, vergi dahil/hariç),
-> madde 49 (talep #17, issue #59: eksi işareti) ve madde 50 (talep #18, issue #60: para birimsiz kısaltma).
+> madde 49 (talep #17, issue #59: eksi işareti), madde 50 (talep #18, issue #60: para birimsiz kısaltma)
+> ve madde 51 (talep #19: eşit taksitli ödeme planı).
 >
 > ⚠️ **Bu paket yeni fonksiyonlar (`period.valueAt`, `period.accrual`, `math.median`,
-> `text.abbreviationSteps`, `money.taxFromGross`, `money.taxFromNet`, `money.compactNumber`), bir alan
+> `text.abbreviationSteps`, `money.taxFromGross`, `money.taxFromNet`, `money.compactNumber`, `math.amortize`), bir alan
 > (`newRegistration`) ve bir birim kategorisi (`volume`) EKLİYOR, yani sürüm en az MINOR
 > olmalı (4.4.0).**
+
+### Eklenenler — `math.amortize`: eşit taksitli ödeme planı (madde 51B)
+
+Taksitli kredi, taksitli satış, kira-satış için. Satırlar kuruş tam sayıdır:
+`{ payment, interest, principal, balance }`.
+
+```
+math.amortize(10001, 0.01, 3, { remainder: 'last' })
+  -> [{ payment: 3401, interest: 100, principal: 3301, balance: 6700 },
+      { payment: 3401, interest: 67,  principal: 3334, balance: 3366 },
+      { payment: 3400, interest: 34,  principal: 3366, balance: 0 }]
+math.amortize(10000000, 0.01, 12, {})   -> null   (politika zorunlu)
+```
+
+Kural (sahip, 2026-10-18): taksit ve her dönemin faizi kuruşa yarım yukarı; artık kuruş
+`remainder: 'last'` ile son taksite biner, plan tam sıfırda kapanır. Oran **dönemsel**
+ondalıktır. Vergi (KKDF, BSMV) çekirdekte yok; orana çağıran katar: `oran × (1 + vergi)`.
+Testler Nakit'in bağımsız cevap anahtarından (8 vaka) yazıldı.
+
+**Yerel kopyadan geçen tüketici** (Portföy `loanCalculator.ts`) fark görebilir: yerel kod
+float `Math.pow` ile hesaplıyor ve son taksiti ayarlamıyor. Talepteki dört örnekte plan sonu
+artığı 0, +33, +8, −2 kuruştu; çekirdekte bu artık son taksittedir.
+
+Ertelendi: eşit anaparalı plan, ödemesiz dönem, artığın ilk taksite binmesi. Ölçülmüş ekran
+gelince MINOR olarak eklenir. Adat (zaman ağırlıklı bakiye) için yeni işlev yok:
+`period.accrual(bakiyeler, from, to, 1)` (kılavuz §7).
 
 ### Düzeltilen — `money.fmtDecimalGrouped` -1 ile 0 arasında eksiyi düşürüyordu (madde 49)
 

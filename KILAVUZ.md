@@ -333,6 +333,22 @@ math.allocate(40, [160, 4, 136, 17], { residual: 'largest-remainder' })   // →
 math.allocate(41, [160, 4, 136, 17], { residual: 'largest-remainder' })   // → [21, 0, 18, 2]
 ```
 
+**Eşit taksitli ödeme planı (`math.amortize`)**
+
+Anapara kuruş, oran **dönemsel** ondalık (%3,05 aylık = 0,0305), dönem sayısı tam sayı.
+Taksit ve her dönemin faizi kuruşa yarım yukarı yuvarlanır. Artık kuruş politikası
+zorunludur; tek değer `'last'`: son taksit kalan bakiyeyi kapatır, plan tam sıfırda biter.
+Vergiyi (KKDF, BSMV) çekirdek bilmez; gerekiyorsa orana siz katın: `oran × (1 + vergi)`.
+
+```js
+math.amortize(10001, 0.01, 3, { remainder: 'last' })   // → [{ payment: 3401, interest: 100, principal: 3301, balance: 6700 }, { payment: 3401, interest: 67, principal: 3334, balance: 3366 }, { payment: 3400, interest: 34, principal: 3366, balance: 0 }]
+math.amortize(10000000, 0, 7, { remainder: 'last' })[6]   // → { payment: 1428574, interest: 0, principal: 1428574, balance: 0 }
+math.amortize(10000000, 0.01, 12, {})   // → null
+```
+
+Düzenli taksit planın ilk satırıdır. Taksiti ayrıca `round(P × r(1+r)^n ÷ …)` diye
+hesaplamayın: float `Math.pow` büyük tutarda kuruşu kaçırır.
+
 ---
 
 ## 4. `money` — para

@@ -478,3 +478,83 @@ export function irr(cashFlows: readonly number[], guess?: number): number | null
   // Yakınsamadıysa yanlış bir sayı dönmektense boş dönülür.
   return null;
 }
+
+/**
+ * `amortize` artık kuruş politikası (madde 51B). Şimdilik tek değer vardır.
+ *
+ * Seçenek bilinçli olarak ZORUNLUDUR ve varsayılanı yoktur: yuvarlamadan kalan kuruşun
+ * hangi taksite bineceği bir tercihtir (madde 9). `'first'` gerçek bir ekranla gelirse
+ * yalnız bu birleşime değer eklenir — MINOR.
+ */
+export type AmortizeRemainder = 'last';
+
+/** `amortize` seçenekleri. */
+export interface AmortizeOptions {
+  remainder: AmortizeRemainder;
+}
+
+/** Ödeme planının bir satırı (alt birim tam sayı). `payment === interest + principal`. */
+export interface AmortizationRow {
+  readonly payment: number;
+  readonly interest: number;
+  readonly principal: number;
+  /** Bu taksit ödendikten sonra kalan anapara. Son satırda `0`. */
+  readonly balance: number;
+}
+
+/** Annüite üssü 120 dönemde bile kuruş kararını bozmasın diye yerel yüksek hassasiyet. */
+const DP = /* @__PURE__ */ D.clone({ precision: 40 });
+
+/**
+ * Eşit taksitli (annüite) ödeme planı (madde 51B, madde 9'un yeniden başvurusu).
+ *
+ * Kural (sahip, 2026-10-18):
+ * 1. Taksit `anapara × r(1+r)^n ÷ ((1+r)^n − 1)`, kuruşa yarım yukarı. Oran 0'da `anapara ÷ n`.
+ * 2. Faiz her dönem `kalan bakiye × r`, kuruşa yarım yukarı.
+ * 3. `remainder: 'last'`: son taksit = son bakiye + o dönemin faizi; plan tam sıfırda kapanır.
+ *    Artık eksi de olabilir (son taksit düzenli taksitten küçük).
+ *
+ * Oran DÖNEMSEL ve ondalıktır (%3,05 = 0,0305). Vergi (KKDF, BSMV) bilinmez; gerekiyorsa
+ * çağıran orana katar: `r × (1 + vergi)` (madde 10). Düzenli taksit planın ilk satırıdır.
+ *
+ * Garantiler: `Σ principal === principalMinor` · son `balance === 0` · her satırda
+ * `payment === interest + principal`.
+ *
+ * `null` döner: anapara pozitif güvenli tam sayı değilse · oran sonlu değil ya da negatifse ·
+ * dönem sayısı 1'den küçük tam sayı değilse · politika tanınmıyorsa · bir tutar güvenli tam
+ * sayı aralığını aşarsa.
+ *
+ * @example math.amortize(10000000, 0.03965, 12, { remainder: 'last' })[0].payment  // 1063359
+ * @example math.amortize(10000000, 0, 7, { remainder: 'last' })[6].payment  // 1428574
+ */
+export function amortize(
+  principalMinor: number,
+  ratePerPeriod: number,
+  periods: number,
+  opts: AmortizeOptions,
+): AmortizationRow[] | null {
+  if (opts?.remainder !== 'last') return null;
+  if (!Number.isSafeInteger(principalMinor) || principalMinor <= 0) return null;
+  if (!Number.isFinite(ratePerPeriod) || ratePerPeriod < 0) return null;
+  if (!Number.isSafeInteger(periods) || periods < 1) return null;
+
+  const r = new DP(String(ratePerPeriod));
+  const p = new DP(principalMinor);
+  const growth = r.plus(1).pow(periods);
+  const regular = (r.isZero() ? p.dividedBy(periods) : p.times(r).times(growth).dividedBy(growth.minus(1)))
+    .toDecimalPlaces(0)
+    .toNumber();
+  if (!Number.isSafeInteger(regular)) return null;
+
+  const rows: AmortizationRow[] = [];
+  let balance = principalMinor;
+  for (let i = 1; i <= periods; i++) {
+    const interest = r.times(balance).toDecimalPlaces(0).toNumber();
+    const payment = i === periods ? balance + interest : regular;
+    if (!Number.isSafeInteger(interest) || !Number.isSafeInteger(payment)) return null;
+    const principal = payment - interest;
+    balance -= principal;
+    rows.push({ payment, interest, principal, balance });
+  }
+  return rows;
+}
