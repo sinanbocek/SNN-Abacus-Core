@@ -110,14 +110,14 @@ Sürüm kararı işe başlamadan alınır. Onaylanmış sürüm PR'ı yeşilse a
 
 1. PR açınca tur bitmez. CI sonucu ve birleşme beklenir. Masaüstü uygulamasının PR izleme aracını kullan.
 2. CI kırmızıysa düzeltmeyi müdüre ver, sen yeniden gönder.
-3. Birleştirme aile kuralına uyar (`es-zamanli-calisma-standardi.md` §7). Depo birleştirme commit'i kullanır (`gh pr merge --merge`). Otomatik birleştirme sahip istemedikçe açılmaz.
+3. Birleştirme aile kuralına uyar (`es-zamanli-calisma-standardi.md` §7). Depo birleştirme commit'i kullanır. PR açınca otomatik birleştirme açılır (`gh pr merge <no> --auto --merge`); denetimler yeşil olunca GitHub kendisi birleştirir.
 4. Birleşince kapanış yap: yerini alan eski PR'ları kapat, sonucu ölç, panoyu güncelle.
 5. Sürüm çıktıysa etiketi uzakta doğrula: `git ls-remote --tags origin refs/tags/vX.Y.Z`. Tüketici PR'ı düşerse o projenin işidir.
 6. Sahibe tek rapor ver: ne bitti, ne ölçüldü, kalan varsa neden. "Senin yapacağın" başlığına yalnız gerçekten onun işini yaz.
 
 Bilinen CI davranışları:
 
-- Yalnız `docs/**`, `README.md` ya da `CHANGELOG.md` değişen PR'da `Lint, Typecheck & Test` koşmaz (`paths-ignore`). Yalnız kod dili ve anahtar taraması koşar. Böyle PR'da yerel kapıyı sen çalıştır.
+- `Lint, Typecheck & Test` her PR'da koşar ve `main` için tek zorunlu denetimdir. İşin adı değişirse dal koruması da güncellenir, yoksa PR'lar sonsuza dek bekler. `tara / ...` işleri ortak depodan gelir, adları değişebilir; zorunlu yazılmaz.
 - GitHub Actions kotası sınırlıdır. İşi tek PR'a topla, ara düzeltmede gönderme, tur bitince tek gönderim yap.
 
 ## Pano bakımı
