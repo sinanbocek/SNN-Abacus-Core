@@ -1,12 +1,13 @@
 # Yazılım Müdürü: durum
 
-Son güncelleme: 2026-11-08 (ekip düzeni kurulumu)
+Son güncelleme: 2026-11-10 (vitest 4.1.12 yükseltmesi)
 
 ## Açık
 
 - TB-013 adım 2: `PlateResult.yeniKayit` alanını ve `.snn-kod-dili.json` istisnasını sil. Sonraki MAJOR'da. Kaynak: `docs/teknik-borc.md`. Alan `src/abacus/text/index.ts` içinde duruyor (2026-11-08).
 - TB-015: `text.company()` beş düzeltme, her biri önce kırmızı test. Sonraki MAJOR'da, TB-013 adım 2 ile birlikte. Kaynak: `docs/teknik-borc.md`, madde 46B.
 - PR #69: Vite 8.2.2 → 8.3.5 (Dependabot). Denetimler yeşil, birleştirilmedi (2026-11-08).
+- 2026-11-10: vitest, @vitest/mocker, @vitest/coverage-v8 4.1.12 yapıldı (vite 8.3.5 korundu); çalışma kopyasında, birleştirme Genel Müdür'de. Vitest, vite'i sert bağımlılık olarak çektiği için kilit dosyasında vite, rolldown, postcss ve ilgili girişler elle eski sürümde tutuldu.
 - GitHub güvenlik uyarıları: 8 açık, hepsi geliştirme aracı. Vite 6 (1 yüksek, 4 orta, 1 düşük), `@vitest/mocker` 2 orta. Kütükte karşılığı yok. PR #69'un kaçını kapattığı ölçülmedi (2026-11-08).
 - (durumu belirsiz) TB-013 etkisi: GHS-Panel'de 6 kaynak, 3 test satırı. Ölçüm 2026-09-24 tarihli; 5.0.0 öncesi yeniden ölçülmeli.
 - (durumu belirsiz) TB-015 etkisi: çekirdek dışında yalnız GHS-Panel çağırıyor. Ölçüm 2026-09-24 tarihli; 5.0.0 öncesi yeniden ölçülmeli.
