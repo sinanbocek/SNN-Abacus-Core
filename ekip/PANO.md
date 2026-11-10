@@ -15,7 +15,6 @@ Son güncelleme: 2026-11-10
 ### Karar
 
 1. 5.0.0 ne zaman açılsın? Acele yok (sahip kararı, 2026-09-24).
-2. minimatch güvenlik uyarısı (#13, geliştirme aracı) borç kütüğüne yazılsın mı? Düzeltme 11.0.1'de, eslint ailesi hâlâ 10. seriyi istiyor (ölçüm 2026-11-10). Vite ve vitest yükseltmeleri birleşti (PR #69, #73).
 
 ### Elle
 
