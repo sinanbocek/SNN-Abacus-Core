@@ -6,14 +6,14 @@ Kapanan kayıtlar: `docs/teknik-borc-arsiv.md`
 > **Teknik borç nedir?** Bir işi hızlı bitirmek için kestirme yol kullanmak, sonradan
 > ödenecek bir borç almak gibidir. Borç ödenmedikçe faizi (bakım zorluğu, hata riski) büyür.
 
-> **Standart:** `~/.claude/standartlar-canli/standartlar/teknik-borc-standardi.md` · **Oluşturulma:** 2026-09-15 · **Açık:** 2 (P1: 0 · P2: 1 · P3: 1)
+> **Standart:** `~/.claude/standartlar-canli/standartlar/teknik-borc-standardi.md` · **Oluşturulma:** 2026-09-15 · **Açık:** 3 (P1: 0 · P2: 1 · P3: 2)
 
 > **2026-09-15:** Kütük ilk kez oluşturuldu. Kayıtlar keşif turunda bulundu (dokümanlar, oturum günlüğü, kod, test/lint çıktıları); kritik iddialar bağımsız olarak yeniden ölçüldü. Ölçülemeyenler kayıt içinde "ölçülmedi/hipotez" diye belirtilmiştir.
 
 ## İçindekiler
 
 - **🟡 P2 — Planlı:** TB-015
-- **🟢 P3 — Fırsatta:** TB-013
+- **🟢 P3 — Fırsatta:** TB-013, TB-016
 
 ## Öncelikler
 
@@ -37,6 +37,7 @@ Kapanan kayıtlar: `docs/teknik-borc-arsiv.md`
 | Turnike (CI kapısı) | Her değişiklikte otomatik çalışan, kuralı sağlamayan işi geçirmeyen denetim |
 | Ünlü uyumu | Ekin ünlüsünün kelimenin son ünlüsüne uyması: ev-de, okul-da |
 | Hâl eki | Ada gelen -de, -den, -e, -in, -i ekleri (İstanbul'da, THY'den) |
+| Üst paket | Başka bir paketi çalışması için kullanan paket; alttakinin sürümüne izin verdiği aralığı o belirler |
 | Unvan | Bir şirketin ya da kurumun resmî, tam adı (… Limited Şirketi, … Genel Müdürlüğü) |
 
 ---
@@ -89,3 +90,22 @@ Kapanan kayıtlar: `docs/teknik-borc-arsiv.md`
 - **Çözüm yönü:** İki adım. **Adım 1 — YAPILDI (2026-09-24, MINOR, `main`'de yayınlanmadı):** `PlateResult.newRegistration` eklendi, `yeniKayit` `@deprecated` işaretlendi, ikisinin eşitliği `plate-new-registration.test.ts` ile çivili; dönüş nesnesi alanlarını çivileyen kilit eklendi (`result-shape.test.ts` — bu kaydın ortaya çıkardığı boşluk). **Adım 2 — bir sonraki MAJOR:** `yeniKayit` alanını ve `.snn-kod-dili.json`'daki geçiş istisnasını sil, `result-shape.test.ts` listesinden çıkar, `MIGRATION-v5.md`'ye satır yaz (GHS-Panel'in 6 satırı `yeniKayit` → `newRegistration`); sonra kaydı kapat.
 - **Geçici istisna yazıldı (2026-09-19).** `.snn-kod-dili.json` içine `yeniKayit` için **geçiş istisnası** kondu; yoksa bu alanın bulunduğu satıra başka bir sebeple dokunmak bile kod dili kapısını kırıyor (ölçüldü: PR #43'te `text/index.ts:394`). İstisnanın gerekçesinde **kalıcı olmadığı** ve bu kayıtla birlikte silineceği yazılı. Tarayıcı artık eşleşmeyen istisnayı uyarıyor, yani gereksizleştiğinde görünür olacak.
 - **Neden Şimdi Çözülmüyor:** Tek bir ad için ayrı bir major sürüm çıkarmak, 8 tüketiciyi yeni bir göçe zorlamak demektir. Sahip kararı (2026-09-24): sürüm çıkmaz, bekleyenler bir sonraki taleplerle toplu yayınlanır. Adım 1 bu sürede tüketicilerin kendi hızlarında geçmesine izin verir; adım 2 ancak bir MAJOR ile yapılabilir.
+
+---
+
+### TB-016 — minimatch 10.2.6 üst paket sınırı yüzünden 11.0.1'e çıkarılamıyor
+- **Tespit Tarihi:** 2026-11-10 (bağımlılık uyarılarının taranması sırasında)
+- **Öncelik:** P3 (Fırsatta)
+
+#### 🟢 Sade Anlatım
+- **Sorun ne?** Geliştirme araçlarının kullandığı küçük bir yardımcı paket (minimatch) eski sürümde duruyor. Yeni sürümü çıkmış ama onu kullanan büyük araçlar henüz yeni sürüme geçmedi.
+- **Benzetme:** Bir cihazın içindeki yedek parçayı değiştirmek istiyorsunuz ama cihazın üreticisi yalnız eski model parçaya göre tasarlamış. Zorla yeni parçayı takarsanız cihaz çalışmayabilir.
+- **Çözülmezse ne olur?** Uyarı açık kalır. Bu paket yalnız geliştirme sırasında kullanılıyor; yayınlanan pakete girmiyor.
+- **Senden beklenen karar:** Yok. Sahip kararı (2026-11-10): uyarı açık kalır, kütüğe yazılır.
+
+#### 🔧 Teknik Detay
+- **Açıklama:** `minimatch` kurulu 10.2.6, ilk düzeltme sürümü 11.0.1. Dependabot uyarısı #13. Kapsam: geliştirme; `package.json`'da doğrudan bağımlılık değil, başka paketlerin getirdiği bağımlılık. Ölçüm 2026-11-10. Üst paketlerin en son sürümleri de 10. seriyi istiyor: `eslint 10.14.0` → `^10.2.6`, `@eslint/config-array 0.23.5` → `^10.2.4`, `@typescript-eslint/typescript-estree 8.72.2` → `^10.2.2`.
+- **Etki:** Yalnız geliştirme ortamı (lint). Yayınlanan paket ve tüketici projeler etkilenmez.
+- **Çözüm yönü:** `eslint` ailesi minimatch 11. seriye izin verdiğinde normal yükseltme yapılır; sonra Dependabot uyarısının kapandığı ölçülür.
+- **Neden Şimdi Çözülmüyor:** Üst paketlerin en son sürümleri de 10. seriyi istiyor; normal yükseltme kapatamaz. `overrides` ile ana sürümü zorlamak eslint'i bozabilir. Sahip kararı (2026-11-10): uyarı açık kalır.
+- **Bağlı kalemler:** Yok.
