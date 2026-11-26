@@ -1,9 +1,10 @@
 # Yazılım Müdürü: durum
 
-Son güncelleme: 2026-11-10 (minimatch TB-016, durum satırları)
+Son güncelleme: 2026-11-26 (MIGRATION-v4.md pakete eklendi)
 
 ## Açık
 
+- 2026-11-26: `package.json` `files` listesine `MIGRATION-v4.md` eklendi; kilit testi `src/abacus/docs-claims.test.ts:818` (kökteki her `MIGRATION-v*.md` listede olmalı). Birleşmedi, commit yok. Tüketiciye ancak sonraki sürüm etiketiyle ulaşır.
 - TB-013 adım 2: `PlateResult.yeniKayit` alanını ve `.snn-kod-dili.json` istisnasını sil. Sonraki MAJOR'da. Kaynak: `docs/teknik-borc.md`. Alan `src/abacus/text/index.ts` içinde duruyor (2026-11-08).
 - TB-015: `text.company()` beş düzeltme, her biri önce kırmızı test. Sonraki MAJOR'da, TB-013 adım 2 ile birlikte. Kaynak: `docs/teknik-borc.md`, madde 46B.
 - 2026-11-10: vitest, @vitest/mocker, @vitest/coverage-v8 4.1.12 birleşti (PR #73); vite 8.3.5 (PR #69) birleşti.
