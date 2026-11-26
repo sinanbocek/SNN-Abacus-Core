@@ -9,7 +9,7 @@ Bu rehber, **ABACUS Engine** (`@snn/abacus-core`) çekirdek motorunu herhangi bi
 Projelerinizin kök dizininde aşağıdaki komutu çalıştırarak `@snn/abacus-core` paketini doğrudan GitHub deposundan kurun:
 
 ```bash
-npm install github:sinanbocek/SNN-Abacus-Core#semver:^3.0.0
+npm install github:sinanbocek/SNN-Abacus-Core#semver:^4.4.0
 ```
 
 > 💡 **Bağımlılık Notu:** Paket, hassas matematiksel işlemler için gereken `decimal.js` bağımlılığını otomatik olarak indirip projenize bağlar. Ekstra bir `decimal.js` kurulumu gerekmez.
@@ -167,21 +167,21 @@ bu, güvenli güncellemelerin otomatik gelmesini, kırıcı olanların gelmemesi
 
 | Çekirdekte çıkan | Örnek | Tüketiciye ne olur |
 |---|---|---|
-| **Yama** (patch) | 2.1.0 → 2.1.1 | **otomatik gelir** |
-| **Ek özellik** (minor) | 2.1.0 → 2.2.0 | **otomatik gelir** |
-| **Kırıcı** (major) | 3.x → 4.0.0 | **GELMEZ** — `package.json` elle değiştirilir |
+| **Yama** (patch) | 4.4.0 → 4.4.1 | **otomatik gelir** |
+| **Ek özellik** (minor) | 4.4.0 → 4.5.0 | **otomatik gelir** |
+| **Kırıcı** (major) | 4.x → 5.0.0 | **GELMEZ** — `package.json` elle değiştirilir |
 
 ### Bağlanma biçimleri
 
 ```jsonc
 // ÖNERİLEN — minor ve yamalar otomatik, major asla
-"@snn/abacus-core": "github:sinanbocek/SNN-Abacus-Core#semver:^3.0.0"
+"@snn/abacus-core": "github:sinanbocek/SNN-Abacus-Core#semver:^4.4.0"
 
 // Yalnız yama otomatik (daha muhafazakâr)
-"@snn/abacus-core": "github:sinanbocek/SNN-Abacus-Core#semver:~2.1.0"
+"@snn/abacus-core": "github:sinanbocek/SNN-Abacus-Core#semver:~4.4.0"
 
 // Tam sabit — hiçbir güncelleme gelmez
-"@snn/abacus-core": "github:sinanbocek/SNN-Abacus-Core#v2.1.0"
+"@snn/abacus-core": "github:sinanbocek/SNN-Abacus-Core#v4.4.0"
 ```
 
 > Doğrulandı (2026-08-30): `^2.0.0` aralığı 2.1.0'a çözülür, `~2.0.0` ve
@@ -203,7 +203,7 @@ yeşilse birleştirilir. Otomatik ama körü körüne değil.
 
 Otomatik gelmez ve gelmemelidir. Geçiş için `MIGRATION-*.md` belgesi okunur,
 pin elle yükseltilir, projenin testleri çalıştırılır.
-v2.x → v3.0.0 için: [MIGRATION-v3.md](MIGRATION-v3.md) · v1.1.0 → v2.0.0 için: [MIGRATION-v2.md](MIGRATION-v2.md).
+v3.x → v4.0.0 için: [MIGRATION-v4.md](MIGRATION-v4.md) · v2.x → v3.0.0 için: [MIGRATION-v3.md](MIGRATION-v3.md) · v1.1.0 → v2.0.0 için: [MIGRATION-v2.md](MIGRATION-v2.md).
 
 ---
 
