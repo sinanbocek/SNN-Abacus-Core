@@ -9,10 +9,10 @@
 Projelerinize GitHub üzerinden doğrudan npm paketi olarak ekleyin:
 
 ```bash
-npm install github:sinanbocek/SNN-Abacus-Core#semver:^3.0.0
+npm install github:sinanbocek/SNN-Abacus-Core#semver:^4.4.0
 ```
 
-> **Sürüm politikası:** `#semver:^3.0.0` aralığı ile bağlanın. Yama ve ek özellik sürümleri (2.1.1, 2.2.0) **otomatik gelir**; kırıcı major sürüm (4.0.0) **gelmez** ve elle geçilir. `package-lock.json` tam commit'i sabitlediği için build'ler tekrarlanabilir kalır. Ayrıntı: [INSTALL.md §4](INSTALL.md).
+> **Sürüm politikası:** `#semver:^4.4.0` aralığı ile bağlanın. Yama ve ek özellik sürümleri (4.4.1, 4.5.0) **otomatik gelir**; kırıcı major sürüm (5.0.0) **gelmez** ve elle geçilir. `package-lock.json` tam commit'i sabitlediği için build'ler tekrarlanabilir kalır. Ayrıntı: [INSTALL.md §4](INSTALL.md).
 
 ```typescript
 import { money, math, tradingMath, date, gold, silver, unit, period, collate } from '@snn/abacus-core';
@@ -54,6 +54,7 @@ collate.sortBy(['zam', 'çam', 'dal']);    // ["çam", "dal", "zam"]
 > Gelmiş her talep ve verilen karar orada tutulur — **reddedilenler gerekçeleriyle birlikte.**
 > Aradığınız şey daha önce değerlendirilip uygun görülmemiş olabilir.
 >
+> **v3.x kullanıyorsanız:** yükseltmeden önce [MIGRATION-v4.md](MIGRATION-v4.md) okuyun — v4.0.0'da `money.parseNumber` yalnız Türkçe biçimi okur; başka yazımlar `null` döner.
 > **v2.x kullanıyorsanız:** yükseltmeden önce [MIGRATION-v3.md](MIGRATION-v3.md) okuyun — v3.0.0 negatif yüzdelerin ve `text.suffix` çıktısının yazımını değiştirir, geçersiz hane sayısında hata fırlatmak yerine `'—'` döndürür.
 > **v1.1.0 kullanıyorsanız:** önce [MIGRATION-v2.md](MIGRATION-v2.md).
 
