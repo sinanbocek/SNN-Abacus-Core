@@ -814,3 +814,18 @@ describe('BELGE İDDİALARI — belgedeki sürüm başlığı koddan geri kalmas
     expect(`${major}.${minor}`).toBe(`${pkgMajor}.${pkgMinor}`);
   });
 });
+
+describe('BELGE İDDİALARI — göç kılavuzları pakete girsin', () => {
+  // README ve INSTALL göç kılavuzlarına bağlantı verir; kılavuz package.json
+  // `files` listesinde yoksa paket içinde bağlantı kırık kalır (MIGRATION-v4.md vakası).
+  it('kök dizindeki her MIGRATION-v*.md package.json files içinde', () => {
+    const guideFiles = Object.keys(import.meta.glob('../../MIGRATION-v*.md', { query: '?raw' }))
+      .map((path) => path.replace('../../', ''))
+      .sort();
+    expect(guideFiles.length, 'kökte MIGRATION-v*.md bulunamadı').toBeGreaterThan(0);
+
+    const packaged = PACKAGE_MANIFEST.files;
+    const missing = guideFiles.filter((file) => !packaged.includes(file));
+    expect(missing, 'package.json files listesinde eksik göç kılavuzu').toEqual([]);
+  });
+});
