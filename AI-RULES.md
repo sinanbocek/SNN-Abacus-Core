@@ -121,7 +121,7 @@ onlara OTOMATİK iner.** Bu, sürüm numarasını bir etiketten sorumluluğa çe
 
 **Yayınlanan lint yapılandırması da bu taahhüde dahildir.** `eslint/index.js`'teki
 `configs.recommended` bir **major hat içinde sabit sözleşmedir**: minor sürümde oraya
-yeni kapı EKLENMEZ. Tüketici `^3.x` ile bağlı olduğu için eklenen kapı kendiliğinden
+yeni kapı EKLENMEZ. Tüketici `^X.Y.Z` aralığıyla bağlı olduğu için eklenen kapı kendiliğinden
 iner ve tüketicinin CI'ı, kendi koduna hiç dokunmadığı hâlde kırmızıya döner.
 
 > **Ölçüldü (2026-09-19):** sessiz varsayılan kapısı v3.4.0'da `recommended`'a eklendi.
@@ -271,5 +271,5 @@ Betiğin tabloyu doğru okuduğunu `release-batching.test.ts` ölçer.
 
   > **Neden makine:** 2026-09-19'a kadar bu bağ insan hafızasına bağlıydı. `package.json`
   > 3.3.0 → 3.4.0 → 3.5.0 oldu, etiket atılmadı ve **hiçbir tüketici haberdar olmadı**.
-  > `#semver:^3.x` aralığı etiketlere göre çözüldüğü için `main`'deki sürüm yükseltmesi
+  > O günkü `#semver:^3.x` aralığı etiketlere göre çözüldüğü için `main`'deki sürüm yükseltmesi
   > görünmez bile kaldı. "Etiket atmayı unutma" bir kural değil, bir dilekti.
