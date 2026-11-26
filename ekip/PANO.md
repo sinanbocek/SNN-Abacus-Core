@@ -1,6 +1,6 @@
 # Pano
 
-Son güncelleme: 2026-11-10
+Son güncelleme: 2026-11-26
 
 **Kısa cevap:** 4.4.0 yayında, bekleyen kabul yok; sıradaki büyük iş 5.0.0 ve zamanı sahibin kararında.
 
@@ -9,6 +9,12 @@ Son güncelleme: 2026-11-10
 | Yazılım | Acil iş yok | 5.0.0 işleri TB-013 adım 2 ve TB-015 | 1 |
 | Talep | Açık talep yok | Yeni talep bekleniyor; madde 39C 5.0.0'a aday | 0 |
 | Belge | Acil iş yok | `MIGRATION-v5.md` 5.0.0 ile yazılacak | 0 |
+
+## Son biten (2026-11-26)
+
+- Kurulum belgeleri 4.x hattına çekildi: README ve INSTALL `#semver:^4.4.0` (#77).
+- `MIGRATION-v4.md` paket dosya listesine girdi, kilit testiyle (#78). Tüketiciye sonraki sürümle ulaşır.
+- `AI-RULES.md` eski `^3.x` izleri güncellendi (#79).
 
 ## Sahibin yapacakları
 
